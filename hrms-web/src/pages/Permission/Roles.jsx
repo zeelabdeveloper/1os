@@ -116,9 +116,9 @@ export default function RoleManagementPage() {
 
   const filteredRoles = roles?.filter(
     (role) =>
-      role.name.toLowerCase().includes(searchText?.toLowerCase()) ||
+      role?.name?.toLowerCase().includes(searchText?.toLowerCase()) ||
       (role.department?.name &&
-        role.department.name?.toLowerCase().includes(searchText?.toLowerCase())) ||
+        role?.department?.name?.toLowerCase().includes(searchText?.toLowerCase())) ||
       (role.branch?.name &&
         role.branch.name?.toLowerCase().includes(searchText?.toLowerCase()))
   );

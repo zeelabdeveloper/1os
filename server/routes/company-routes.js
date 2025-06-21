@@ -19,10 +19,14 @@ const {
   getRoleByDepartment,
 } = require("../controllers/componyOperation");
 
+
+
 router.get("/companyBranch", fetchBranches);
 router.post("/companyBranch", addBranch);
 router.put("/companyBranch/:id", updateBranch);
 router.delete("/companyBranch/:id", deleteBranch);
+
+
 
 router.get("/departments", getAllDepartments);
 router.get("/departments/head", getHeadOfDepartments);

@@ -97,100 +97,105 @@ const App = () => {
                   path="/store/storegroup"
                   element={lazyLoad("store/StoreGroup")}
                 />
-               
+
                 <Route path="/store/staff" element={lazyLoad("store/Staff")} />
                 <Route path="/store/roles" element={lazyLoad("store/Roles")} />
 
                 {/* Performance Routes */}
                 <Route
                   path="/performance/indicators"
-                  element={lazyLoad("/performance/indicators")}
+                  element={lazyLoad("performance/indicators")}
                 />
                 <Route
                   path="/performance/goals"
-                  element={lazyLoad("/performance/goals")}
+                  element={lazyLoad("performance/goals")}
                 />
                 <Route
                   path="/performance/appraisals"
-                  element={lazyLoad("/performance/appraisals")}
+                  element={lazyLoad("performance/appraisals")}
                 />
                 <Route
                   path="/performance/feedback"
-                  element={lazyLoad("/performance/feedback")}
+                  element={lazyLoad("performance/feedback")}
                 />
                 <Route
                   path="/performance/reviews"
-                  element={lazyLoad("/performance/reviews")}
+                  element={lazyLoad("performance/reviews")}
                 />
 
                 {/* staff */}
 
                 <Route
                   path="/staff/employees"
-                  element={lazyLoad("/staff/employee")}
+                  element={lazyLoad("staff/employee")}
                 />
                 <Route
                   path="/staff/create"
-                  element={lazyLoad("/staff/createemployee")}
+                  element={lazyLoad("staff/createemployee")}
                 />
                 <Route
                   path="/staff/employee"
-                  element={lazyLoad("/staff/ViewStaff")}
+                  element={lazyLoad("staff/ViewStaff")}
                 />
 
                 {/* Attendance */}
 
                 <Route
                   path="/attendance/daily"
-                  element={lazyLoad("/attendance/daily")}
+                  element={lazyLoad("attendance/daily")}
                 />
 
                 <Route
                   path="/attendance/monthly"
-                  element={lazyLoad("/attendance/monthly")}
+                  element={lazyLoad("attendance/monthly")}
                 />
                 <Route
                   path="/attendance/reports"
-                  element={lazyLoad("/attendance/report")}
+                  element={lazyLoad("attendance/report")}
                 />
 
                 {/* Hrms Systetm Setup */}
 
-                <Route path="/1os/setup" element={lazyLoad("/1os/setup")} />
+                <Route path="/1os/setup" element={lazyLoad("1os/setup")} />
 
                 {/* Recruitment */}
 
                 <Route
                   path="/recruitment/jobs"
-                  element={lazyLoad("/recruitment/jobs")}
+                  element={lazyLoad("recruitment/jobs")}
                 />
                 <Route
                   path="/recruitment/create"
-                  element={lazyLoad("/recruitment/create")}
+                  element={lazyLoad("recruitment/create")}
                 />
                 <Route
                   path="/recruitment/applications"
-                  element={lazyLoad("/recruitment/applications")}
+                  element={lazyLoad("recruitment/applications")}
                 />
                 <Route
                   path="/recruitment/application"
-                  element={lazyLoad("/recruitment/application")}
+                  element={lazyLoad("recruitment/application")}
                 />
                 <Route
                   path="/recruitment/candidates"
-                  element={lazyLoad("/recruitment/candidates")}
+                  element={lazyLoad("recruitment/candidates")}
                 />
                 <Route
                   path="/recruitment/onboarding"
-                  element={lazyLoad("/recruitment/onboarding")}
+                  element={lazyLoad("recruitment/onboarding")}
                 />
                 <Route
                   path="/recruitment/interviews"
-                  element={lazyLoad("/recruitment/interview")}
+                  element={lazyLoad("recruitment/interview")}
                 />
+
+                {/* system Setting/ */}
+
+                <Route path="/settings" element={lazyLoad("settings")} />
               </Route>
 
               <Route path="/login" element={<Login />} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

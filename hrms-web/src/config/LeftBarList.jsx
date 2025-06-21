@@ -5,7 +5,7 @@ import {
   ClockCircleOutlined,
 } from "@ant-design/icons";
 import { FcDataConfiguration } from "react-icons/fc";
-
+import { RiListSettingsLine } from "react-icons/ri";
 import { IoIosAnalytics, IoIosPaper } from "react-icons/io";
 import { FaHouseChimneyMedical } from "react-icons/fa6";
 
@@ -130,10 +130,7 @@ const menuItems = [
         key: "/recruitment/applications",
         label: "Job Applications",
       },
-      // {
-      //   key: "/recruitment/candidates",
-      //   label: "Job Candidates",
-      // },
+
       {
         key: "/recruitment/onboarding",
         label: "Job Onboarding",
@@ -162,14 +159,6 @@ const menuItems = [
       {
         key: "/performance/appraisals",
         label: "Appraisals",
-      },
-      {
-        key: "/performance/reviews",
-        label: "Performance Reviews",
-      },
-      {
-        key: "/performance/feedback",
-        label: "360° Feedback",
       },
     ],
   },
@@ -264,6 +253,12 @@ const menuItems = [
     key: "/1os/setup?type=initial",
     icon: <DashboardOutlined />,
     label: "HRMS System Setup",
+  },
+
+  {
+    key: "/settings",
+    icon: <RiListSettingsLine />,
+    label: "Settings",
   },
 
   {

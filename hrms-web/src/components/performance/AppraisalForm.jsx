@@ -176,7 +176,7 @@ const AppraisalForm = ({ visible, onClose, editData }) => {
       strengths: values.strengths || [],
       areasForImprovement: values.areasForImprovement || [],
       feedback: values.feedback || "",
-      reviewer: "authenticated-user-id", // Replace with actual user ID from auth context
+      reviewer: "683fed6e4171723fde1cba1a" 
     };
 
     if (editData) {

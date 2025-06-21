@@ -64,7 +64,9 @@ const GoalForm = ({ visible, onClose, editData }) => {
       handleClose();
     },
     onError: (error) => {
-      toast.error(
+        setLoading(false) 
+        toast.error(
+    
         error.response?.data?.message || "Error updating or creating goal"
       );
     },

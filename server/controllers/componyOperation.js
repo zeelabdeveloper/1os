@@ -35,7 +35,7 @@ exports.addBranch = async (req, res) => {
       return res.status(400).json({ message: "Branch code already exists" });
     }
 
-    const branch = new Branch({ code, name });
+    const branch = new Branch({ code, name }); 
     await branch.save();
     res.status(201).json({ data: branch, message: "Added New Branch" });
   } catch (err) {
@@ -53,7 +53,7 @@ exports.updateBranch = async (req, res) => {
       { code, name },
       { new: true, runValidators: true }
     );
-
+console.log(branch)
     if (!branch) {
       return res.status(404).json({ message: "Branch not found" });
     }

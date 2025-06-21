@@ -90,8 +90,8 @@ const UserAppraisalModal = ({ visible, onClose, appraisal }) => {
         <Descriptions.Item label="Employee Name">
           {appraisal.user?.firstName} {appraisal.user?.lastName}
         </Descriptions.Item>
-        <Descriptions.Item label="Employee ID">
-          {appraisal.user?.employeeId || 'N/A'}
+        <Descriptions.Item label="Email">
+          {appraisal.user?.email || 'N/A'}
         </Descriptions.Item>
         <Descriptions.Item label="Designation">
           <Tag color="blue">{appraisal.role?.name}</Tag>
