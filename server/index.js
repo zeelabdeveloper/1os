@@ -38,6 +38,7 @@ app.use("/api/v1/store/roles", require("./routes/store/storeRoles.js"));
 app.use("/api/v1/stores", require("./routes/store/store.js"));
 app.use("/api/v1/jobs", require("./routes/jobsRoute.js"));
 app.use("/api/v1/recruitment", require("./routes/recruitment.js"));
+app.use("/api/v1/interview/interviewSessions", require("./routes/interviewSessions.js"));
 // app.use("/api/v1/onboarding", require("./routes/onboarding.js"));
 app.use("/api/v1/analytics", require("./routes/analytics.js"));
 app.use(

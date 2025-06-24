@@ -30,28 +30,41 @@ import {
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { toast } from "react-hot-toast";
 import InterviewSessionForm from "./InterviewSessionForm";
+import toast from "react-hot-toast";
 
 const { Text } = Typography;
 const { Option } = Select;
-const { RangePicker } = DatePicker;
+
+const getCandidateIdFromUrl = () => {
+  const query = new URLSearchParams(window.location.search);
+  return query.get("id");
+};
+
+const candidateId = getCandidateIdFromUrl();
 
 const fetchInterviewSessions = async () => {
   const { data } = await axios.get(
-    "/api/interviewSessions?populate=interviewRound,application"
+    `/api/v1/interview/interviewSessions/${candidateId}`
   );
   return data;
 };
 
 const deleteInterviewSession = async (id) => {
-  await axios.delete(`/api/interviewSessions/${id}`);
+  await axios.delete(`/api/v1/interview/interviewSessions/${id}`);
+};
+
+const updateInterviewStatus = async ({ id, status }) => {
+  const { data } = await axios.patch(
+    `/api/v1/interview/interviewSessions/${id}`,
+    { status }
+  );
+  return data;
 };
 
 const InterviewSessionList = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
-  const [form] = Form.useForm();
 
   const {
     data: sessions,
@@ -61,17 +74,33 @@ const InterviewSessionList = () => {
     queryKey: ["interviewSessions"],
     queryFn: fetchInterviewSessions,
   });
+  console.log(sessions);
+  const deleteMutation = useMutation({
+    mutationFn: deleteInterviewSession,
+    onSuccess: () => {
+      toast.success("Interview session deleted successfully");
+      
+      refetch();
+    },
+    onError: () => {
+      toast.error("Failed to delete interview session");
+    },
+  });
 
-const deleteMutation = useMutation({
-  mutationFn: deleteInterviewSession,
-  onSuccess: () => {
-    message.success("Interview session deleted successfully");
-    refetch(); // still works the same way
-  },
-  onError: () => {
-    message.error("Failed to delete interview session");
-  },
-});
+  const statusMutation = useMutation({
+    mutationFn: updateInterviewStatus,
+    onSuccess: () => {
+      message.success("Status updated successfully");
+      refetch();
+    },
+    onError: () => {
+      message.error("Failed to update status");
+    },
+  });
+
+  const handleStatusChange = (id, newStatus) => {
+    statusMutation.mutate({ id, status: newStatus });
+  };
 
   const handleEdit = (session) => {
     setSelectedSession(session);
@@ -85,10 +114,9 @@ const deleteMutation = useMutation({
 
   const handleCancel = () => {
     setIsModalVisible(false);
-    form.resetFields();
   };
 
-  const getStatusTag = (status) => {
+  const getStatusTag = (status, record) => {
     const statusMap = {
       scheduled: { color: "blue", icon: <ClockCircleOutlined /> },
       in_progress: { color: "orange", icon: <ClockCircleOutlined /> },
@@ -96,25 +124,46 @@ const deleteMutation = useMutation({
       cancelled: { color: "red", icon: <CloseCircleOutlined /> },
       rescheduled: { color: "purple", icon: <ExclamationCircleOutlined /> },
     };
+
     return (
-      <Tag icon={statusMap[status]?.icon} color={statusMap[status]?.color}>
-        {status.replace("_", " ")}
-      </Tag>
+      <Select
+        defaultValue={status}
+        style={{ width: 150 }}
+        onChange={(value) => handleStatusChange(record._id, value)}
+        bordered={false}
+      >
+        {Object.keys(statusMap).map((key) => (
+          <Option key={key} value={key}>
+            <Tag color={statusMap[key].color} icon={statusMap[key].icon}>
+              {key.replace("_", " ")}
+            </Tag>
+          </Option>
+        ))}
+      </Select>
     );
   };
 
-  const getOutcomeTag = (outcome) => {
+  const getOutcomeTag = (outcome, record) => {
     const outcomeMap = {
       selected: { color: "success", text: "Selected" },
       rejected: { color: "error", text: "Rejected" },
       hold: { color: "warning", text: "On Hold" },
       pending: { color: "default", text: "Pending" },
     };
+
     return (
-      <Badge
-        status={outcomeMap[outcome]?.color}
-        text={outcomeMap[outcome]?.text}
-      />
+      <Select
+        defaultValue={outcome}
+        style={{ width: 120 }}
+        onChange={(value) => handleOutcomeChange(record._id, value)}
+        bordered={false}
+      >
+        {Object.keys(outcomeMap).map((key) => (
+          <Option key={key} value={key}>
+            <Badge status={outcomeMap[key].color} text={outcomeMap[key].text} />
+          </Option>
+        ))}
+      </Select>
     );
   };
 
@@ -126,9 +175,19 @@ const deleteMutation = useMutation({
       render: (text, record) => (
         <Space>
           <Avatar src={record.application?.photo} icon={<UserOutlined />} />
-          <Text strong>{text}</Text>
+          <div>
+            <Text strong>{text}</Text>
+            <br />
+            <Text type="secondary">{record.application?.email}</Text>
+          </div>
         </Space>
       ),
+    },
+    {
+      title: "Position",
+      dataIndex: ["application", "positionApplied"],
+      key: "position",
+      render: (text) => <Text>{text}</Text>,
     },
     {
       title: "Interview Round",
@@ -163,6 +222,15 @@ const deleteMutation = useMutation({
             {dayjs(record.startTime).format("h:mm A")} -{" "}
             {dayjs(record.endTime).format("h:mm A")}
           </Text>
+          {record.meetingLink && (
+            <a
+              href={record.meetingLink}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Join Meeting
+            </a>
+          )}
         </Space>
       ),
     },
@@ -170,17 +238,18 @@ const deleteMutation = useMutation({
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: getStatusTag,
+      render: (status, record) => getStatusTag(status, record),
     },
     {
       title: "Outcome",
       dataIndex: "outcome",
       key: "outcome",
-      render: getOutcomeTag,
+      render: (outcome, record) => getOutcomeTag(outcome, record),
     },
     {
       title: "Actions",
       key: "actions",
+      fixed: "right",
       render: (_, record) => (
         <Space size="middle">
           <Button
@@ -213,21 +282,18 @@ const deleteMutation = useMutation({
       >
         <Table
           columns={columns}
-          dataSource={sessions}
+          dataSource={Array.isArray(sessions) && sessions}
           rowKey="_id"
           loading={isLoading}
           pagination={{ pageSize: 10 }}
-          scroll={{ x: true }}
+          scroll={{ x: 1300 }}
+          bordered
         />
       </Card>
 
       <Modal
-        title={
-          selectedSession
-            ? "Edit Interview Session"
-            : "Schedule New Interview Session"
-        }
-        visible={isModalVisible}
+        title={selectedSession ? "Edit Session" : "New Session"}
+        open={isModalVisible}
         onCancel={handleCancel}
         footer={null}
         width={800}
