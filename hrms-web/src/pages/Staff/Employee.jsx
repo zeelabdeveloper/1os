@@ -119,32 +119,35 @@ export default function StaffListPage() {
   };
 
   // Handle delete
-const handleDelete = (id) => {
-  Modal.confirm({
-    title: (
-      <div className="flex items-center">
-        <FaExclamationCircle className="text-red-500 mr-2" />
-        <span>Delete Staff Member</span>
-      </div>
-    ),
-    icon: null, // Remove the default icon since we're using our own
-    content: (
-      <div className="flex items-start">
-        <FiTrash2 className="text-red-500 mr-2 mt-1" />
-        <span>Are you sure you want to delete this staff member? This action cannot be undone.</span>
-      </div>
-    ),
-    okText: "Delete",
-    okType: "danger",
-    okButtonProps: {
-      icon: <FiTrash2 />,
-    },
-    cancelText: "Cancel",
-    width: 500,
-    centered: true,
-    onOk: () => deleteMutation.mutate(id),
-  });
-};
+  const handleDelete = (id) => {
+    Modal.confirm({
+      title: (
+        <div className="flex items-center">
+          <FaExclamationCircle className="text-red-500 mr-2" />
+          <span>Delete Staff Member</span>
+        </div>
+      ),
+      icon: null, // Remove the default icon since we're using our own
+      content: (
+        <div className="flex items-start">
+          <FiTrash2 className="text-red-500 mr-2 mt-1" />
+          <span>
+            Are you sure you want to delete this staff member? This action
+            cannot be undone.
+          </span>
+        </div>
+      ),
+      okText: "Delete",
+      okType: "danger",
+      okButtonProps: {
+        icon: <FiTrash2 />,
+      },
+      cancelText: "Cancel",
+      width: 500,
+      centered: true,
+      onOk: () => deleteMutation.mutate(id),
+    });
+  };
 
   // Table columns
   const columns = [

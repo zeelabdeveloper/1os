@@ -26,6 +26,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchBranches, fetchDepartmentsByBranch, fetchRoleByDepartment } from "../../api/auth";
 import { createJob } from "../../api/jobs";
+import toast from "react-hot-toast";
 
 const { Option } = Select;
 
@@ -74,13 +75,13 @@ const PostJobForm = () => {
   const { mutate: postJob, isLoading } = useMutation({
     mutationFn: createJob,
     onSuccess: () => {
-      message.success("Job posted successfully");
+      toast.success("Job posted successfully");
       form.resetFields();
       setDescription("");
       setRequirements("");
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
     },
-    onError: () => message.error("Failed to post job"),
+    onError: () => toast.error("Failed to post job"),
   });
 
   const onFinish = (values) => {

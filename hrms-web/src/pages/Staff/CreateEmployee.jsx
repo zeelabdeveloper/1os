@@ -6,7 +6,9 @@ import {
   BankOutlined,
   HistoryOutlined,
   CheckCircleOutlined,
-  DollarOutlined, 
+  DollarOutlined,
+  LaptopOutlined,
+  PaperClipOutlined,
 } from "@ant-design/icons";
 import { Steps, Button, Form, Switch } from "antd";
 import toast from "react-hot-toast";
@@ -24,6 +26,8 @@ import {
   fetchDepartmentsByBranch,
   fetchRoleByDepartment,
 } from "../../api/auth";
+import AssetInfo from "./ProfileCreating/AssetsInfo";
+import DocumentVerification from "./ProfileCreating/DocumentInfo";
 
 const { Step } = Steps;
 
@@ -59,14 +63,21 @@ const UserCreationWizard = () => {
   });
 
   // Mutation for creating user
-  const { mutate: createUser, isLoading } = useMutation({
+  const {
+    mutate: createUser,
+    data,
+    isLoading, 
+    isError,
+    isSuccess,
+  } = useMutation({
     mutationFn: createStaff,
     onSuccess: (data) => {
       toast.success(data.message || "User created successfully!");
       queryClient.invalidateQueries(["users"]);
-      form.resetFields();
-      setCurrent(0);
-      setIsCocoStaff(false);
+      // form.resetFields();
+      // setCurrent(0);
+
+      // setIsCocoStaff(false);
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Failed to create user");
@@ -108,6 +119,16 @@ const UserCreationWizard = () => {
       content: <WorkExperience form={form} />,
     },
     {
+      title: "Document",
+      icon: <PaperClipOutlined />,
+      content: <DocumentVerification form={form} />,
+    },
+    {
+      title: "Assets",
+      icon: <LaptopOutlined />,
+      content: <AssetInfo form={form} />,
+    },
+    {
       title: "Salary",
       icon: <DollarOutlined />,
       content: <SalaryDetails form={form} />,
@@ -115,7 +136,7 @@ const UserCreationWizard = () => {
     {
       title: "Confirmation",
       icon: <CheckCircleOutlined />,
-      content: <ConfirmationStaffCreate form={form.getFieldsValue()} />,
+      content: <ConfirmationStaffCreate isLoading={isLoading} isError={isError} isSuccess={isSuccess}    data={data} />,
     },
   ];
 
@@ -146,6 +167,7 @@ const UserCreationWizard = () => {
     form
       .validateFields()
       .then((values) => {
+        console.log(values);
         createUser(form.getFieldValue());
       })
       .catch((error) => {

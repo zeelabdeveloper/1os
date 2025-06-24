@@ -20,7 +20,7 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchJobs, deleteJob } from "../../api/jobs";
+import { fetchJobList, deleteJob } from "../../api/jobs";
 import JobDetails from "../../components/JobDetails";
 import JobForm from "../../components/JobForm";
 import JobStatsDashboard from "./JobState";
@@ -44,7 +44,7 @@ const JobsTable = () => {
   const { data: jobsData = {}, isLoading } = useQuery({
     queryKey: ["jobs", pagination.current, searchText],
     queryFn: () =>
-      fetchJobs({
+      fetchJobList({
         page: pagination.current,
         limit: pagination.pageSize,
         search: searchText,

@@ -7,8 +7,13 @@ export const createJob = async (data) => {
 
 export const fetchJobs = async () => {
   const response = await axios.get("/api/v1/jobs");
-
+  console.log(response.data);
   return response?.data?.data || [];
+};
+export const fetchJobList = async () => {
+  const response = await axios.get("/api/v1/jobs");
+
+  return response?.data;
 };
 
 export const updateJob = async (jobData) => {
@@ -38,6 +43,15 @@ export const fetchApplications = async (jobId, dateFilter) => {
     console.log(error);
     return [];
   }
+};
+export const fetchHiredApplications = async () => {
+ 
+    const response = await axios.get(
+      `/api/v1/jobs/application/hired/all`
+    );
+    console.log(response.data);
+    return response.data;
+
 };
 
 export const updateApplicationStatus = async ({ id, status }) => {
@@ -73,7 +87,7 @@ export const submitJobApplication = async (formData) => {
 
 export const fetchOnboardings = async () => {
   const response = await axios.get("/api/v1/onboarding");
-   
+
   return response.data;
 };
 
@@ -84,3 +98,14 @@ export const deleteOnboarding = (id) => {
 export const convertToEmployee = (id) => {
   return axios.post(`/api/v1/onboarding/${id}/convert`);
 };
+
+
+
+
+
+
+
+
+
+
+

@@ -7,6 +7,8 @@ const EmployeeId = require("../models/EmployeeId");
 const Salary = require("../models/Salary");
 const Organization = require("../models/Organization");
 const Experience = require("../models/Experience");
+const Asset = require("../models/Assets");
+const Document = require("../models/Document");
 
 module.exports = {
   createStaff: async (req, res) => {
@@ -14,11 +16,12 @@ module.exports = {
     session.startTransaction();
 
     try {
-      const userCount = await User.countDocuments();
+      const userCount = await EmployeeId.countDocuments();
       const newEmployeeId = `EMP${userCount + 1}`;
 
       const data = { ...req.body.user };
-      if (req.body.user.reportingto) {
+
+      if (req?.body?.user?.reportingto) {
         data.reportingto = req.body.user.reportingto;
         data.isCocoEmployee = true;
       }
@@ -40,7 +43,7 @@ module.exports = {
 
       const newProfile = new Profile({
         ...req.body.profile,
-        photo: "",
+
         user: savedUser._id,
         family: {
           ...req.body.family,
@@ -97,6 +100,38 @@ module.exports = {
         );
       }
 
+      // 7. Handle assets (if needed)
+      if (req.body.assets && req.body.assets.length > 0) {
+        // Assuming you have an Experience model
+        const assets = req.body.assets.map((exp) => ({
+          user: savedUser._id,
+          ...exp,
+        }));
+        const savedAssets = await Asset.insertMany(assets, {
+          session,
+        });
+        const AssetIds = savedAssets.map((exp) => exp._id);
+        await savedUser.updateOne({ $set: { Asset: AssetIds } }, { session });
+      }
+
+      // 7. Handle document (if needed)
+      if (req.body.documents && req.body.documents.length > 0) {
+        // Assuming you have an Experience model
+        const documents = req.body.documents.map((exp) => ({
+          user: savedUser._id,
+
+          ...exp,
+        }));
+        const savedAssets = await Document.insertMany(documents, {
+          session,
+        });
+        const AssetIds = savedAssets.map((exp) => exp._id);
+        await savedUser.updateOne(
+          { $set: { Document: AssetIds } },
+          { session }
+        );
+      }
+
       // Commit transaction
       await session.commitTransaction();
       session.endSession();
@@ -104,6 +139,7 @@ module.exports = {
       // Return success response
       return res.status(201).json({
         success: true,
+        data: savedUser,
         message: "Staff created successfully!!!",
       });
     } catch (error) {
@@ -124,7 +160,17 @@ module.exports = {
     try {
       const { empId } = req.params;
 
-      const user = await User.aggregate([
+      if (!mongoose.Types.ObjectId.isValid(empId)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid employee ID format" });
+      }
+
+      const result = await User.aggregate([
+        // Stage 1: Match the user
+        { $match: { _id: new mongoose.Types.ObjectId(empId) } },
+
+        // Stage 2: Lookup all related data in parallel
         {
           $lookup: {
             from: "employeeids",
@@ -133,8 +179,6 @@ module.exports = {
             as: "EmployeeId",
           },
         },
-        { $unwind: "$EmployeeId" },
-        { $match: { "EmployeeId.employeeId": empId?.toUpperCase() } },
         {
           $lookup: {
             from: "profiles",
@@ -143,7 +187,6 @@ module.exports = {
             as: "Profile",
           },
         },
-        { $unwind: { path: "$Profile", preserveNullAndEmptyArrays: true } },
         {
           $lookup: {
             from: "banks",
@@ -152,49 +195,51 @@ module.exports = {
             as: "Bank",
           },
         },
-        { $unwind: "$Bank" },
         {
           $lookup: {
             from: "organizations",
             localField: "Organization",
             foreignField: "_id",
             as: "Organization",
+            pipeline: [
+              // Nested lookup for organization relations
+              {
+                $lookup: {
+                  from: "companybranches",
+                  localField: "branch",
+                  foreignField: "_id",
+                  as: "branch",
+                },
+              },
+              {
+                $lookup: {
+                  from: "departments",
+                  localField: "department",
+                  foreignField: "_id",
+                  as: "department",
+                },
+              },
+              {
+                $lookup: {
+                  from: "roles",
+                  localField: "role",
+                  foreignField: "_id",
+                  as: "role",
+                },
+              },
+              {
+                $unwind: { path: "$branch", preserveNullAndEmptyArrays: true },
+              },
+              {
+                $unwind: {
+                  path: "$department",
+                  preserveNullAndEmptyArrays: true,
+                },
+              },
+              { $unwind: { path: "$role", preserveNullAndEmptyArrays: true } },
+            ],
           },
         },
-        { $unwind: "$Organization" },
-
-        {
-          $lookup: {
-            from: "companybranches",
-            localField: "Organization.branch",
-            foreignField: "_id",
-            as: "Branch",
-          },
-        },
-        { $unwind: { path: "$Branch", preserveNullAndEmptyArrays: true } },
-
-        // 7. Populate Organization.department
-        {
-          $lookup: {
-            from: "departments",
-            localField: "Organization.department",
-            foreignField: "_id",
-            as: "Department",
-          },
-        },
-        { $unwind: { path: "$Department", preserveNullAndEmptyArrays: true } },
-
-        // 8. Populate Organization.role
-        {
-          $lookup: {
-            from: "roles",
-            localField: "Organization.role",
-            foreignField: "_id",
-            as: "Role",
-          },
-        },
-        { $unwind: { path: "$Role", preserveNullAndEmptyArrays: true } },
-
         {
           $lookup: {
             from: "salaries",
@@ -203,7 +248,6 @@ module.exports = {
             as: "Salary",
           },
         },
-        { $unwind: "$Salary" },
         {
           $lookup: {
             from: "experiences",
@@ -212,30 +256,74 @@ module.exports = {
             as: "Experience",
           },
         },
+        {
+          $lookup: {
+            from: "assets",
+            localField: "Asset",
+            foreignField: "_id",
+            as: "Asset",
+          },
+        },
+        {
+          $lookup: {
+            from: "documents",
+            localField: "Document",
+            foreignField: "_id",
+            as: "Document",
+          },
+        },
+
+        // Stage 3: Unwind single-reference fields
+        { $unwind: { path: "$EmployeeId", preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: "$Profile", preserveNullAndEmptyArrays: true } },
+        { $unwind: { path: "$Bank", preserveNullAndEmptyArrays: true } },
+        {
+          $unwind: { path: "$Organization", preserveNullAndEmptyArrays: true },
+        },
+        { $unwind: { path: "$Salary", preserveNullAndEmptyArrays: true } },
+
+        // Stage 4: Projection (remove sensitive/unwanted fields)
+        {
+          $project: {
+            password: 0,
+            __v: 0,
+            "EmployeeId.__v": 0,
+            "Profile.__v": 0,
+            "Bank.__v": 0,
+            "Organization.__v": 0,
+            "Salary.__v": 0,
+            "Experience.__v": 0,
+            "Asset.__v": 0,
+            "Document.__v": 0,
+            "Organization.branch.__v": 0,
+            "Organization.department.__v": 0,
+            "Organization.role.__v": 0,
+          },
+        },
       ]);
 
-      if (!user || user.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "No user found with that employee ID",
-        });
+      if (!result.length) {
+        return res
+          .status(404)
+          .json({ success: false, message: "No user found with that ID" });
       }
 
       res.status(200).json({
         success: true,
-        data: user[0],
+        data: result[0],
         message: "Staff fetched successfully",
       });
     } catch (error) {
+      console.log(error);
       res.status(500).json({
         success: false,
-        message: error.message || "Server error while fetching staff",
+        message: "Server error while fetching staff",
         error: error.message,
       });
     }
   },
+
   fetchStaffByRole: async (req, res) => {
-    console.log("fgfg")
     try {
       const { roleID } = req.params;
 
@@ -297,8 +385,92 @@ module.exports = {
   editStaffByEmpId: async (req, res) => {
     console.log(req.body);
     try {
-      id;
+      const { empId } = req.params;
+
+      if (!mongoose.Types.ObjectId.isValid(empId)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid employee ID format" });
+      }
+
+      const user = await User.findById(empId);
+      // console.log(user);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User Not Found",
+        });
+      }
+
+      if (req.body?.personal) {
+        await User.findByIdAndUpdate(req.params.empId, req.body.personal);
+      }
+      if (req.body?.profile) {
+        await Profile.findByIdAndUpdate(
+          user.Profile,
+
+          {
+            ...req.body.profile,
+          }
+        );
+      }
+      if (req.body?.organization) {
+        await Organization.findByIdAndUpdate(
+          user.Organization,
+
+          {
+            ...req.body.organization,
+          }
+        );
+      }
+      if (req.body?.bank) {
+        await Bank.findByIdAndUpdate(
+          user.Bank,
+
+          {
+            ...req.body.bank,
+          }
+        );
+      }
+      if (req.body?.salary) {
+        await Salary.findByIdAndUpdate(
+          user.Salary,
+
+          {
+            ...req.body.salary,
+          }
+        );
+      }
+
+      if (req.body?.document?.length > 0) {
+        const docsToUpdate = req.body.document.filter((doc) => doc._id);
+        const docsToCreate = req.body.document.filter((doc) => !doc._id);
+
+        // Update existing docs
+        if (docsToUpdate.length > 0) {
+          await Promise.all(
+            docsToUpdate.map((doc) => Document.findByIdAndUpdate(doc._id, doc))
+          );
+        }
+
+        // Create new docs & add their IDs to user.Document
+        if (docsToCreate.length > 0) {
+          const newDocs = docsToCreate.map((doc) => ({
+            ...doc,
+            user: empId, // Link to the user
+          }));
+
+          const createdDocs = await Document.insertMany(newDocs);
+
+          // Add new document IDs to user.Document array
+          user.Document.push(...createdDocs.map((doc) => doc._id));
+          await user.save();
+        }
+      }
+
+      return res.status(200).json({ message: "Data Updated!" });
     } catch (error) {
+      console.log(error);
       res.status(500).json({
         success: false,
         message: error.message || "Server error while edit staff",
@@ -310,7 +482,6 @@ module.exports = {
   getStaff: async (req, res) => {
     try {
       const { page = 1, limit = 10, search = "" } = req.query;
-      console.log(req.query);
 
       // Build search query
       const query = {};

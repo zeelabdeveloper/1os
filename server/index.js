@@ -38,11 +38,21 @@ app.use("/api/v1/store/roles", require("./routes/store/storeRoles.js"));
 app.use("/api/v1/stores", require("./routes/store/store.js"));
 app.use("/api/v1/jobs", require("./routes/jobsRoute.js"));
 app.use("/api/v1/recruitment", require("./routes/recruitment.js"));
-app.use("/api/v1/onboarding", require("./routes/onboarding.js"));
+// app.use("/api/v1/onboarding", require("./routes/onboarding.js"));
 app.use("/api/v1/analytics", require("./routes/analytics.js"));
 app.use(
   "/api/v1/performance",
   require("./routes/performance/performanceRouter.js")
+);
+
+app.use("/api/v1/settings", require("./routes/setting/settingsRouter.js"));
+app.use(
+  "/api/v1/email-settings",
+  require("./routes/setting/emailSettingRoutes.js")
+);
+app.use(
+  "/api/v1/email-notification-setting",
+  require("./routes/setting/emailNotificationRouter.js")
 );
 
 const PORT = process.env.PORT || 5000;

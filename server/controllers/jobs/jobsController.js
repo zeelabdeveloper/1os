@@ -268,6 +268,23 @@ const getApplicationsForJob = async (req, res) => {
     });
   }
 };
+const getHiredApplicationsForJob = async (req, res) => {
+  try {
+    const applications = await Application.find({
+      status: { $in: ["hired", "onboarding"] }
+    });
+
+    res.status(200).json(applications);
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch applications",
+      error: error.message,
+    });
+  }
+};
+
 const fetchApplicationById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -306,10 +323,10 @@ const updateApplicationStatus = async (req, res) => {
     if (!application) {
       res.status(404).json({ message: "Applications Not Found!" });
     }
-   console.log("dffgfgfgfdfd")
+    console.log("dffgfgfgfdfd");
     if (req.body.status !== "hired" || req.body.status !== "onboarding") {
-      console.log("dfdfd")
-     await Onboarding.findOneAndDelete({ application: application._id });
+      console.log("dfdfd");
+      await Onboarding.findOneAndDelete({ application: application._id });
     }
 
     res.status(200).json(application);
@@ -343,7 +360,7 @@ const createApplication = async (req, res) => {
   try {
     let resumePath = "";
     if (req.file) {
-      resumePath = `/uploads/resumes/${req.file.filename}`;
+      resumePath = `/uploads/company/${req.file.filename}`;
     }
 
     const application = await Application.create({
@@ -375,5 +392,6 @@ module.exports = {
   getApplicationsForJob,
   updateApplicationStatus,
   createApplication,
+  getHiredApplicationsForJob,
   fetchApplicationById,
 };

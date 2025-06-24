@@ -34,12 +34,28 @@ import {
   DeleteOutlined,
   TeamOutlined,
   UploadOutlined,
+  PlusOutlined,
+  ShoppingOutlined,
+  FileTextOutlined,
+  EyeOutlined,
+  CloseOutlined,
+  CheckOutlined,
+  DeliveredProcedureOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
 import dayjs from "dayjs";
 import { format } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
- 
+import toast from "react-hot-toast";
+
+import { useQuery } from "@tanstack/react-query";
+import {
+  fetchBranches,
+  fetchDepartmentsByBranch,
+  fetchRoleByDepartment,
+} from "../../api/auth";
+const { Option } = Select;
+
 const ViewStaff = () => {
   const [searchParams] = useSearchParams();
   const empId = searchParams.get("emp");
@@ -48,23 +64,21 @@ const ViewStaff = () => {
   const [error, setError] = useState(null);
   const [editingSection, setEditingSection] = useState(null);
   const queryClient = useQueryClient();
-
+  const fetchStaffData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`/api/v1/user/staff/${empId}`);
+      console.log(response.data);
+      setStaffData(response.data.data);
+    } catch (err) {
+      console.error("Error fetching staff data:", err);
+      setError(err.response?.data?.message || "Failed to fetch staff data");
+      message.error("Failed to fetch staff details");
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchStaffData = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`/api/v1/user/staff/${empId}`);
-        console.log(response.data);
-        setStaffData(response.data.data);
-      } catch (err) {
-        console.error("Error fetching staff data:", err);
-        setError(err.response?.data?.message || "Failed to fetch staff data");
-        message.error("Failed to fetch staff details");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (empId) {
       fetchStaffData();
     } else {
@@ -81,9 +95,9 @@ const ViewStaff = () => {
       );
       return response.data;
     },
-    onSuccess: () => {
-      message.success("Staff details updated successfully");
-      queryClient.invalidateQueries(["staff", empId]);
+    onSuccess: (data) => {
+      toast.success(data.message || "Staff details updated successfully");
+      fetchStaffData();
       setEditingSection(null);
     },
     onError: (error) => {
@@ -92,11 +106,6 @@ const ViewStaff = () => {
       );
     },
   });
-
-  const handleExportPDF = () => {
-    message.info("Exporting to PDF...");
-    // PDF export logic would go here
-  };
 
   const handleEditSection = (section) => {
     setEditingSection(section);
@@ -107,6 +116,7 @@ const ViewStaff = () => {
   };
 
   const handleSave = (sectionData) => {
+    console.log(sectionData);
     updateStaffMutation.mutate({
       [editingSection]: sectionData,
     });
@@ -130,22 +140,12 @@ const ViewStaff = () => {
   }
 
   return (
-    <div className="container h-[92vh] overflow-y-auto mx-auto px-4 py-8">
+    <div className=" h-[92vh] overflow-y-auto mx-auto px-4 py-8">
       <Card
         className="shadow-lg"
         title={
           <div className="flex justify-between items-center">
             <span className="text-xl font-semibold">Employee Details</span>
-            <div className="flex space-x-2">
-              <Button
-                type="primary"
-                icon={<FilePdfOutlined />}
-                onClick={handleExportPDF}
-                disabled={loading}
-              >
-                Export PDF
-              </Button>
-            </div>
           </div>
         }
       >
@@ -165,9 +165,9 @@ const ViewStaff = () => {
                   size={150}
                   icon={<UserOutlined />}
                   src={staffData?.Profile?.photo}
-                  className="mb-4 border-2 border-gray-300"
+                  className="mb-4   shadow-2xl border-gray-300"
                 />
-                <h2 className="text-2xl font-bold text-center">
+                <h2 className="text-2xl mt-3 font-bold text-center">
                   {staffData?.firstName} {staffData?.lastName}
                 </h2>
                 <p className="text-gray-600 mb-2 flex items-center">
@@ -180,12 +180,25 @@ const ViewStaff = () => {
                     {staffData.contactNumber}
                   </p>
                 )}
-                <Tag
-                  color={staffData?.isActive ? "green" : "red"}
-                  className="mb-4"
-                >
-                  {staffData?.isActive ? "Active" : "Inactive"}
-                </Tag>
+                <div className="flex gap-2 mb-4">
+                  <span
+                    className={`px-3 py-1 rounded-full text-white text-sm font-semibold transition-all duration-500 shadow-md
+      ${
+        staffData?.isActive
+          ? "bg-green-500 animate-pulse"
+          : "bg-red-500 animate-pulse"
+      }
+    `}
+                  >
+                    {staffData?.isActive ? "Active" : "Inactive"}
+                  </span>
+
+                  {staffData?.isCocoEmployee && (
+                    <span className="px-3 py-1 rounded-full bg-green-600 text-white text-sm font-semibold transition-all duration-500 shadow-md hover:scale-105 animate-fade-in">
+                      COCO
+                    </span>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -213,9 +226,6 @@ const ViewStaff = () => {
             {/* Organization Details Card */}
             <OrganizationCard
               data={staffData?.Organization}
-              branch={staffData?.Branch}
-              department={staffData?.Department}
-              role={staffData?.Role}
               employee={staffData?.EmployeeId}
               loading={loading}
               isEditing={editingSection === "organization"}
@@ -253,6 +263,23 @@ const ViewStaff = () => {
               onCancel={handleCancelEdit}
               onSave={handleSave}
             />
+
+            <AssetCard
+              data={staffData?.Asset}
+              loading={loading}
+              isEditing={editingSection === "asset"}
+              onEdit={() => handleEditSection("asset")}
+              onCancel={handleCancelEdit}
+              onSave={handleSave}
+            />
+            <DocumentCard
+              data={staffData?.Document}
+              loading={loading}
+              isEditing={editingSection === "document"}
+              onEdit={() => handleEditSection("document")}
+              onCancel={handleCancelEdit}
+              onSave={handleSave}
+            />
           </div>
         </div>
       </Card>
@@ -269,7 +296,6 @@ const PersonalDetailsCard = ({
   onCancel,
   onSave,
 }) => {
-   console.log(data)
   const [formData, setFormData] = useState({
     firstName: data?.firstName || "",
     lastName: data?.lastName || "",
@@ -282,11 +308,11 @@ const PersonalDetailsCard = ({
   useEffect(() => {
     if (data) {
       setFormData({
-        firstName: data.firstName || "",
-        lastName: data.lastName || "",
-        email: data.email || "",
-        contactNumber: data.contactNumber || "",
-        dateOfJoining: data.dateOfJoining || "",
+        firstName: data?.firstName || "",
+        lastName: data?.lastName || "",
+        email: data?.email || "",
+        contactNumber: data?.contactNumber || "",
+        dateOfJoining: data?.dateOfJoining || "",
         isActive: data.isActive || false,
       });
     }
@@ -325,33 +351,33 @@ const PersonalDetailsCard = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <EditableField
             label="First Name"
-            value={formData.firstName}
+            value={formData?.firstName}
             onChange={(value) => handleChange("firstName", value)}
           />
           <EditableField
             label="Last Name"
-            value={formData.lastName}
+            value={formData?.lastName}
             onChange={(value) => handleChange("lastName", value)}
           />
           <EditableField
             label="Email"
-            value={formData.email}
+            value={formData?.email}
             onChange={(value) => handleChange("email", value)}
           />
           <EditableField
             label="Contact Number"
-            value={formData.contactNumber}
+            value={formData?.contactNumber}
             onChange={(value) => handleChange("contactNumber", value)}
           />
           <EditableField
             label="Date of Joining"
-            value={formData.dateOfJoining}
+            value={formData?.dateOfJoining}
             type="date"
             onChange={(value) => handleChange("dateOfJoining", value)}
           />
           <EditableField
             label="Status"
-            value={formData.isActive}
+            value={formData?.isActive}
             type="switch"
             checkedChildren="Active"
             unCheckedChildren="Inactive"
@@ -388,16 +414,7 @@ const PersonalDetailsCard = ({
     </Card>
   );
 };
- 
 
-
-
-
-
-
-
- 
- 
 const ProfileCard = ({
   data,
   loading,
@@ -407,63 +424,65 @@ const ProfileCard = ({
   onSave,
 }) => {
   const [formData, setFormData] = useState({
-    dateOfBirth: '',
-    gender: '',
-    address: '',
-    state: '',
-    district: '',
-    photo: '',
+    dateOfBirth: "",
+    gender: "",
+    address: "",
+    state: "",
+    district: "",
+
     family: {
-      fatherName: '',
-      fatherOccupation: '',
-      motherName: '',
-      motherOccupation: '',
+      fatherName: "",
+      fatherOccupation: "",
+      motherName: "",
+      motherOccupation: "",
       numberOfBrothers: 0,
       numberOfSisters: 0,
       hasCrimeRecord: false,
-    }
+      crimeReason: "",
+    },
   });
 
   useEffect(() => {
     if (data) {
       setFormData({
-        dateOfBirth: data.dateOfBirth || '',
-        gender: data.gender || '',
-        address: data.address || '',
-        state: data.state || '',
-        district: data.district || '',
-        photo: data.photo || '',
+        dateOfBirth: data.dateOfBirth || "",
+        gender: data.gender || "",
+        address: data.address || "",
+        state: data.state || "",
+        district: data.district || "",
+
         family: {
-          fatherName: data.family?.fatherName || '',
-          fatherOccupation: data.family?.fatherOccupation || '',
-          motherName: data.family?.motherName || '',
-          motherOccupation: data.family?.motherOccupation || '',
+          fatherName: data.family?.fatherName || "",
+          fatherOccupation: data.family?.fatherOccupation || "",
+          motherName: data.family?.motherName || "",
+          motherOccupation: data.family?.motherOccupation || "",
           numberOfBrothers: data.family?.numberOfBrothers || 0,
           numberOfSisters: data.family?.numberOfSisters || 0,
           hasCrimeRecord: data.family?.hasCrimeRecord || false,
-        }
+          crimeReason: data.family?.crimeReason || "",
+        },
       });
     }
   }, [data]);
 
   const handleChange = (field, value) => {
-    if (field.includes('.')) {
-      const [parent, child] = field.split('.');
-      setFormData(prev => ({
+    if (field.includes(".")) {
+      const [parent, child] = field.split(".");
+      setFormData((prev) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: value
-        }
+          [child]: value,
+        },
       }));
     } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
+      setFormData((prev) => ({ ...prev, [field]: value }));
     }
   };
 
   const handleFileUpload = (info) => {
-    if (info.file.status === 'done') {
-      handleChange('photo', info.file.response.url);
+    if (info.file.status === "done") {
+      handleChange("photo", info.file.response.url);
     }
   };
 
@@ -496,66 +515,64 @@ const ProfileCard = ({
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-gray-600 text-sm font-medium mb-1">Date of Birth</label>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Date of Birth
+              </label>
               <DatePicker
                 className="w-full"
-                value={formData.dateOfBirth ? dayjs(formData.dateOfBirth) : null}
-                onChange={(date, dateString) => handleChange('dateOfBirth', dateString)}
+                value={
+                  formData.dateOfBirth ? dayjs(formData.dateOfBirth) : null
+                }
+                onChange={(date, dateString) =>
+                  handleChange("dateOfBirth", dateString)
+                }
               />
             </div>
 
             <div>
-              <label className="block text-gray-600 text-sm font-medium mb-1">Gender</label>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Gender
+              </label>
               <Select
                 className="w-full"
                 value={formData.gender}
-                onChange={(value) => handleChange('gender', value)}
+                onChange={(value) => handleChange("gender", value)}
                 options={[
-                  { value: 'male', label: 'Male' },
-                  { value: 'female', label: 'Female' },
-                  { value: 'other', label: 'Other' },
+                  { value: "male", label: "Male" },
+                  { value: "female", label: "Female" },
+                  { value: "other", label: "Other" },
                 ]}
               />
             </div>
 
             <div>
-              <label className="block text-gray-600 text-sm font-medium mb-1">Address</label>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Address
+              </label>
               <Input
                 value={formData.address}
-                onChange={(e) => handleChange('address', e.target.value)}
+                onChange={(e) => handleChange("address", e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-gray-600 text-sm font-medium mb-1">State</label>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                State
+              </label>
               <Input
                 value={formData.state}
-                onChange={(e) => handleChange('state', e.target.value)}
+                onChange={(e) => handleChange("state", e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-gray-600 text-sm font-medium mb-1">District/City</label>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                District/City
+              </label>
               <Input
                 value={formData.district}
-                onChange={(e) => handleChange('district', e.target.value)}
+                onChange={(e) => handleChange("district", e.target.value)}
               />
-            </div>
-
-            <div>
-              <label className="block text-gray-600 text-sm font-medium mb-1">Profile Photo</label>
-              <Upload
-                action="/api/upload" // Your upload endpoint
-                onChange={handleFileUpload}
-                showUploadList={false}
-              >
-                <Button icon={<UploadOutlined />}>Upload Photo</Button>
-              </Upload>
-              {formData.photo && (
-                <div className="mt-2 text-sm text-gray-500">
-                  Current: {formData.photo}
-                </div>
-              )}
             </div>
           </div>
 
@@ -566,185 +583,364 @@ const ProfileCard = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-gray-600 text-sm font-medium mb-1">Father's Name</label>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Father's Name
+              </label>
               <Input
                 value={formData.family.fatherName}
-                onChange={(e) => handleChange('family.fatherName', e.target.value)}
+                onChange={(e) =>
+                  handleChange("family.fatherName", e.target.value)
+                }
               />
             </div>
 
             <div>
-              <label className="block text-gray-600 text-sm font-medium mb-1">Father's Occupation</label>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Father's Occupation
+              </label>
               <Input
                 value={formData.family.fatherOccupation}
-                onChange={(e) => handleChange('family.fatherOccupation', e.target.value)}
+                onChange={(e) =>
+                  handleChange("family.fatherOccupation", e.target.value)
+                }
               />
             </div>
 
             <div>
-              <label className="block text-gray-600 text-sm font-medium mb-1">Mother's Name</label>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Mother's Name
+              </label>
               <Input
                 value={formData.family.motherName}
-                onChange={(e) => handleChange('family.motherName', e.target.value)}
+                onChange={(e) =>
+                  handleChange("family.motherName", e.target.value)
+                }
               />
             </div>
 
             <div>
-              <label className="block text-gray-600 text-sm font-medium mb-1">Mother's Occupation</label>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Mother's Occupation
+              </label>
               <Input
                 value={formData.family.motherOccupation}
-                onChange={(e) => handleChange('family.motherOccupation', e.target.value)}
+                onChange={(e) =>
+                  handleChange("family.motherOccupation", e.target.value)
+                }
               />
             </div>
 
             <div>
-              <label className="block text-gray-600 text-sm font-medium mb-1">Number of Brothers</label>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Number of Brothers
+              </label>
               <InputNumber
                 className="w-full"
                 value={formData.family.numberOfBrothers}
-                onChange={(value) => handleChange('family.numberOfBrothers', value)}
+                onChange={(value) =>
+                  handleChange("family.numberOfBrothers", value)
+                }
                 min={0}
               />
             </div>
 
             <div>
-              <label className="block text-gray-600 text-sm font-medium mb-1">Number of Sisters</label>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Number of Sisters
+              </label>
               <InputNumber
                 className="w-full"
                 value={formData.family.numberOfSisters}
-                onChange={(value) => handleChange('family.numberOfSisters', value)}
+                onChange={(value) =>
+                  handleChange("family.numberOfSisters", value)
+                }
                 min={0}
               />
             </div>
 
             <div>
-              <label className="block text-gray-600 text-sm font-medium mb-1">Has Crime Record</label>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Has Crime Record
+              </label>
               <Switch
-                checked={formData.family.hasCrimeRecord}
-                onChange={(checked) => handleChange('family.hasCrimeRecord', checked)}
+                checked={
+                  formData.family.hasCrimeRecord === "yes" ? true : false
+                }
+                onChange={(checked) =>
+                  handleChange(
+                    "family.hasCrimeRecord",
+                    checked === true ? "yes" : "no"
+                  )
+                }
                 checkedChildren="Yes"
                 unCheckedChildren="No"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Crime Reason
+              </label>
+              <Input
+                value={formData.family.crimeReason}
+                onChange={(e) =>
+                  handleChange("family.crimeReason", e.target.value)
+                }
               />
             </div>
           </div>
         </div>
       ) : (
+        // <div className="space-y-6">
+        //   <Descriptions column={2}>
+        //     <Descriptions.Item label="Date of Birth">
+        //       {data?.dateOfBirth
+        //         ? dayjs(data.dateOfBirth).format("DD MMMM YYYY")
+        //         : "N/A"}
+        //     </Descriptions.Item>
+        //     <Descriptions.Item label="Gender">
+        //       {data?.gender
+        //         ? data.gender.charAt(0).toUpperCase() + data.gender.slice(1)
+        //         : "N/A"}
+        //     </Descriptions.Item>
+        //     <Descriptions.Item label="Address">
+        //       {data?.address || "N/A"}
+        //     </Descriptions.Item>
+        //     <Descriptions.Item label="State">
+        //       {data?.state || "N/A"}
+        //     </Descriptions.Item>
+        //     <Descriptions.Item label="District/City">
+        //       {data?.district || "N/A"}
+        //     </Descriptions.Item>
+        //   </Descriptions>
+
+        //   <Divider orientation="left" orientationMargin={0}>
+        //     <TeamOutlined className="mr-2" />
+        //     Family Details
+        //   </Divider>
+
+        //   <Descriptions column={2}>
+        //     <Descriptions.Item label="Father's Name">
+        //       {data?.family?.fatherName || "N/A"}
+        //     </Descriptions.Item>
+        //     <Descriptions.Item label="Father's Occupation">
+        //       {data?.family?.fatherOccupation || "N/A"}
+        //     </Descriptions.Item>
+        //     <Descriptions.Item label="Mother's Name">
+        //       {data?.family?.motherName || "N/A"}
+        //     </Descriptions.Item>
+        //     <Descriptions.Item label="Mother's Occupation">
+        //       {data?.family?.motherOccupation || "N/A"}
+        //     </Descriptions.Item>
+        //     <Descriptions.Item label="Brothers">
+        //       {data?.family?.numberOfBrothers ?? "N/A"}
+        //     </Descriptions.Item>
+        //     <Descriptions.Item label="Sisters">
+        //       {data?.family?.numberOfSisters ?? "N/A"}
+        //     </Descriptions.Item>
+        //     <Descriptions.Item label="Crime Record">
+        //       <Badge
+        //         status={data?.family?.hasCrimeRecord ? "error" : "success"}
+        //         text={data?.family?.hasCrimeRecord ? "Yes" : "No"}
+        //       />
+        //     </Descriptions.Item>
+        //     <Descriptions.Item label="Crime Reason">
+        //       {data?.family?.crimeReason ?? "N/A"}
+        //     </Descriptions.Item>
+        //   </Descriptions>
+        // </div>
+
         <div className="space-y-6">
           <Descriptions column={2}>
-            <Descriptions.Item label="Date of Birth">
-              {data?.dateOfBirth ? dayjs(data.dateOfBirth).format('DD MMMM YYYY') : 'N/A'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Gender">
-              {data?.gender ? data.gender.charAt(0).toUpperCase() + data.gender.slice(1) : 'N/A'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Address">
-              {data?.address || 'N/A'}
-            </Descriptions.Item>
-            <Descriptions.Item label="State">
-              {data?.state || 'N/A'}
-            </Descriptions.Item>
-            <Descriptions.Item label="District/City">
-              {data?.district || 'N/A'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Profile Photo">
-              {data?.photo ? (
-                <a href={data.photo} target="_blank" rel="noopener noreferrer">
-                  View Photo
-                </a>
-              ) : 'N/A'}
-            </Descriptions.Item>
+            {data?.dateOfBirth && (
+              <Descriptions.Item label="Date of Birth">
+                {dayjs(data.dateOfBirth).format("DD MMMM YYYY")}
+              </Descriptions.Item>
+            )}
+
+            {data?.gender && (
+              <Descriptions.Item label="Gender">
+                {data.gender.charAt(0).toUpperCase() + data.gender.slice(1)}
+              </Descriptions.Item>
+            )}
+
+            {data?.address && (
+              <Descriptions.Item label="Address">
+                {data.address}
+              </Descriptions.Item>
+            )}
+
+            {data?.state && (
+              <Descriptions.Item label="State">{data.state}</Descriptions.Item>
+            )}
+
+            {data?.district && (
+              <Descriptions.Item label="District/City">
+                {data.district}
+              </Descriptions.Item>
+            )}
           </Descriptions>
 
-          <Divider orientation="left" orientationMargin={0}>
-            <TeamOutlined className="mr-2" />
-            Family Details
-          </Divider>
+          {data?.family &&
+            (data.family.fatherName ||
+              data.family.fatherOccupation ||
+              data.family.motherName ||
+              data.family.motherOccupation ||
+              data.family.numberOfBrothers != null ||
+              data.family.numberOfSisters != null ||
+              data.family.hasCrimeRecord != null ||
+              data.family.crimeReason) && (
+              <>
+                <Divider orientation="left" orientationMargin={0}>
+                  <TeamOutlined className="mr-2" />
+                  Family Details
+                </Divider>
 
-          <Descriptions column={2}>
-            <Descriptions.Item label="Father's Name">
-              {data?.family?.fatherName || 'N/A'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Father's Occupation">
-              {data?.family?.fatherOccupation || 'N/A'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Mother's Name">
-              {data?.family?.motherName || 'N/A'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Mother's Occupation">
-              {data?.family?.motherOccupation || 'N/A'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Brothers">
-              {data?.family?.numberOfBrothers ?? 'N/A'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Sisters">
-              {data?.family?.numberOfSisters ?? 'N/A'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Crime Record">
-              <Badge
-                status={data?.family?.hasCrimeRecord ? 'error' : 'success'}
-                text={data?.family?.hasCrimeRecord ? 'Yes' : 'No'}
-              />
-            </Descriptions.Item>
-          </Descriptions>
+                <Descriptions column={2}>
+                  {data.family.fatherName && (
+                    <Descriptions.Item label="Father's Name">
+                      {data.family.fatherName}
+                    </Descriptions.Item>
+                  )}
+
+                  {data.family.fatherOccupation && (
+                    <Descriptions.Item label="Father's Occupation">
+                      {data.family.fatherOccupation}
+                    </Descriptions.Item>
+                  )}
+
+                  {data.family.motherName && (
+                    <Descriptions.Item label="Mother's Name">
+                      {data.family.motherName}
+                    </Descriptions.Item>
+                  )}
+
+                  {data.family.motherOccupation && (
+                    <Descriptions.Item label="Mother's Occupation">
+                      {data.family.motherOccupation}
+                    </Descriptions.Item>
+                  )}
+
+                  {data.family.numberOfBrothers != null && (
+                    <Descriptions.Item label="Brothers">
+                      {data.family.numberOfBrothers}
+                    </Descriptions.Item>
+                  )}
+
+                  {data.family.numberOfSisters != null && (
+                    <Descriptions.Item label="Sisters">
+                      {data.family.numberOfSisters}
+                    </Descriptions.Item>
+                  )}
+
+                  {data.family.hasCrimeRecord != null && (
+                    <Descriptions.Item label="Crime Record">
+                      <Badge
+                        status={
+                          data.family.hasCrimeRecord === "yes"
+                            ? "error"
+                            : "success"
+                        }
+                        text={
+                          data.family.hasCrimeRecord === "yes" ? "Yes" : "No"
+                        }
+                      />
+                    </Descriptions.Item>
+                  )}
+
+                  {data.family.crimeReason && (
+                    <Descriptions.Item label="Crime Reason">
+                      {data.family.crimeReason}
+                    </Descriptions.Item>
+                  )}
+                </Descriptions>
+              </>
+            )}
         </div>
       )}
     </Card>
   );
 };
 
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Organization Card Component
+
 const OrganizationCard = ({
   data,
-  branch,
-  department,
   employee,
-  role,
   loading,
   isEditing,
   onEdit,
   onCancel,
   onSave,
 }) => {
+  // Form state - stores only IDs
   const [formData, setFormData] = useState({
-    branch: data?.branch || "",
-    department: data?.department || "",
-    role: data?.role || "",
-    employmentType: data?.employmentType || "full-time",
-    isActive: data?.isActive || true,
+    branch: null,
+    department: null,
+    role: null,
+    employmentType: "full-time",
+    isActive: true,
   });
 
+  // API Fetch Functions (replace with your actual API calls)
+
+  // Data Fetching with React Query
+  // Branches
+  const { data: branches = [] } = useQuery({
+    queryKey: ["branches"],
+    queryFn: fetchBranches,
+  });
+
+  // Departments (depends on formData.branch)
+  const { data: departments = [] } = useQuery({
+    queryKey: ["departments", formData.branch],
+    queryFn: () => fetchDepartmentsByBranch(formData.branch),
+    enabled: !!formData.branch,
+  });
+
+  // Roles (depends on formData.department)
+  const { data: roles = [] } = useQuery({
+    queryKey: ["roles", formData.department],
+    queryFn: () => fetchRoleByDepartment(formData.department),
+    enabled: !!formData.department,
+  });
+
+  // Initialize form data
   useEffect(() => {
     if (data) {
       setFormData({
-        branch: data.branch || "",
-        department: data.department || "",
-        role: data.role || "",
-        employmentType: data.employmentType || "full-time",
-        isActive: data.isActive || true,
+        branch: data?.branch?._id || null,
+        department: data?.department?._id || null,
+        role: data?.role?._id || null,
+        employmentType: data?.employmentType || "full-time",
+        isActive: data?.isActive ?? true,
       });
     }
   }, [data]);
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const newState = { ...prev, [field]: value };
+
+      // Reset logic
+      if (field === "branch") {
+        newState.department = null;
+        newState.role = null;
+      } else if (field === "department") {
+        newState.role = null;
+      }
+      // Role change doesn't affect anything
+
+      return newState;
+    });
+  };
+
+  const handleSave = () => {
+    if (!formData.branch || !formData.department || !formData.role) {
+      toast.error("Please select branch, department and role");
+      return;
+    }
+    onSave(formData);
   };
 
   return (
@@ -762,7 +958,7 @@ const OrganizationCard = ({
           ) : (
             <Space>
               <Button onClick={onCancel}>Cancel</Button>
-              <Button type="primary" onClick={() => onSave(formData)}>
+              <Button type="primary" onClick={handleSave}>
                 Save
               </Button>
             </Space>
@@ -774,57 +970,111 @@ const OrganizationCard = ({
         <Skeleton active paragraph={{ rows: 4 }} />
       ) : isEditing ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <EditableField
-            label="Branch"
-            value={formData.branch}
-            type="select"
-            options={[{ value: branch?._id, label: branch?.name }]}
-            onChange={(value) => handleChange("branch", value)}
-          />
-          <EditableField
-            label="Department"
-            value={formData.department}
-            type="select"
-            options={[{ value: department?._id, label: department?.name }]}
-            onChange={(value) => handleChange("department", value)}
-          />
-          <EditableField
-            label="Role"
-            value={formData.role}
-            type="select"
-            options={[{ value: role?._id, label: role?.name }]}
-            onChange={(value) => handleChange("role", value)}
-          />
-          <EditableField
-            label="Employment Type"
-            value={formData.employmentType}
-            type="select"
-            options={[
-              { value: "full-time", label: "Full Time" },
-              { value: "part-time", label: "Part Time" },
-              { value: "contract", label: "Contract" },
-            ]}
-            onChange={(value) => handleChange("employmentType", value)}
-          />
-          <EditableField
-            label="Status"
-            value={formData.isActive}
-            type="switch"
-            checkedChildren="Active"
-            unCheckedChildren="Inactive"
-            onChange={(value) => handleChange("isActive", value)}
-          />
+          {/* Branch Selection */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Branch</label>
+            <Select
+              value={formData.branch}
+              onChange={(value) => handleChange("branch", value)}
+              placeholder="Select Branch"
+              className="w-full"
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option.children.toLowerCase().includes(input.toLowerCase())
+              }
+              loading={!branches}
+            >
+              {branches.map((branch) => (
+                <Option key={branch._id} value={branch._id}>
+                  {branch.name}
+                </Option>
+              ))}
+            </Select>
+          </div>
+
+          {/* Department Selection */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Department</label>
+            <Select
+              value={formData.department}
+              onChange={(value) => handleChange("department", value)}
+              placeholder="Select Department"
+              className="w-full"
+              disabled={!formData.branch}
+              loading={formData.branch && departments.length === 0}
+              showSearch
+              optionFilterProp="children"
+            >
+              {departments.map((dept) => (
+                <Option key={dept._id} value={dept._id}>
+                  {dept.name}
+                </Option>
+              ))}
+            </Select>
+          </div>
+
+          {/* Role Selection */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Role</label>
+            <Select
+              value={formData.role}
+              onChange={(value) => handleChange("role", value)}
+              placeholder="Select Role"
+              className="w-full"
+              disabled={!formData.department}
+              loading={formData.department && roles.length === 0}
+              showSearch
+              optionFilterProp="children"
+            >
+              {roles.map((role) => (
+                <Option key={role._id} value={role._id}>
+                  {role.name}
+                </Option>
+              ))}
+            </Select>
+          </div>
+
+          {/* Employment Type */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Employment Type
+            </label>
+            <Select
+              value={formData.employmentType}
+              onChange={(value) => handleChange("employmentType", value)}
+              className="w-full"
+            >
+              <Option value="full-time">Full Time</Option>
+              <Option value="part-time">Part Time</Option>
+              <Option value="contract">Contract</Option>
+            </Select>
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Status</label>
+            <div className="flex items-center">
+              <Switch
+                checked={formData.isActive}
+                onChange={(checked) => handleChange("isActive", checked)}
+                checkedChildren="Active"
+                unCheckedChildren="Inactive"
+              />
+            </div>
+          </div>
         </div>
       ) : (
+        // View Mode
         <Descriptions column={2}>
           <Descriptions.Item label="Branch">
-            {branch?.name || "N/A"}
+            {data?.branch?.name || "N/A"}
           </Descriptions.Item>
           <Descriptions.Item label="Department">
-            {department?.name || "N/A"}
+            {data?.department?.name || "N/A"}
           </Descriptions.Item>
           <Descriptions.Item label="Role">
-            {role?.name || "N/A"}
+            {data?.role?.name || "N/A"}
           </Descriptions.Item>
           <Descriptions.Item label="Employee ID">
             {employee?.employeeId || "N/A"}
@@ -847,19 +1097,6 @@ const OrganizationCard = ({
   );
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Bank Details Card Component
 const BankDetailsCard = ({
   data,
@@ -876,6 +1113,7 @@ const BankDetailsCard = ({
     accountHolderName: data?.accountHolderName || "",
     ifscCode: data?.ifscCode || "",
     branch: data?.branch || "",
+    verified: data?.verified || false,
   });
 
   useEffect(() => {
@@ -887,6 +1125,7 @@ const BankDetailsCard = ({
         accountHolderName: data.accountHolderName || "",
         ifscCode: data.ifscCode || "",
         branch: data.branch || "",
+        verified: data?.verified || false,
       });
     }
   }, [data]);
@@ -983,6 +1222,13 @@ const BankDetailsCard = ({
             label="Branch"
             value={formData.branch}
             onChange={(value) => handleChange("branch", value)}
+          />
+
+          <Switch
+            checked={formData.verified}
+            onChange={(checked) => handleChange("verified", checked)}
+            checkedChildren="Varified"
+            unCheckedChildren="Not Varified"
           />
         </div>
       ) : (
@@ -1503,12 +1749,504 @@ const ExperienceCard = ({
     </Card>
   );
 };
+const AssetCard = ({ data, loading, isEditing, onEdit, onCancel, onSave }) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    price: "",
+    purchaseDate: "",
+    quantity: 1,
+  });
+
+  const [assets, setAssets] = useState(data || []);
+  const [editingIndex, setEditingIndex] = useState(null);
+
+  useEffect(() => {
+    if (data) {
+      setAssets(data);
+    }
+  }, [data]);
+
+  const handleChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddAsset = () => {
+    setEditingIndex(null);
+    setFormData({
+      name: "",
+      price: "",
+      purchaseDate: "",
+      quantity: 1,
+    });
+    onEdit();
+  };
+
+  const handleEditAsset = (index) => {
+    setEditingIndex(index);
+    setFormData({
+      name: assets[index].name || "",
+      price: assets[index].price || "",
+      purchaseDate: assets[index].purchaseDate || "",
+      quantity: assets[index].quantity || 1,
+    });
+    onEdit();
+  };
+
+  const handleSaveAsset = () => {
+    if (editingIndex !== null) {
+      // Update existing asset
+      const updatedAssets = [...assets];
+      updatedAssets[editingIndex] = formData;
+      setAssets(updatedAssets);
+    } else {
+      // Add new asset
+      setAssets((prev) => [...prev, formData]);
+    }
+    onSave(assets);
+  };
+
+  const handleRemoveAsset = (index) => {
+    const updatedAssets = assets.filter((_, i) => i !== index);
+    setAssets(updatedAssets);
+    onSave(updatedAssets);
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <Skeleton active paragraph={{ rows: 4 }} />
+      </Card>
+    );
+  }
+
+  return (
+    <Card
+      title={
+        <div className="flex justify-between items-center">
+          <span className="flex items-center">
+            <ShoppingOutlined className="mr-2" />
+            Assets
+          </span>
+          {!isEditing && (
+            <Button
+              icon={<PlusOutlined />}
+              onClick={handleAddAsset}
+              disabled={loading}
+            >
+              Add Asset
+            </Button>
+          )}
+        </div>
+      }
+    >
+      {isEditing ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <EditableField
+              label="Asset Name"
+              value={formData.name}
+              onChange={(value) => handleChange("name", value)}
+            />
+            <EditableField
+              label="Price"
+              value={formData.price}
+              type="number"
+              onChange={(value) => handleChange("price", value)}
+            />
+            <EditableField
+              label="Purchase Date"
+              value={formData.purchaseDate}
+              type="date"
+              onChange={(value) => handleChange("purchaseDate", value)}
+            />
+            <EditableField
+              label="Quantity"
+              value={formData.quantity}
+              type="number"
+              min={1}
+              onChange={(value) => handleChange("quantity", value)}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2 mt-4">
+            <Button onClick={onCancel}>Cancel</Button>
+            <Button type="primary" onClick={handleSaveAsset}>
+              {editingIndex !== null ? "Update Asset" : "Add Asset"}
+            </Button>
+          </div>
+        </div>
+      ) : assets && assets.length > 0 ? (
+        <div className="space-y-4">
+          {assets.map((asset, index) => (
+            <Card key={index} className="relative">
+              <div className="absolute top-4 right-4 flex space-x-2">
+                <Button
+                  size="small"
+                  icon={<EditOutlined />}
+                  onClick={() => handleEditAsset(index)}
+                />
+                <Popconfirm
+                  title="Are you sure to delete this asset?"
+                  onConfirm={() => handleRemoveAsset(index)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button size="small" icon={<DeleteOutlined />} danger />
+                </Popconfirm>
+              </div>
+
+              <Descriptions column={2}>
+                <Descriptions.Item label="Asset Name">
+                  {asset.name || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Price">
+                  {asset.price ? `₹${asset.price}` : "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Purchase Date">
+                  {asset.purchaseDate
+                    ? format(new Date(asset.purchaseDate), "PPP")
+                    : "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Quantity">
+                  {asset.quantity || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Total Value">
+                  {asset.price && asset.quantity
+                    ? `₹${asset.price * asset.quantity}`
+                    : "N/A"}
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Empty description="No asset records found" />
+      )}
+    </Card>
+  );
+};
+
+
+const DocumentCard = ({
+  data,
+  loading,
+  isEditing,
+  onEdit,
+  onCancel,
+  onSave,
+  onVerify,
+}) => {
+  const [formData, setFormData] = useState({
+    documentType: "Aadhar Card",
+    documentNumber: "",
+    documentUrl: "",
+    verified: false,
+  });
+
+  const [documents, setDocuments] = useState(data || []);
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewImage, setPreviewImage] = useState("");
+
+  useEffect(() => {
+    if (data) {
+      setDocuments(data);
+    }
+  }, [data]);
+
+  const handleChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddDocument = () => {
+    setEditingIndex(null);
+    setFormData({
+      documentType: "Aadhar Card",
+      documentNumber: "",
+      documentUrl: "",
+      verified: false,
+    });
+    onEdit();
+  };
+
+  const handleEditDocument = (index) => {
+    setEditingIndex(index);
+    setFormData({
+      ...documents[index],
+    });
+    onEdit();
+  };
+
+  const handleSaveDocument = () => {
+    let updatedDocuments;
+    
+    if (editingIndex !== null) {
+      // Update existing document
+      updatedDocuments = [...documents];
+      updatedDocuments[editingIndex] = formData;
+    } else {
+      // Add new document
+      updatedDocuments = [...documents, formData];
+    }
+    
+    setDocuments(updatedDocuments);
+    onSave(updatedDocuments);
+    onCancel();
+  };
+
+  const handleRemoveDocument = (index) => {
+    const updatedDocuments = documents.filter((_, i) => i !== index);
+    setDocuments(updatedDocuments);
+    onSave(updatedDocuments);
+  };
+
+  const handlePreview = (url) => {
+    setPreviewImage(url);
+    setPreviewVisible(true);
+  };
+
+  const documentTypes = [
+    "Aadhar Card",
+    "PAN Card",
+    "Passport",
+    "Driving License",
+    "Voter ID",
+    "Ration Card",
+    "Other",
+  ];
+
+  if (loading) {
+    return (
+      <Card>
+        <Skeleton active paragraph={{ rows: 4 }} />
+      </Card>
+    );
+  }
+
+  return (
+    <Card
+      title={
+        <div className="flex justify-between items-center">
+          <span className="flex items-center">
+            <FileTextOutlined className="mr-2 text-blue-500" />
+            <span className="text-lg font-semibold">Documents</span>
+          </span>
+          {!isEditing && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAddDocument}
+              disabled={loading}
+            >
+              Add Document
+            </Button>
+          )}
+        </div>
+      }
+      className="shadow-lg"
+    >
+      {isEditing ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <EditableField
+              label="Document Type"
+              value={formData.documentType}
+              type="select"
+              options={documentTypes.map((type) => ({
+                value: type,
+                label: type,
+              }))}
+              onChange={(value) => handleChange("documentType", value)}
+            />
+            <EditableField
+              label="Document Number"
+              value={formData.documentNumber}
+              onChange={(value) => handleChange("documentNumber", value)}
+              placeholder="Enter document number"
+            />
+
+            <EditableField
+              label="Verification"
+              value={formData.verified}
+              type="switch"
+              checkedChildren="Verified"
+              unCheckedChildren="Unverified"
+              onChange={(value) => handleChange("verified", value)}
+            />
+
+            <EditableField
+              label="Document URL"
+              value={formData.documentUrl}
+              onChange={(value) => handleChange("documentUrl", value)}
+              placeholder="Paste document image URL"
+              type="upload"
+            />
+          </div>
+
+          {formData.documentUrl && (
+            <div className="mt-4">
+              <p className="font-medium mb-2">Document Preview:</p>
+              <div className="w-48 h-32 border rounded-md overflow-hidden">
+                <Avatar
+                  shape="square"
+                  src={formData.documentUrl}
+                  alt="Document preview"
+                  className="!w-full !h-full object-contain"
+                  onClick={() => handlePreview(formData.documentUrl)}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-2 mt-6">
+            <Button onClick={onCancel}>Cancel</Button>
+            <Button type="primary" onClick={handleSaveDocument}>
+              {editingIndex !== null ? "Update Document" : "Add Document"}
+            </Button>
+          </div>
+        </div>
+      ) : documents && documents.length > 0 ? (
+        <div className="space-y-6">
+          {documents.map((doc, index) => (
+            <Card
+              key={index}
+              className="relative border border-gray-100 hover:border-blue-100 transition-all"
+              bodyStyle={{ padding: "16px" }}
+            >
+              <div className="absolute top-4 right-4 flex space-x-2">
+                <Button
+                  size="small"
+                  icon={<EditOutlined />}
+                  onClick={() => handleEditDocument(index)}
+                />
+                <Popconfirm
+                  title="Are you sure to delete this document?"
+                  onConfirm={() => handleRemoveDocument(index)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button size="small" icon={<DeleteOutlined />} danger />
+                </Popconfirm>
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="w-full md:w-1/4">
+                  <div
+                    className="h-40 bg-gray-50 rounded-md flex items-center justify-center cursor-pointer overflow-hidden border"
+                    onClick={() => handlePreview(doc.documentUrl)}
+                  >
+                    {doc.documentUrl ? (
+                      <Avatar
+                        size={"large"}
+                        shape="square"
+                        src={doc.documentUrl}
+                        alt="Document"
+                        className="w-full h-full !w-full !h-full object-contain"
+                      />
+                    ) : (
+                      <FileTextOutlined className="text-4xl text-gray-400" />
+                    )}
+                  </div>
+                  <Button
+                    type="link"
+                    icon={<EyeOutlined />}
+                    onClick={() => handlePreview(doc.documentUrl)}
+                    className="mt-2"
+                  >
+                    View Full
+                  </Button>
+                </div>
+
+                <div className="w-full md:w-3/4">
+                  <Descriptions
+                    column={1}
+                    size="small"
+                    className="document-details"
+                  >
+                    <Descriptions.Item label="Document Type">
+                      <span className="font-medium">
+                        {doc.documentType || "N/A"}
+                      </span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Document Number">
+                      <Tag color="blue" className="text-sm">
+                        {doc.documentNumber || "N/A"}
+                      </Tag>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Uploaded On">
+                      {doc.createdAt
+                        ? format(new Date(doc.createdAt), "PPP")
+                        : "N/A"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Status">
+                      <Tag
+                        color={doc.verified ? "green" : "orange"}
+                        icon={
+                          doc.verified ? <CheckOutlined /> : <CloseOutlined />
+                        }
+                      >
+                        {doc.verified ? "Verified" : "Pending Verification"}
+                      </Tag>
+                    </Descriptions.Item>
+                  </Descriptions>
+
+                  {onVerify && !doc.verified && (
+                    <div className="mt-4">
+                      <Button
+                        type="primary"
+                        size="small"
+                        onClick={() => onVerify(doc._id)}
+                      >
+                        Verify Document
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <Empty
+          description={
+            <span className="text-gray-500">No documents added yet</span>
+          }
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        >
+          <Button type="primary" onClick={handleAddDocument}>
+            Add Your First Document
+          </Button>
+        </Empty>
+      )}
+
+      {previewVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl max-h-screen overflow-auto">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h3 className="text-lg font-medium">Document Preview</h3>
+              <Button
+                icon={<CloseOutlined />}
+                type="text"
+                onClick={() => setPreviewVisible(false)}
+              />
+            </div>
+            <div className="p-4 flex justify-center">
+              <Avatar
+                shape="square"
+                src={previewImage}
+                alt="Document preview"
+                className="!w-full !h-full object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+};
 
 
 
-
-
- 
 const EditableField = ({
   label,
   value,

@@ -1,62 +1,88 @@
-// models/Onboarding.js
 const mongoose = require("mongoose");
 
-const OnboardingSchema = new mongoose.Schema(
+const onboardingSchema = new mongoose.Schema(
   {
-    application: {
+    candidate: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Application",
       required: true,
+      unique: true,
     },
-     
-    job: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Job",
-      required: true,
-    },
-    joiningDate: {
-      type: Date,
-      required: true,
-    },
-    status: {
-      type: String,
-      enum: ["pending", "confirmed", "cancelled"],
-      required: true,
-    },
-    salary: {
+    stages: [
+      {
+        stageType: {
+          type: String,
+          enum: [
+            "interview",
+            "document_verification",
+            "background_check",
+            "training",
+            "final_approval",
+          ],
+          required: true,
+        },
+        stageNumber: {
+          type: Number,
+          required: true,
+        },
+        status: {
+          type: String,
+          enum: ["pending", "in_progress", "completed", "passed", "failed"],
+          default: "pending",
+        },
+        // For interview rounds
+        interviewRound: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "InterviewRound",
+        },
+        interviewer: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        interviewFeedback: String,
+        scheduledDate: Date,
+        completedDate: Date,
+
+        
+        backgroundCheckStatus: String,
+        backgroundCheckReport: String,
+
+        // For training
+        trainingDetails: {
+          startDate: Date,
+          endDate: Date,
+          trainer: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+          },
+          skillsCovered: [String],
+          evaluationScore: Number,
+        },
+
+        // For final approval
+        approvalDetails: {
+          approvedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+          },
+          approvedAt: Date,
+          designation: String,
+          salary: Number,
+          joiningDate: Date,
+        },
+      },
+    ],
+    currentStage: {
       type: Number,
-      required: true,
+      default: 1,
     },
-    bonus: {
-      type: Number,
-      default: 0,
-    },
-    workLocation: {
+    overallStatus: {
       type: String,
-      enum: ["office", "remote", "hybrid"],
-      required: true,
-    },
-    equipmentNeeded: {
-      type: Boolean,
-      default: false,
-    },
-    notes: {
-      type: String,
-    },
-    initiatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    initiatedAt: {
-      type: Date,
-      default: Date.now,
-    },
-    completedAt: {
-      type: Date,
+      enum: ["in_progress", "completed", "terminated"],
+      default: "in_progress",
     },
   },
   { timestamps: true }
 );
-const Onboarding = mongoose.model("Onboarding", OnboardingSchema);
+const Onboarding = mongoose.model("Onboarding", onboardingSchema);
 module.exports = Onboarding;

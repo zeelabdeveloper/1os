@@ -68,9 +68,9 @@ const SettingsPanel = () => {
   return (
     <div className="w-full flex h-[92vh] bg-white">
       {/* Sidebar */}
-      <div className="w-[260px] bg-white border-r shadow-md overflow-y-auto h-full">
-        <div className="p-4 font-bold text-center text-indigo-600 text-xl border-b">
-          HRMGo
+      <div className="w-[260px] h-[92vh] overflow-y-auto py-2  shadow-lg    ">
+        <div className="p-4 font-bold text-center text-green-600   text-xl ">
+          Controller
         </div>
         <Menu
           mode="inline"
@@ -84,7 +84,7 @@ const SettingsPanel = () => {
           {settingsSections.map(({ key, label, icon }) => (
             <Menu.Item key={key} icon={icon}>
               <div className="flex justify-between items-center">
-                <span>{label}</span>
+                <span className="text-[12px]">{label}</span>
                 <RightOutlined className="text-xs text-gray-400" />
               </div>
             </Menu.Item>

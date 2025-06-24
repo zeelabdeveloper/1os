@@ -20,8 +20,7 @@ import {
   MinusCircleOutlined,
   FileTextOutlined,
   DollarOutlined,
-  CalendarOutlined,
-  TeamOutlined,
+  
   TagOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -32,6 +31,7 @@ import {
 } from "../api/auth";
 import { updateJob } from "../api/jobs";
 import moment from "moment";
+import toast from "react-hot-toast";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -98,11 +98,11 @@ const EditJobForm = ({ jobData, onSuccess }) => {
   const { mutate: updateJobMutation, isLoading } = useMutation({
     mutationFn: updateJob,
     onSuccess: () => {
-      message.success("Job updated successfully");
+      toast.success(   "Job updated successfully");
       onSuccess();
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
     },
-    onError: () => message.error("Failed to update job"),
+    onError: (err) => toast.error("Failed to update job"),
   });
 
   const onFinish = (values) => {

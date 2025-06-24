@@ -123,7 +123,7 @@ export const fetchEmployees = async (isCocoStaff) => {
 
 export const fetchRoles = async () => {
   const response = await axios.get(`/api/v1/company/roles`);
-
+ 
   return response.data;
 };
 export const fetchStoreRoles = async () => {
@@ -144,7 +144,7 @@ export const fetchRoleByDepartment = async (department) => {
   const response = await axios.get(
     `/api/v1/company/branch/department/role/${department}`
   );
-
+console.log(department)
   return response.data.data;
 };
 

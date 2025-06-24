@@ -1,8 +1,3 @@
- 
-
-
-
-
 // src/pages/recruitment/ApplicationDetails.jsx
 import React, { useState } from "react";
 import {
@@ -80,7 +75,11 @@ const statusConfig = {
   interview: { title: "Interview", icon: <UserOutlined />, color: "#8b5cf6" },
   hired: { title: "Hired", icon: <CheckOutlined />, color: "#10b981" },
   rejected: { title: "Rejected", icon: <CloseOutlined />, color: "#ef4444" },
-  onboarding: { title: "Onboarding", icon: <RocketOutlined />, color: "#8b5cf6" }
+  onboarding: {
+    title: "Onboarding",
+    icon: <RocketOutlined />,
+    color: "#8b5cf6",
+  },
 };
 
 const ApplicationDetails = () => {
@@ -94,7 +93,7 @@ const ApplicationDetails = () => {
   const [statusNotes, setStatusNotes] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [showStatusForm, setShowStatusForm] = useState(false);
-  const [isOnboardingModalVisible, setIsOnboardingModalVisible] = useState(false);
+
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [onboardingForm] = Form.useForm();
 
@@ -116,20 +115,6 @@ const ApplicationDetails = () => {
     },
   });
 
-  const { mutate: startOnboarding, isLoading: isOnboardingLoading } = useMutation({
-    mutationFn: initiateOnboarding,
-    onSuccess: () => {
-      toast.success("Onboarding initiated successfully!");
-      queryClient.invalidateQueries(["application", applicationId]);
-      setIsOnboardingModalVisible(false);
-      setOnboardingStep(0);
-      onboardingForm.resetFields();
-    },
-    onError: (error) => {
-      toast.error(error?.response?.data?.message || "Failed to initiate onboarding");
-    },
-  });
-
   const handleStatusUpdate = () => {
     if (!selectedStatus) {
       toast.error("Please select a status");
@@ -144,7 +129,7 @@ const ApplicationDetails = () => {
   };
 
   const handleOnboardingSubmit = (values) => {
-    console.log(values)
+    console.log(values);
     const payload = {
       applicationId: application._id,
       candidateId: application.candidateId,
@@ -160,143 +145,53 @@ const ApplicationDetails = () => {
 
   const statusMenu = (
     <Menu>
-      {Object.entries(statusConfig).map(([key, status]) => (
-        <Menu.Item
-          key={key}
-          onClick={() => {
-            setSelectedStatus(key);
-            setShowStatusForm(true);
-          }}
-          className="flex items-center gap-2"
-        >
-          <span
-            className={`w-3 h-3 rounded-full`}
-            style={{ backgroundColor: status.color }}
-          />
-          {status.title}
-        </Menu.Item>
-      )).splice(0,5)  }
+      {Object.entries(statusConfig)
+        .map(([key, status]) => (
+          <Menu.Item
+            key={key}
+            onClick={() => {
+              setSelectedStatus(key);
+              setShowStatusForm(true);
+            }}
+            className="flex items-center gap-2"
+          >
+            <span
+              className={`w-3 h-3 rounded-full`}
+              style={{ backgroundColor: status.color }}
+            />
+            {status.title}
+          </Menu.Item>
+        ))
+        .splice(0, 5)}
     </Menu>
   );
 
-  const onboardingSteps = [
-    {
-      title: "Basic Details",
-      fields: ["joiningDate", "status"],
-      content: (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Form.Item
-            name="joiningDate"
-            label="Joining Date"
-            rules={[{ required: true, message: "Please select joining date" }]}
-          >
-            <DatePicker 
-              style={{ width: "100%" }} 
-              disabledDate={(current) => current && current < dayjs().startOf("day")}
-            />
-          </Form.Item>
-          
-          <Form.Item
-            name="status"
-            label="Onboarding Status"
-            rules={[{ required: true, message: "Please select status" }]}
-          >
-            <Select>
-              <Option value="pending">Pending</Option>
-              <Option value="confirmed">Confirmed</Option>
-              <Option value="cancelled">Cancelled</Option>
-            </Select>
-          </Form.Item>
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center h-[80vh]">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="w-10 h-10 bg-blue-100 rounded-full"></div>
+          <div className="h-4 bg-gray-200 rounded w-48"></div>
         </div>
-      )
-    },
-    {
-      title: "Compensation",
-      fields: ["salary"],
-      content: (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Form.Item
-            name="salary"
-            label="Salary (USD)"
-            rules={[{ required: true, message: "Please enter salary" }]}
-          >
-            <InputNumber 
-              style={{ width: "100%" }} 
-              min={1000} 
-              formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")} 
-              parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
-            />
-          </Form.Item>
-          
-          <Form.Item
-            name="bonus"
-            label="Signing Bonus"
-          >
-            <InputNumber 
-              style={{ width: "100%" }} 
-              min={0} 
-              formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")} 
-              parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
-            />
-          </Form.Item>
-        </div>
-      )
-    },
-    {
-      title: "Additional Info",
-      fields: ["workLocation"],
-      content: (
-        <div className="grid grid-cols-1 gap-4">
-          <Form.Item
-            name="workLocation"
-            label="Work Location"
-            rules={[{ required: true, message: "Please select work location" }]}
-          >
-            <Select>
-              <Option value="office">Office</Option>
-              <Option value="remote">Remote</Option>
-              <Option value="hybrid">Hybrid</Option>
-            </Select>
-          </Form.Item>
-          
-          <Form.Item
-            name="equipmentNeeded"
-            label="Equipment Needed"
-            valuePropName="checked"
-          >
-            <Switch checkedChildren="Yes" unCheckedChildren="No" defaultChecked />
-          </Form.Item>
-          
-          <Form.Item
-            name="notes"
-            label="Additional Notes"
-          >
-            <TextArea rows={3} />
-          </Form.Item>
-        </div>
-      )
-    }
-  ];
+      </div>
+    );
 
-  if (isLoading) return (
-    <div className="flex justify-center items-center h-[80vh]">
-      <div className="animate-pulse flex flex-col items-center gap-4">
-        <div className="w-10 h-10 bg-blue-100 rounded-full"></div>
-        <div className="h-4 bg-gray-200 rounded w-48"></div>
+  if (!application)
+    return (
+      <div className="flex justify-center items-center h-[80vh]">
+        <div className="text-center">
+          <Title level={4} className="text-gray-600">
+            Application not found
+          </Title>
+          <Button
+            type="primary"
+            onClick={() => navigate("/recruitment/applications")}
+          >
+            Back to Applications
+          </Button>
+        </div>
       </div>
-    </div>
-  );
-  
-  if (!application) return (
-    <div className="flex justify-center items-center h-[80vh]">
-      <div className="text-center">
-        <Title level={4} className="text-gray-600">Application not found</Title>
-        <Button type="primary" onClick={() => navigate("/recruitment/applications")}>
-          Back to Applications
-        </Button>
-      </div>
-    </div>
-  );
+    );
 
   return (
     <div className="p-6 bg-gray-50 overflow-y-scroll h-[92vh]">
@@ -327,23 +222,8 @@ const ApplicationDetails = () => {
         >
           Back to Applications
         </Button>
-        
+
         <div className="flex gap-2">
-          
-          
-          {application.status === "hired"  && (
-            <Button
-              type="primary"
-              icon={<RocketOutlined />}
-              className="flex items-center bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 border-0 text-white"
-              onClick={() => setIsOnboardingModalVisible(true)}
-            >
-              Start Onboarding
-            </Button>
-          )}
-          
-        
-          
           <Dropdown overlay={statusMenu} placement="bottomRight">
             <Button
               type="primary"
@@ -356,12 +236,7 @@ const ApplicationDetails = () => {
         </div>
       </div>
 
-
-
-
-
-
-  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Candidate Profile Card */}
         <div className="lg:col-span-1">
           <Card className="shadow-lg border-0 rounded-xl overflow-hidden">
@@ -430,7 +305,9 @@ const ApplicationDetails = () => {
                   icon={<FileTextOutlined />}
                   block
                   className="text-left flex items-center text-gray-700 hover:text-blue-500"
-                  href={application.resume}
+                  href={`${import.meta.env.VITE_BACKEND_URL}${
+                    application.resume
+                  }`}
                   target="_blank"
                 >
                   View Resume
@@ -649,145 +526,8 @@ const ApplicationDetails = () => {
           </Card>
         </div>
       </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      {/* Onboarding Modal */}
-      <Modal
-        title={
-          <div className="flex items-center gap-2">
-            <RocketOutlined className="text-purple-500" />
-            <span>Initiate Job Onboarding</span>
-          </div>
-        }
-        open={isOnboardingModalVisible}
-        onCancel={() => {
-          setIsOnboardingModalVisible(false);
-          setOnboardingStep(0);
-          onboardingForm.resetFields();
-          toast("Onboarding cancelled", { icon: "⚠️" });
-        }}
-        footer={null}
-        width={700}
-        centered
-        className="rounded-lg"
-        maskClosable={false}
-      >
-        <Steps current={onboardingStep} className="mb-6">
-          {onboardingSteps.map((step, index) => (
-            <Step key={index} title={step.title} />
-          ))}
-        </Steps>
-
-        <Form
-          form={onboardingForm}
-          layout="vertical"
-          onFinish={handleOnboardingSubmit}
-          preserve={false}
-        >
-          <div className="min-h-[300px]">
-            {onboardingSteps.map((step, index) => (
-              <div
-                key={index}
-                style={{ display: index === onboardingStep ? "block" : "none" }}
-              >
-                {step.content}
-              </div>
-            ))}
-          </div>
-
-          <div className="flex justify-between mt-6">
-            <div>
-              {onboardingStep > 0 && (
-                <Button
-                  onClick={() => {
-                    setOnboardingStep(onboardingStep - 1);
-                  }}
-                >
-                  Previous
-                </Button>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              {onboardingStep < onboardingSteps.length - 1 ? (
-                <Button
-                  type="primary"
-                  onClick={() => {
-                    onboardingForm
-                      .validateFields(onboardingSteps[onboardingStep].fields)
-                      .then(() => {
-                        setOnboardingStep(onboardingStep + 1);
-                      })
-                      .catch((err) => {
-                        toast.error("Please complete all required fields in this step");
-                      });
-                  }}
-                >
-                  Next
-                </Button>
-              ) : (
-                <Button
-                  type="primary"
-                  
-                  className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 border-0"
-                  loading={isOnboardingLoading}
-                  onClick={() => {
-                    // Validate all steps before submission
-                    const allFields = onboardingSteps.flatMap(step => step.fields);
-                    onboardingForm
-                      .validateFields(allFields)
-                      .then(() => onboardingForm.submit())
-                      .catch((err) => {
-                        const errorField = err.errorFields[0]?.name[0];
-                        if (errorField) {
-                          const stepIndex = onboardingSteps.findIndex(step => 
-                            step.fields.includes(errorField)
-                          );
-                          if (stepIndex >= 0) {
-                            setOnboardingStep(stepIndex);
-                          }
-                        }
-                        toast.error("Please complete all required fields");
-                      });
-                  }}
-                >
-                  Complete Onboarding
-                </Button>
-              )}
-            </div>
-          </div>
-        </Form>
-      </Modal>
     </div>
   );
 };
 
 export default ApplicationDetails;
-
-
-
-
-
-
-

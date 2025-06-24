@@ -13,7 +13,15 @@ const {
   updateApplicationStatus,
   deleteApplicationStatus,
   fetchApplicationById,
+  getHiredApplicationsForJob,
 } = require("../controllers/jobs/jobsController.js");
+const {
+  fetchInterviewRounds,
+  addInterviewRound,
+  updateInterviewRound,
+  deleteInterviewRound,
+  fetchInterviewersByDepartment,
+} = require("../controllers/jobs/interviewController.js");
 
 const router = express.Router();
 
@@ -25,35 +33,44 @@ router.delete("/:id", deleteJob);
 router.get("/stats/all", getJobStats);
 
 // Multer storage configuration
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/resumes");
+    cb(null, "uploads/company");
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, "resume-" + uniqueSuffix + ext);
+    cb(
+      null,
+      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
+    );
   },
 });
 
+const fileFilter = (req, file, cb) => {
+  cb(null, true);
+};
+
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // max 5MB
-  fileFilter: function (req, file, cb) {
-    if (file.mimetype === "application/pdf") {
-      cb(null, true);
-    } else {
-      cb(new Error("Only PDF files are allowed!"));
-    }
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 1024 * 1024 * 5,
   },
 });
 
 router.post("/applications", upload.single("resume"), createApplication);
 router.get("/applications/status", getApplicationsForJob);
+router.get("/application/hired/all", getHiredApplicationsForJob);
 router.get("/application/:id", fetchApplicationById);
-
 
 router.patch("/application/:id/status", updateApplicationStatus);
 router.delete("/application/:id/status", deleteApplicationStatus);
+
+router.get("/interview/interviewRounds", fetchInterviewRounds);
+router.post("/interview/interviewRounds", addInterviewRound);
+router.put("/interview/interviewRounds/:id", updateInterviewRound);
+router.delete("/interview/interviewRounds/:id", deleteInterviewRound);
+ 
 
 module.exports = router;

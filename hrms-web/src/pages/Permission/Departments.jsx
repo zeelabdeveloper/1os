@@ -25,10 +25,7 @@ import {
 import { FaExclamationCircle } from "react-icons/fa";
 
 import * as api from "../../api/auth";
-import {
-  validateDepartmentCode,
-  validateDepartmentName,
-} from "../../utils/validators";
+ 
 import toast from "react-hot-toast";
 
 // Custom debounce hook

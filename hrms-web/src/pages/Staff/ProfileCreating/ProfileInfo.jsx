@@ -1,93 +1,146 @@
 import React, { memo, useState, useEffect } from "react";
 import { UploadOutlined } from "@ant-design/icons";
-import { Form, Upload, Divider, Image, DatePicker, Select, Input } from "antd";
+import {
+  Form,
+  Upload,
+  DatePicker,
+  Divider,
+  Button,
+  message,
+  Select,
+  Input,
+} from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { State, City } from "country-state-city";
+import toast from "react-hot-toast";
 
 const { Option } = Select;
 
-const ProfileInfo = memo(() => {
-  const [fileList, setFileList] = useState([]);
+const ProfileInfo = memo(({ form }) => {
+  const [loading, setLoading] = useState(false);
   const [selectedState, setSelectedState] = useState(null);
-  const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [availableDistricts, setAvailableDistricts] = useState([]);
- 
-
+  const [img, setImg] = useState("");
   // Load states
-  const states = State.getStatesOfCountry("IN"); 
+  const states = State.getStatesOfCountry("IN");
 
   // Load districts when state changes
   useEffect(() => {
     if (selectedState) {
-      // Fetch districts using an alternative approach
       const state = states.find((s) => s.isoCode === selectedState);
       const citiesInState = City.getCitiesOfState("IN", selectedState);
-      const districts = [...new Set(citiesInState.map((city) => city.district || city.name))]; // Extract unique districts
+      const districts = [
+        ...new Set(citiesInState.map((city) => city.district || city.name)),
+      ];
       setAvailableDistricts(districts);
-      setSelectedDistrict(null); // Reset district
-       
     } else {
       setAvailableDistricts([]);
     }
   }, [selectedState]);
 
- 
+  const handleUpload = async (options) => {
+    const { file, onSuccess, onError, onProgress } = options;
+    setLoading(true);
 
-  const beforeUpload = (file) => {
-    const isImage = file.type.startsWith("image/");
-    if (!isImage) {
-      console.error("You can only upload image files!");
-      return Upload.LIST_IGNORE;
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "newsimgupload");
+      formData.append("cloud_name", "dikxwu8om");
+
+      const xhr = new XMLHttpRequest();
+      xhr.open(
+        "POST",
+        "https://api.cloudinary.com/v1_1/dikxwu8om/image/upload",
+        true
+      );
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          onProgress({ percent }, file);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText);
+          const url = response.secure_url;
+
+          // Set the photo URL directly in the form
+          form.setFieldsValue({
+            profile: {
+              ...form.getFieldValue("profile"),
+              photo: url,
+            },
+          });
+          setImg(url);
+          console.log(form.getFieldValue("profile"));
+          onSuccess(url, file);
+          toast.success(`${file.name} uploaded successfully`);
+        } else {
+          onError(new Error("Upload failed"));
+          toast.error(`${file.name} upload failed`);
+        }
+        setLoading(false);
+      };
+
+      xhr.onerror = () => {
+        onError(new Error("Upload failed"));
+        toast.error(`${file.name} upload failed`);
+        setLoading(false);
+      };
+
+      xhr.send(formData);
+    } catch (error) {
+      onError(error);
+      message.error("Upload failed");
+      setLoading(false);
     }
-    file.preview = URL.createObjectURL(file);
-    setFileList([file]);
-    return false;
   };
-
-  const handleRemove = () => {
-    if (fileList[0]?.preview) {
-      URL.revokeObjectURL(fileList[0].preview);
-    }
-    setFileList([]);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (fileList[0]?.preview) {
-        URL.revokeObjectURL(fileList[0].preview);
-      }
-    };
-  }, [fileList]);
 
   return (
     <div className="p-4">
       <Divider orientation="left">Profile Information</Divider>
 
-      <Form.Item name={["profile", "photo"]} label="Profile Photo">
+     
         <Upload
-          listType="picture-card"
-          fileList={fileList}
-          beforeUpload={beforeUpload}
-          onRemove={handleRemove}
+          customRequest={handleUpload}
+          listType="text"
           maxCount={1}
           accept="image/*"
+          beforeUpload={(file) => {
+            const isLt5M = file.size / 1024 / 1024 < 5;
+            if (!isLt5M) {
+              message.error("Image must be smaller than 5MB!");
+              return false;
+            }
+            return true;
+          }}
+          onChange={(info) => {
+            if (info.file.status === "done") {
+              // URL is already set in handleUpload
+            } else if (info.file.status === "error") {
+              message.error(`${info.file.name} file upload failed.`);
+            }
+          }}
+          showUploadList={false}
         >
-          {fileList.length >= 1 ? (
-            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Image
-                src={fileList[0].preview}
-                alt="profile preview"
-                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-              />
-            </div>
-          ) : (
-            <div>
-              <UploadOutlined />
-              <div style={{ marginTop: 8 }}>Upload</div>
-            </div>
-          )}
+          <Button icon={<UploadOutlined />} loading={loading}>
+            Click to Upload Photo (Max 5MB)
+          </Button>
         </Upload>
-      </Form.Item>
+
+        
+      {form.getFieldValue("profile")?.photo && (
+        <div style={{ marginBottom: 16, marginTop:12, }}>
+          <img
+            src={img}
+            alt="Profile preview"
+            style={{ maxWidth: "100%", maxHeight: 200 }}
+          />
+        </div>
+      )}
 
       <Form.Item name={["profile", "dateOfBirth"]} label="Date of Birth">
         <DatePicker style={{ width: "100%" }} />
@@ -127,7 +180,6 @@ const ProfileInfo = memo(() => {
         <Select
           placeholder="Select district"
           disabled={!selectedState}
-          onChange={(value) => setSelectedDistrict(value)}
           showSearch
           optionFilterProp="children"
           filterOption={(input, option) =>
@@ -142,15 +194,16 @@ const ProfileInfo = memo(() => {
         </Select>
       </Form.Item>
 
-       
-
       <Divider orientation="left">Family Information</Divider>
 
       <Form.Item name={["family", "fatherName"]} label="Father's Name">
         <Input placeholder="Enter father's name" />
       </Form.Item>
 
-      <Form.Item name={["family", "fatherOccupation"]} label="Father's Occupation">
+      <Form.Item
+        name={["family", "fatherOccupation"]}
+        label="Father's Occupation"
+      >
         <Input placeholder="Enter father's occupation" />
       </Form.Item>
 
@@ -158,11 +211,17 @@ const ProfileInfo = memo(() => {
         <Input placeholder="Enter mother's name" />
       </Form.Item>
 
-      <Form.Item name={["family", "motherOccupation"]} label="Mother's Occupation">
+      <Form.Item
+        name={["family", "motherOccupation"]}
+        label="Mother's Occupation"
+      >
         <Input placeholder="Enter mother's occupation" />
       </Form.Item>
 
-      <Form.Item name={["family", "numberOfBrothers"]} label="Number of Brothers">
+      <Form.Item
+        name={["family", "numberOfBrothers"]}
+        label="Number of Brothers"
+      >
         <Input type="number" min={0} placeholder="Enter number of brothers" />
       </Form.Item>
 

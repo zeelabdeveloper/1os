@@ -343,6 +343,15 @@ const ApplicationDetailsModal = ({ application, onClose, statusConfig }) => {
                   ? new Date(application.dob).toLocaleDateString()
                   : "Not specified"}
               </Descriptions.Item>
+              <Descriptions.Item label="Resume">
+                <a
+                  href={`${import.meta.env.VITE_BACKEND_URL}${
+                    application.resume
+                  }`}
+                >
+                  View Now
+                </a>
+              </Descriptions.Item>
             </Descriptions>
           </Card>
 
@@ -413,9 +422,13 @@ const ApplicationForm = ({ jobs, onSuccess }) => {
 
   const { mutate: submitApplication, isLoading } = useMutation({
     mutationFn: submitJobApplication,
-    onSuccess: () => {
-      toast.success("Application submitted successfully");
+    onSuccess: (dataa) => {
+      toast.success(dataa.message || "Application submitted successfully");
       onSuccess();
+    },
+    onError: (err) => {
+      console.log(err);
+      toast.error(err?.response?.data?.message || "Internal Server Error");
     },
   });
 
@@ -520,6 +533,7 @@ const ApplicationForm = ({ jobs, onSuccess }) => {
       >
         <Upload
           fileList={fileList}
+          maxCount={1}
           onChange={({ fileList }) => setFileList(fileList)}
           beforeUpload={() => false}
           accept=".pdf,.doc,.docx"

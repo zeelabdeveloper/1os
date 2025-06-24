@@ -185,6 +185,10 @@ const App = () => {
                   element={lazyLoad("recruitment/onboarding")}
                 />
                 <Route
+                  path="/recruitment/startonboarding"
+                  element={lazyLoad("recruitment/startonboarding")}
+                />
+                <Route
                   path="/recruitment/interviews"
                   element={lazyLoad("recruitment/interview")}
                 />

@@ -67,6 +67,18 @@ const UserSchema = new mongoose.Schema({
       ref: "Experience",
     },
   ],
+  Asset: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Asset",
+    },
+  ],
+  Document: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Document",
+    },
+  ],
 
   dateOfJoining: {
     type: Date,
@@ -75,7 +87,7 @@ const UserSchema = new mongoose.Schema({
 
   isActive: {
     type: Boolean,
-    default: true,
+    default: false,
   },
   lastLogin: Date,
   loginAttempts: {
