@@ -1,8 +1,3 @@
-// const InterviewSession = require('../models/InterviewSession');
-// const InterviewRound = require('../models/InterviewRound');
-// const Application = require('../models/Application');
-// const { sendInterviewScheduledEmail } = require('../services/emailService');
-
 const Application = require("../../models/jobs/applicationSchema");
 const InterViewRound = require("../../models/jobs/InterviewRound");
 const InterviewSession = require("../../models/jobs/InterviewSession");
@@ -33,15 +28,14 @@ exports.getInterviewSession = async (req, res, next) => {
 
     res.status(200).json(interviewSessions);
   } catch (err) {
-   
     res.status(400).json({
       success: false,
       error: err.message,
     });
   }
 };
- 
-// @desc    Create new interview session 
+
+// @desc    Create new interview session
 // @route   POST /api/v1/interview/interviewSessions
 // @access  Private
 exports.createInterviewSession = async (req, res, next) => {
@@ -53,7 +47,7 @@ exports.createInterviewSession = async (req, res, next) => {
       meetingLink,
       notes,
     } = req.body;
- 
+
     // Validate required fields
     if (
       !interviewRoundId ||
@@ -188,7 +182,8 @@ exports.updateInterviewSession = async (req, res, next) => {
       if (updateData.timeRange.length !== 2) {
         return res.status(400).json({
           success: false,
-          message: "timeRange must contain exactly 2 elements [startTime, endTime]",
+          message:
+            "timeRange must contain exactly 2 elements [startTime, endTime]",
         });
       }
       updateData.startTime = updateData.timeRange[0];
@@ -222,19 +217,90 @@ exports.updateInterviewSession = async (req, res, next) => {
   }
 };
 
+exports.updateInterviewSessionStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status, isOutCome } = req.body;
+
+    const session = await InterviewSession.findById(id);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "No interview session found with that ID",
+      });
+    }
+
+    // Outcome update has priority if isOutCome is true
+    if (isOutCome) {
+      const validOutcome = ["selected", "rejected", "hold"];
+      if (!validOutcome.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid outcome value. Allowed: selected, rejected, hold",
+        });
+      }
+      session.outcome = status;
+    } 
+    // Status update
+    else if (status) {
+      const validStatus = [
+        "scheduled",
+        "in_progress", 
+        "completed",
+        "cancelled",
+        "rescheduled",
+      ];
+      if (!validStatus.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid status value",
+        });
+      }
+ 
+      // Additional validation for completed status
+      if (status === "completed" && session.outcome === "pending") {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot mark as completed when outcome is pending. Please set outcome first.",
+        });
+      }
+
+      session.status = status;
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide either 'status' or set 'isOutCome' to true",
+      });
+    }
+
+    await session.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Interview session updated successfully",
+      data: session,
+    });
+  } catch (err) {
+    return res.status(400).json({
+      success: false,
+      error: err.message,
+    });
+  }
+};
+
 // @desc    Delete interview session
 // @route   DELETE /api/v1/interview/interviewSessions/:id
 // @access  Private
 exports.deleteInterviewSession = async (req, res, next) => {
   try {
     const session = await InterviewSession.findById(req.params.id);
- 
+
     if (!session) {
       return res.status(404).json({
         success: false,
         error: "No interview session found with that ID",
       });
-    } 
+    }
 
     await session.deleteOne();
 
@@ -243,7 +309,6 @@ exports.deleteInterviewSession = async (req, res, next) => {
       data: {},
     });
   } catch (err) {
-
     res.status(400).json({
       success: false,
       error: err.message,
@@ -256,7 +321,7 @@ exports.deleteInterviewSession = async (req, res, next) => {
 // @access  Private
 exports.getSessionsForApplication = async (req, res, next) => {
   try {
-  const sessions = await InterviewSession.find({
+    const sessions = await InterviewSession.find({
       applicationId: req.params.applicationId,
     })
       .populate({
@@ -268,7 +333,6 @@ exports.getSessionsForApplication = async (req, res, next) => {
       })
       .populate("applicationId") // optional: if you want full application details
       .sort({ startTime: 1 });
-
 
     res.status(200).json({
       success: true,

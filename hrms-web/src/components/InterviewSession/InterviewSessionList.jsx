@@ -52,10 +52,10 @@ const deleteInterviewSession = async (id) => {
   await axios.delete(`/api/v1/interview/interviewSessions/${id}`);
 };
 
-const updateInterviewStatus = async ({ id, status }) => {
+const updateInterviewStatus = async ({ id, status , isOutCome   }) => {
   const { data } = await axios.patch(
     `/api/v1/interview/interviewSessions/${id}`,
-    { status }
+    { status , isOutCome   }
   );
   return data;
 };
@@ -87,17 +87,18 @@ const InterviewSessionList = () => {
 
   const statusMutation = useMutation({
     mutationFn: updateInterviewStatus,
-    onSuccess: () => {
-      message.success("Status updated successfully");
+    onSuccess: (s) => {
+      toast.success( s.message || "Status updated successfully");
       refetch();
     },
-    onError: () => {
-      message.error("Failed to update status");
+    onError: (err) => {
+      console.log(err)
+      toast.error( err.response.data.message ||  "Failed to update status");
     },
   });
 
-  const handleStatusChange = (id, newStatus) => {
-    statusMutation.mutate({ id, status: newStatus });
+  const handleStatusChange = (id, newStatus  , isOutCome  ) => {
+    statusMutation.mutate({ id, status: newStatus  ,  isOutCome });
   };
 
   const handleEdit = (session) => {
@@ -153,7 +154,7 @@ const InterviewSessionList = () => {
       <Select
         defaultValue={outcome}
         style={{ width: 120 }}
-        onChange={(value) => handleOutcomeChange(record._id, value)}
+        onChange={(value) => handleStatusChange(record._id, value ,  true  )}
         bordered={false}
       >
         {Object.keys(outcomeMap).map((key) => (

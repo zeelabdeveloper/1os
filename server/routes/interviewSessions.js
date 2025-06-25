@@ -1,12 +1,13 @@
 const express = require("express");
 const {
-  getInterviewSessions,
+  
   getInterviewSession,
   createInterviewSession,
   updateInterviewSession,
   deleteInterviewSession,
   getSessionsForApplication,
   getSessionsForInterviewer,
+  updateInterviewSessionStatus,
 } = require("../controllers/jobs/interviewSessionController");
 const router = express.Router();
 
@@ -16,6 +17,7 @@ router
   .route("/:id")
   .get(getInterviewSession)
   .put(updateInterviewSession)
+  .patch(updateInterviewSessionStatus)
   .delete(deleteInterviewSession);
 
 router.route("/:applicationId").get( getSessionsForApplication);

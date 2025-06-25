@@ -41,6 +41,7 @@ app.use("/api/v1/recruitment", require("./routes/recruitment.js"));
 app.use("/api/v1/interview/interviewSessions", require("./routes/interviewSessions.js"));
 // app.use("/api/v1/onboarding", require("./routes/onboarding.js"));
 app.use("/api/v1/analytics", require("./routes/analytics.js"));
+app.use("/api/v1/documents", require("./routes/documentRoutes.js"));
 app.use(
   "/api/v1/performance",
   require("./routes/performance/performanceRouter.js")
