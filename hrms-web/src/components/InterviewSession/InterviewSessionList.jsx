@@ -7,11 +7,9 @@ import {
   Space,
   Button,
   Modal,
-  Form,
-  Input,
+ 
   Select,
-  DatePicker,
-  TimePicker,
+ 
   Card,
   Popconfirm,
   message,
@@ -174,38 +172,33 @@ const InterviewSessionList = () => {
       key: "candidate",
       render: (text, record) => (
         <Space>
-          <Avatar src={record.application?.photo} icon={<UserOutlined />} />
+          <Avatar src={record.applicationId?.photo} icon={<UserOutlined />} />
           <div>
-            <Text strong>{text}</Text>
+            <Text strong>{record.applicationId?.name}</Text>
             <br />
-            <Text type="secondary">{record.application?.email}</Text>
+            <Text type="secondary">{record.applicationId?.email}</Text>
           </div>
         </Space>
       ),
     },
-    {
-      title: "Position",
-      dataIndex: ["application", "positionApplied"],
-      key: "position",
-      render: (text) => <Text>{text}</Text>,
-    },
+   
     {
       title: "Interview Round",
       dataIndex: ["interviewRound", "name"],
       key: "round",
       render: (text, record) => (
         <div>
-          <Text strong>{text}</Text>
+          <Text strong>{record.interviewRoundId?.name}</Text>
           <br />
           <Text type="secondary">
-            Round {record.interviewRound?.roundNumber}
+            Round {record.interviewRoundId?.roundNumber}
           </Text>
         </div>
       ),
     },
     {
       title: "Interviewer",
-      dataIndex: ["interviewRound", "interviewer", "name"],
+      dataIndex: ["interviewRoundId", "interviewer", "fullName"],
       key: "interviewer",
       render: (text) => <Tag icon={<UserOutlined />}>{text}</Tag>,
     },
@@ -271,7 +264,7 @@ const InterviewSessionList = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="">
       <Card
         title="Interview Sessions"
         extra={

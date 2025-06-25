@@ -14,7 +14,15 @@ exports.getInterviewSession = async (req, res, next) => {
   try {
     const interviewSessions = await InterviewSession.find({
       applicationId: req.params.id,
-    }).populate("interviewRoundId applicationId")
+    })
+      .populate("applicationId") // basic populate for Application
+      .populate({
+        path: "interviewRoundId", // from InterviewSession
+        populate: {
+          path: "interviewer", // from InterviewRound
+          model: "User", // adjust if you named the model differently
+        },
+      });
 
     if (!interviewSessions || interviewSessions.length === 0) {
       return res.status(404).json({
@@ -25,14 +33,15 @@ exports.getInterviewSession = async (req, res, next) => {
 
     res.status(200).json(interviewSessions);
   } catch (err) {
-    console.log(err);
+   
     res.status(400).json({
       success: false,
       error: err.message,
     });
   }
 };
-// @desc    Create new interview session
+ 
+// @desc    Create new interview session 
 // @route   POST /api/v1/interview/interviewSessions
 // @access  Private
 exports.createInterviewSession = async (req, res, next) => {
@@ -44,7 +53,7 @@ exports.createInterviewSession = async (req, res, next) => {
       meetingLink,
       notes,
     } = req.body;
-    console.log(req.body);
+ 
     // Validate required fields
     if (
       !interviewRoundId ||
@@ -165,69 +174,44 @@ exports.createInterviewSession = async (req, res, next) => {
 // @access  Private
 exports.updateInterviewSession = async (req, res, next) => {
   try {
-    let session = await InterviewSession.findById(req.params.id);
+    const { id } = req.params;
+    const updateData = { ...req.body };
+
+    // Handle timeRange if provided
+    if (updateData.timeRange) {
+      if (!Array.isArray(updateData.timeRange)) {
+        return res.status(400).json({
+          success: false,
+          message: "timeRange must be an array [startTime, endTime]",
+        });
+      }
+      if (updateData.timeRange.length !== 2) {
+        return res.status(400).json({
+          success: false,
+          message: "timeRange must contain exactly 2 elements [startTime, endTime]",
+        });
+      }
+      updateData.startTime = updateData.timeRange[0];
+      updateData.endTime = updateData.timeRange[1];
+      delete updateData.timeRange;
+    }
+
+    const session = await InterviewSession.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true }
+    );
 
     if (!session) {
       return res.status(404).json({
         success: false,
-        error: "No interview session found with that ID",
+        message: "No interview session found with that ID",
       });
     }
-
-    // Handle time updates separately
-    if (req.body.timeRange) {
-      const [startTime, endTime] = req.body.timeRange;
-      req.body.startTime = startTime;
-      req.body.endTime = endTime;
-      delete req.body.timeRange;
-
-      // Check for scheduling conflicts when time is updated
-      const conflictingSession = await InterviewSession.findOne({
-        _id: { $ne: session._id }, // Exclude current session
-        $or: [
-          {
-            interviewerId: session.interviewerId,
-            $or: [
-              { startTime: { $lt: endTime, $gte: startTime } },
-              { endTime: { $gt: startTime, $lte: endTime } },
-              { startTime: { $lte: startTime }, endTime: { $gte: endTime } },
-            ],
-          },
-          {
-            applicationId: session.applicationId,
-            $or: [
-              { startTime: { $lt: endTime, $gte: startTime } },
-              { endTime: { $gt: startTime, $lte: endTime } },
-              { startTime: { $lte: startTime }, endTime: { $gte: endTime } },
-            ],
-          },
-        ],
-      });
-
-      if (conflictingSession) {
-        return res.status(400).json({
-          success: false,
-          error: "Scheduling conflict detected",
-          conflictWith: conflictingSession._id,
-        });
-      }
-    }
-
-    // Update session
-    session = await InterviewSession.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    )
-      .populate("interviewRound")
-      .populate("application")
-      .populate("interviewer");
 
     res.status(200).json({
       success: true,
+      message: "Interview updated successfully",
       data: session,
     });
   } catch (err) {
@@ -244,13 +228,13 @@ exports.updateInterviewSession = async (req, res, next) => {
 exports.deleteInterviewSession = async (req, res, next) => {
   try {
     const session = await InterviewSession.findById(req.params.id);
-console.log(session)
+ 
     if (!session) {
       return res.status(404).json({
         success: false,
         error: "No interview session found with that ID",
       });
-    }
+    } 
 
     await session.deleteOne();
 
@@ -259,7 +243,7 @@ console.log(session)
       data: {},
     });
   } catch (err) {
-    console.log(err)
+
     res.status(400).json({
       success: false,
       error: err.message,
@@ -272,12 +256,19 @@ console.log(session)
 // @access  Private
 exports.getSessionsForApplication = async (req, res, next) => {
   try {
-    const sessions = await InterviewSession.find({
+  const sessions = await InterviewSession.find({
       applicationId: req.params.applicationId,
     })
-      .populate("interviewRound")
-      .populate("interviewer")
+      .populate({
+        path: "interviewRoundId", // correct field name in InterviewSession
+        populate: {
+          path: "interviewer", // nested field inside InterviewRound
+          model: "User", // make sure 'User' is the correct model name
+        },
+      })
+      .populate("applicationId") // optional: if you want full application details
       .sort({ startTime: 1 });
+
 
     res.status(200).json({
       success: true,

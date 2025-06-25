@@ -1,3 +1,5 @@
+ 
+
 // import React from 'react';
 // import { 
 //   Form, 
@@ -8,7 +10,6 @@
 //   Row,
 //   Col,
 //   Card,
-//   message,
 //   Divider,
 //   Typography,
 //   Spin,
@@ -25,9 +26,8 @@
 // const { Option } = Select;
 // const { RangePicker } = DatePicker;
 
- 
- 
 // const InterviewSessionForm = ({ session, onSuccess }) => {
+//   console.log(session)
 //   const [form] = Form.useForm();
 //   const [selectedRound, setSelectedRound] = React.useState(null);
   
@@ -38,17 +38,6 @@
 //   };
   
 //   const candidateId = getCandidateIdFromUrl();
-
-//   if (!candidateId) {
-//     return (
-//       <Alert 
-//         type="error" 
-//         message="Candidate ID missing" 
-//         description="Please access this page with a valid candidate ID in the URL (e.g., ?id=123)"
-//         showIcon
-//       />
-//     );
-//   }
 
 //   // Fetch candidate data
 //   const { data: candidate, isPending: candidateLoading, error: candidateError } = useQuery({
@@ -61,27 +50,28 @@
 //     queryKey: ['interviewRounds'],
 //     queryFn: fetchInterviewRounds
 //   });
- 
+
 //   const mutation = useMutation({
 //     mutationFn: async (values) => {
 //       const payload = {
 //         ...values,
-//         applicationId: candidateId, // Use the candidate from URL
+//         applicationId: candidateId,
 //         startTime: values.timeRange[0].toISOString(),
 //         endTime: values.timeRange[1].toISOString()
 //       };
       
-//       return session?._id
-//         ?await axios.put(`/api/v1/interview/interviewSessions/${session._id}`, payload)
-//         :await axios.post('/api/v1/interview/interviewSessions', payload);
+//       if (session?._id) {
+//         return await axios.put(`/api/v1/interview/interviewSessions/${session._id}`, payload);
+//       } else {
+//         return await axios.post('/api/v1/interview/interviewSessions', payload);
+//       }
 //     },
-//     onSuccess: (data) => {
-//       console.log(data)
+//     onSuccess: () => {
 //       toast.success(`Session ${session?._id ? 'updated' : 'created'} successfully`);
+//       form.resetFields();
 //       onSuccess();
 //     },
 //     onError: (error) => {
-//         console.log(error)
 //       toast.error(error.response?.data?.message || 'An error occurred');
 //     }
 //   });
@@ -91,8 +81,12 @@
 //     setSelectedRound(round);
 //   };
 
-//   const handleSubmit = (values) => {
-//     mutation.mutate(values);
+//   const handleSubmit = async (values) => {
+//     try {
+//       await mutation.mutateAsync(values);
+//     } catch (error) {
+//       toast.error('Submission error:', error);
+//     }
 //   };
 
 //   React.useEffect(() => {
@@ -100,10 +94,22 @@
 //       form.setFieldsValue({
 //         ...session,
 //         timeRange: [dayjs(session.startTime), dayjs(session.endTime)]
+
 //       });
 //       handleRoundChange(session.interviewRoundId);
 //     }
 //   }, [session, form]);
+
+//   if (!candidateId) {
+//     return (
+//       <Alert 
+//         type="error" 
+//         message="Candidate ID missing" 
+//         description="Please access this page with a valid candidate ID in the URL (e.g., ?id=123)"
+//         showIcon
+//       />
+//     );
+//   }
 
 //   if (candidateLoading) return <Spin />;
   
@@ -157,6 +163,7 @@
 //               loading={roundsLoading}
 //               onChange={handleRoundChange}
 //               showSearch
+//                value={form.getFieldValue('interviewRoundId')}
 //               optionFilterProp="children"
 //             >
 //               {interviewRounds?.map(round => (
@@ -227,10 +234,15 @@
 //       <Divider />
 
 //       <Form.Item>
-//         <Button type="primary" htmlType="submit" loading={mutation.isLoading}>
+//         <Button 
+//           type="primary" 
+//           htmlType="submit" 
+//           loading={mutation.isPending}
+//           disabled={mutation.isPending}
+//         >
 //           {session?._id ? 'Update Session' : 'Schedule Session'}
 //         </Button>
-//         <Button onClick={onSuccess} style={{ marginLeft: 8 }}>
+//         <Button onClick={onSuccess} style={{ marginLeft: 8 }} disabled={mutation.isPending}>
 //           Cancel
 //         </Button>
 //       </Form.Item>
@@ -270,7 +282,6 @@ const InterviewSessionForm = ({ session, onSuccess }) => {
   const [form] = Form.useForm();
   const [selectedRound, setSelectedRound] = React.useState(null);
   
-  // Get candidate ID from URL query parameters
   const getCandidateIdFromUrl = () => {
     const query = new URLSearchParams(window.location.search);
     return query.get('id');
@@ -278,7 +289,6 @@ const InterviewSessionForm = ({ session, onSuccess }) => {
   
   const candidateId = getCandidateIdFromUrl();
 
-  // Fetch candidate data
   const { data: candidate, isPending: candidateLoading, error: candidateError } = useQuery({
     queryKey: ['candidate', candidateId],
     queryFn: () => fetchApplicationById(candidateId),
@@ -311,12 +321,14 @@ const InterviewSessionForm = ({ session, onSuccess }) => {
       onSuccess();
     },
     onError: (error) => {
+      console.log( error)
       toast.error(error.response?.data?.message || 'An error occurred');
     }
   });
 
   const handleRoundChange = (roundId) => {
-    const round = interviewRounds?.find(r => r._id === roundId);
+    const actualId = typeof roundId === 'object' ? roundId._id : roundId;
+    const round = interviewRounds?.find(r => r._id === actualId);
     setSelectedRound(round);
   };
 
@@ -324,19 +336,26 @@ const InterviewSessionForm = ({ session, onSuccess }) => {
     try {
       await mutation.mutateAsync(values);
     } catch (error) {
-      console.error('Submission error:', error);
+    //  toast.error('Submission error:', error);
     }
   };
 
   React.useEffect(() => {
-    if (session) {
-      form.setFieldsValue({
+    if (session && interviewRounds) {
+      const initialValues = {
         ...session,
         timeRange: [dayjs(session.startTime), dayjs(session.endTime)]
-      });
-      handleRoundChange(session.interviewRoundId);
+      };
+      
+      initialValues.interviewRoundId = 
+        typeof session.interviewRoundId === 'object' 
+          ? session.interviewRoundId._id 
+          : session.interviewRoundId;
+      
+      form.setFieldsValue(initialValues);
+      handleRoundChange(initialValues.interviewRoundId);
     }
-  }, [session, form]);
+  }, [session, form, interviewRounds]);
 
   if (!candidateId) {
     return (
@@ -372,7 +391,6 @@ const InterviewSessionForm = ({ session, onSuccess }) => {
         notes: ''
       }}
     >
-      {/* Display candidate info */}
       <Row gutter={16}>
         <Col span={24}>
           <Card size="small" className="mb-4">
@@ -380,7 +398,6 @@ const InterviewSessionForm = ({ session, onSuccess }) => {
               <Text strong>Candidate: </Text>
               <Text>{candidate?.name} ({candidate?.email})</Text>
             </div>
-            
             <div>
               <Text strong>Status: </Text>
               <Text>{candidate?.status || 'Not specified'}</Text>
@@ -402,6 +419,8 @@ const InterviewSessionForm = ({ session, onSuccess }) => {
               onChange={handleRoundChange}
               showSearch
               optionFilterProp="children"
+              disabled={roundsLoading}
+              value={form.getFieldValue('interviewRoundId')}
             >
               {interviewRounds?.map(round => (
                 <Option key={round._id} value={round._id}>
