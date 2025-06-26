@@ -2,7 +2,10 @@ import { useState } from "react";
 import { Layout } from "antd";
 import InterviewSessionDetail from "../../components/InterviewSession/InterviewSessionDetail";
 import InterviewSessionList from "../../components/InterviewSession/InterviewSessionList";
-import DocumentVerification from "../../components/onboarding/OnboardingChecklist";
+import DocumentVerification from "../../components/onboarding/DocsVerify";
+import AssetManagement from "../../components/onboarding/AssetManagement";
+import TrainingManagement from "../../components/onboarding/TrainingManagement";
+import LetterManagement from "../../components/onboarding/LetterManagement";
 
 const { Header, Content } = Layout;
 
@@ -18,8 +21,7 @@ function App() {
           </h1>
         </div>
       </Header>
-      {/* <Content className="p-6">
-        
+      <Content className="p-6">
         <InterviewSessionList onSelectSession={setSelectedSession} />
 
         {selectedSession && (
@@ -28,8 +30,12 @@ function App() {
             onEdit={() => setSelectedSession(null)}
           />
         )}
-      </Content> */}
-      <DocumentVerification />
+
+        <DocumentVerification />
+        <AssetManagement />
+        <TrainingManagement />
+        <LetterManagement />
+      </Content>
     </Layout>
   );
 }

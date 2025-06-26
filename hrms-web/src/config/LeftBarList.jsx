@@ -107,8 +107,8 @@ const menuItems = [
     label: "Content",
     children: [
       {
-        key: "/create-role",
-        label: "Role Create",
+        key: "/content/letter",
+        label: "Letter",
       },
     ],
   },
@@ -275,6 +275,10 @@ const menuItems = [
       {
         key: "/helps",
         label: "Helps",
+      },
+      {
+        key: "/developer-settings",
+        label: "Developer Access",
       },
     ],
   },

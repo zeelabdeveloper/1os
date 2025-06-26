@@ -38,10 +38,17 @@ app.use("/api/v1/store/roles", require("./routes/store/storeRoles.js"));
 app.use("/api/v1/stores", require("./routes/store/store.js"));
 app.use("/api/v1/jobs", require("./routes/jobsRoute.js"));
 app.use("/api/v1/recruitment", require("./routes/recruitment.js"));
-app.use("/api/v1/interview/interviewSessions", require("./routes/interviewSessions.js"));
+app.use(
+  "/api/v1/interview/interviewSessions",
+  require("./routes/interviewSessions.js")
+);
 // app.use("/api/v1/onboarding", require("./routes/onboarding.js"));
 app.use("/api/v1/analytics", require("./routes/analytics.js"));
 app.use("/api/v1/documents", require("./routes/documentRoutes.js"));
+app.use("/api/v1/assets", require("./routes/AssetRoute.js"));
+app.use("/api/v1/trainings", require("./routes/TrainingRoutes.js"));
+app.use("/api/v1/letters", require("./routes/RelevantLetterRoutes.js"));
+app.use("/api/v1/manage-letter", require("./routes/letterTemplates.js"));
 app.use(
   "/api/v1/performance",
   require("./routes/performance/performanceRouter.js")
@@ -55,6 +62,13 @@ app.use(
 app.use(
   "/api/v1/email-notification-setting",
   require("./routes/setting/emailNotificationRouter.js")
+);
+
+// access For Only Developer
+
+app.use(
+  "/api/v2/developer/routes",
+  require("./routes/DeveloperRouteAccess.js")
 );
 
 const PORT = process.env.PORT || 5000;

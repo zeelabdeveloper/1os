@@ -11,6 +11,7 @@ import {
   Tag,
   Modal,
   Spin,
+  Switch,
   Drawer,
   Space,
 } from "antd";
@@ -34,12 +35,17 @@ const DocumentVerification = memo(() => {
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
   const [editingDoc, setEditingDoc] = useState(null);
   const queryClient = useQueryClient();
-
+  const getCandidateIdFromUrl = () => {
+    const query = new URLSearchParams(window.location.search);
+    return query.get("id");
+  };
   // Fetch documents
   const { data: documents = [], isLoading } = useQuery({
     queryKey: ["documents"],
     queryFn: async () => {
-      const { data } = await axios.get("/api/v1/documents/my-documents");
+      const { data } = await axios.get(
+        `/api/v1/documents/my-documents/${getCandidateIdFromUrl()}`
+      );
       return data.data;
     },
     onError: () => toast.error("Failed to load documents"),
@@ -48,10 +54,12 @@ const DocumentVerification = memo(() => {
   // Save documents
   const { mutate: saveDocuments, isPending: isSaving } = useMutation({
     mutationFn: async (docData) => {
-      const url = editingDoc
-        ? `/api/v1/documents/${editingDoc._id}`
-        : "/api/v1/documents";
-      const method = editingDoc ? "put" : "post";
+      console.log(editingDoc);
+      if (editingDoc) {
+        docData.id = editingDoc._id;
+      }
+      const url = "/api/v1/documents";
+      const method = "post";
 
       const { data } = await axios[method](url, docData);
       return data;
@@ -66,7 +74,7 @@ const DocumentVerification = memo(() => {
       setEditingDoc(null);
     },
     onError: (error) => {
-      console.log(error)
+      console.log(error);
       toast.error(error.response?.data?.message || "Failed to save document");
     },
   });
@@ -124,7 +132,9 @@ const DocumentVerification = memo(() => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+
       const docData = {
+        applicationId: getCandidateIdFromUrl(),
         documentType: values.documentType,
         documentNumber: values.documentNumber,
         documentUrl: values.documentUrl,

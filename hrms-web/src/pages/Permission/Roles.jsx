@@ -14,12 +14,21 @@ import {
 } from "antd";
 import { FiPlus, FiSearch, FiTrash2, FiEdit, FiSave } from "react-icons/fi";
 import { FaExclamationCircle } from "react-icons/fa";
-import { TeamOutlined,  ApartmentOutlined, BankOutlined } from "@ant-design/icons";
+import {
+  TeamOutlined,
+  ApartmentOutlined,
+  BankOutlined,
+} from "@ant-design/icons";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { addRole, deleteRole, fetchBranches, fetchDepartmentsByBranch, fetchRoles, updateRole } from "../../api/auth";
-
- 
+import {
+  addRole,
+  deleteRole,
+  fetchBranches,
+  fetchDepartmentsByBranch,
+  fetchRoles,
+  updateRole,
+} from "../../api/auth";
 
 // The rest of the component remains the same as provided
 export default function RoleManagementPage() {
@@ -67,8 +76,7 @@ export default function RoleManagementPage() {
     },
     onError: (error) => {
       toast.error(
-        error.response?.data?.message ||
-          "There was an error deleting the role."
+        error.response?.data?.message || "There was an error deleting the role."
       );
     },
   });
@@ -77,7 +85,7 @@ export default function RoleManagementPage() {
   const addMutation = useMutation({
     mutationFn: addRole,
     onSuccess: (data) => {
-      console.log( data)
+      console.log(data);
       queryClient.invalidateQueries({ queryKey: ["roles"] });
       toast.success(data.message || "Role created!");
       setIsModalOpen(false);
@@ -85,10 +93,9 @@ export default function RoleManagementPage() {
       setSelectedBranch(null);
     },
     onError: (error) => {
-      console.log( error)
+      console.log(error);
       toast.error(
-        error.response?.data?.message ||
-          "There was an error adding the role."
+        error.response?.data?.message || "There was an error adding the role."
       );
     },
   });
@@ -104,8 +111,7 @@ export default function RoleManagementPage() {
     },
     onError: (error) => {
       toast.error(
-        error.response?.data?.message ||
-          "There was an error updating the role."
+        error.response?.data?.message || "There was an error updating the role."
       );
     },
   });
@@ -118,7 +124,9 @@ export default function RoleManagementPage() {
     (role) =>
       role?.name?.toLowerCase().includes(searchText?.toLowerCase()) ||
       (role.department?.name &&
-        role?.department?.name?.toLowerCase().includes(searchText?.toLowerCase())) ||
+        role?.department?.name
+          ?.toLowerCase()
+          .includes(searchText?.toLowerCase())) ||
       (role.branch?.name &&
         role.branch.name?.toLowerCase().includes(searchText?.toLowerCase()))
   );
@@ -207,7 +215,9 @@ export default function RoleManagementPage() {
             <Input.TextArea />
           </Form.Item>
         ) : (
-          text
+          <span className="block max-w-xs truncate">
+            {text?.length > 100 ? `${text.slice(0, 100)}...` : text}
+          </span>
         ),
     },
     {
@@ -215,7 +225,6 @@ export default function RoleManagementPage() {
       dataIndex: "branchId",
       key: "branch",
       render: (branch, record) =>
-       
         editingId === record._id ? (
           <Form.Item
             name="branchId"
@@ -241,8 +250,6 @@ export default function RoleManagementPage() {
         ) : (
           <Tag icon={<BankOutlined />} color="purple">
             {branch?.name || "N/A"}
-
-          
           </Tag>
         ),
       sorter: (a, b) =>
@@ -286,18 +293,15 @@ export default function RoleManagementPage() {
       key: "status",
       render: (status, record) =>
         editingId === record._id ? (
-          <Form.Item name="isActive" initialValue={status} className="mb-0">          
+          <Form.Item name="isActive" initialValue={status} className="mb-0">
             <Select>
               <Select.Option value={true}>Active</Select.Option>
               <Select.Option value={false}>Inactive</Select.Option>
             </Select>
           </Form.Item>
         ) : (
-          <Tag
-            color={status  ? "green" : "orange"}
-            icon={  <TeamOutlined />}
-          >  
-            {status? "Active" : "Deactive"}
+          <Tag color={status ? "green" : "orange"} icon={<TeamOutlined />}>
+            {status ? "Active" : "Deactive"}
           </Tag>
         ),
       sorter: (a, b) => a.status.localeCompare(b.status),
@@ -517,7 +521,8 @@ export default function RoleManagementPage() {
                     <Select.Option key={dept._id} value={dept._id}>
                       <div className="flex items-center">
                         <ApartmentOutlined className="mr-2" />
-                        {dept.name} - {dept.isActive?"Activated":"Inactivated"}
+                        {dept.name} -{" "}
+                        {dept.isActive ? "Activated" : "Inactivated"}
                       </div>
                     </Select.Option>
                   ))}

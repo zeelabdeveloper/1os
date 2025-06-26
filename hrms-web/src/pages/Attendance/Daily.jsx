@@ -23,11 +23,11 @@ const AttendanceSystem = () => {
   } = useQuery({
     queryKey: ["currentUser"],
     queryFn: async () => {
-      const response = await axios.get("/api/v1/user/staff/emp3");
+      const response = await axios.get("/api/v1/user/staff/685d24dd2fd550d8d845da7e");
       return response.data;
     },
   });
-
+console.log(error)
   const [activeTab, setActiveTab] = useState("daily");
 
   if (isLoading) return <Spin size="large" fullscreen />;

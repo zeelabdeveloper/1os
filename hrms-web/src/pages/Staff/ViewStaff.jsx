@@ -17,7 +17,6 @@ import {
   Switch,
   Select,
   Input,
-  Upload,
   InputNumber,
 } from "antd";
 import {
@@ -161,12 +160,17 @@ const ViewStaff = () => {
               </>
             ) : (
               <>
-                <Avatar
-                  size={150}
-                  icon={<UserOutlined />}
-                  src={staffData?.Profile?.photo}
-                  className="mb-4   shadow-2xl border-gray-300"
-                />
+                <div className="w-[150px] h-[150px] rounded-full overflow-hidden border border-gray-300 shadow-2xl mb-4 flex items-center justify-center bg-gray-100">
+                  {staffData?.Profile?.photo ? (
+                    <img
+                      src={staffData.Profile.photo}
+                      alt="Profile"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <UserOutlined style={{ fontSize: "48px", color: "#aaa" }} />
+                  )}
+                </div>
                 <h2 className="text-2xl mt-3 font-bold text-center">
                   {staffData?.firstName} {staffData?.lastName}
                 </h2>
@@ -1926,7 +1930,6 @@ const AssetCard = ({ data, loading, isEditing, onEdit, onCancel, onSave }) => {
   );
 };
 
-
 const DocumentCard = ({
   data,
   loading,
@@ -1979,7 +1982,7 @@ const DocumentCard = ({
 
   const handleSaveDocument = () => {
     let updatedDocuments;
-    
+
     if (editingIndex !== null) {
       // Update existing document
       updatedDocuments = [...documents];
@@ -1988,7 +1991,7 @@ const DocumentCard = ({
       // Add new document
       updatedDocuments = [...documents, formData];
     }
-    
+
     setDocuments(updatedDocuments);
     onSave(updatedDocuments);
     onCancel();
@@ -2244,8 +2247,6 @@ const DocumentCard = ({
     </Card>
   );
 };
-
-
 
 const EditableField = ({
   label,

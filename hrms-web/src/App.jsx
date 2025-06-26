@@ -36,7 +36,7 @@ const App = () => {
                 <Route path="dashboard" element={lazyLoad("Dashboard")} />
                 <Route path="categories" element={lazyLoad("Categories")} />
                 <Route path="profiles" element={lazyLoad("Profile")} />
-                <Route path="create-role" element={lazyLoad("CreateRole")} />
+                
                 <Route
                   path="/coco/userlist"
                   element={lazyLoad("Coco/UserList")}
@@ -86,6 +86,15 @@ const App = () => {
                 <Route
                   path="/payroll/set-salary"
                   element={lazyLoad("PAYROLL/SetSalary")}
+                />
+                <Route
+                  path="/payroll/pay-slip"
+                  element={lazyLoad("payroll/PaySlip")}
+                />
+                {/* Content */}
+                <Route
+                  path="/content/letter"
+                  element={lazyLoad("content/letter")}
                 />
                 <Route
                   path="/payroll/pay-slip"
@@ -196,6 +205,7 @@ const App = () => {
                 {/* system Setting/ */}
 
                 <Route path="/settings" element={lazyLoad("settings")} />
+                <Route path="/developer-settings" element={lazyLoad("DeveloperSetting")} />
               </Route>
 
               <Route path="/login" element={<Login />} />

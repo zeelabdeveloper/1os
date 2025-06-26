@@ -8,7 +8,7 @@ import {
   Tag,
   Avatar,
   Space,
-  Popconfirm,
+   
   Card,
   Divider,
   Descriptions,
@@ -24,7 +24,7 @@ import {
   FiUser,
   FiPhone,
   FiMail,
-  FiCreditCard,
+  
   FiCalendar,
   FiMapPin,
   FiGrid,

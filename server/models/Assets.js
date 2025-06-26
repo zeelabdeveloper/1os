@@ -1,11 +1,16 @@
 const mongoose = require("mongoose");
 
-const ExperienceSchema = new mongoose.Schema({
+const AssetSchema = new mongoose.Schema({
   user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
+     type: mongoose.Schema.Types.ObjectId,
+     ref: "User",
+      
+   },
+   applicationId: {
+     type: mongoose.Schema.Types.ObjectId,
+     ref: "Application",
+      
+   },
   name: {
     type: String,
     required: true,
@@ -31,9 +36,9 @@ const ExperienceSchema = new mongoose.Schema({
   },
 });
 
-ExperienceSchema.pre("save", function (next) {
+AssetSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   next();
 });
-const Asset=mongoose.model("Asset", ExperienceSchema);
+const Asset=mongoose.model("Asset", AssetSchema);
 module.exports = Asset

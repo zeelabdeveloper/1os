@@ -1,13 +1,12 @@
-const Document = require("../../models/Document");
+ 
+const Asset = require("../../models/Assets");
 const Application = require("../../models/jobs/applicationSchema");
 const Onboarding = require("../../models/jobs/Onboarding");
 
-// Create or Update Document
-exports.createOrUpdateDocument = async (req, res) => {
+// Create or Update Asset
+exports.createOrUpdateAsset = async (req, res) => {
   try {
-    const { documentType, id, applicationId, documentNumber, documentUrl } =
-      req.body;
-    console.log(req.body);
+    const { name, id, applicationId, price, quantity, purchaseDate } = req.body;
 
     const application = await Application.findById(applicationId);
     if (!application) {
@@ -18,41 +17,41 @@ exports.createOrUpdateDocument = async (req, res) => {
     }
 
     if (id) {
-      await Document.findByIdAndUpdate(id, req.body);
-      return res.status(200).json({ message: "Document Updated!" });
+      await Asset.findByIdAndUpdate(id, req.body);
+      return res.status(200).json({ message: "Asset Updated!" });
     }
 
-    let document = await Document.findOne({
-      documentType,
-      documentNumber,
+    let asset = await Asset.findOne({
+      name,
       applicationId,
     });
 
-    if (document) {
-      // Update existing document
-      document.documentNumber = documentNumber;
-      document.documentUrl = documentUrl;
-      document.verified = false;
-      await document.save();
+    if (asset) {
+      // Update existing asset
+      asset.price = price;
+      asset.quantity = quantity;
+      asset.purchaseDate = purchaseDate;
+      await asset.save();
     } else {
-      // Create new document
-      document = new Document({
+      // Create new asset
+      asset = new Asset({
         applicationId,
-        documentType,
-        documentNumber,
-        documentUrl,
+        name,
+        price,
+        quantity,
+        purchaseDate,
       });
-      await document.save();
+      await asset.save();
 
       const onboarding = await Onboarding.findOne({ applicationId });
 
       if (onboarding) {
-        onboarding.Document.push(document._id);
+        onboarding.Asset.push(asset._id);
         await onboarding.save();
       } else {
         const newOnboarding = new Onboarding({
           applicationId,
-          Document: [document._id],
+          Asset: [asset._id],
         });
         await newOnboarding.save();
       }
@@ -60,7 +59,7 @@ exports.createOrUpdateDocument = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: document,
+      data: asset,
     });
   } catch (error) {
     console.log(error);
@@ -71,15 +70,15 @@ exports.createOrUpdateDocument = async (req, res) => {
   }
 };
 
-// Get All Documents for User
-exports.getUserDocuments = async (req, res) => {
+// Get All Assets for User
+exports.getUserAssets = async (req, res) => {
   const { applicationId } = req.params;
   try {
-    const documents = await Document.find({ applicationId });
+    const assets = await Asset.find({ applicationId });
 
     res.status(200).json({
       success: true,
-      data: documents,
+      data: assets,
     });
   } catch (error) {
     console.log(error);
@@ -90,29 +89,29 @@ exports.getUserDocuments = async (req, res) => {
   }
 };
 
-// Delete Document
-exports.deleteDocument = async (req, res) => {
+// Delete Asset
+exports.deleteAsset = async (req, res) => {
   try {
-    const document = await Document.findOneAndDelete({
+    const asset = await Asset.findOneAndDelete({
       _id: req.params.id,
     });
 
-    if (!document) {
+    if (!asset) {
       return res.status(404).json({
         success: false,
-        error: "Document not found",
+        error: "Asset not found",
       });
     }
 
-    // Remove the document reference from Onboarding
+    // Remove the asset reference from Onboarding
     await Onboarding.findOneAndUpdate(
-      { applicationId: document.applicationId },
-      { $pull: { Document: document._id } }
+      { applicationId: asset.applicationId },
+      { $pull: { Asset: asset._id } }
     );
 
     res.status(200).json({
       success: true,
-      message: "Document deleted successfully and removed from onboarding",
+      message: "Asset deleted successfully and removed from onboarding",
     });
   } catch (error) {
     console.log(error);
@@ -123,13 +122,13 @@ exports.deleteDocument = async (req, res) => {
   }
 };
 
-// Admin: Get All Documents (for verification)
-exports.getAllDocuments = async (req, res) => {
+// Admin: Get All Assets
+exports.getAllAssets = async (req, res) => {
   try {
-    const documents = await Document.find().populate("user", "name email");
+    const assets = await Asset.find().populate("user", "name email");
     res.status(200).json({
       success: true,
-      data: documents,
+      data: assets,
     });
   } catch (error) {
     res.status(500).json({

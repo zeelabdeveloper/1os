@@ -1,6 +1,7 @@
 const Application = require("../../models/jobs/applicationSchema");
 const InterViewRound = require("../../models/jobs/InterviewRound");
 const InterviewSession = require("../../models/jobs/InterviewSession");
+const Onboarding = require("../../models/jobs/Onboarding");
 
 // @desc    Get single interview session
 // @route   GET /api/v1/interview/interviewSessions/:id
@@ -40,13 +41,8 @@ exports.getInterviewSession = async (req, res, next) => {
 // @access  Private
 exports.createInterviewSession = async (req, res, next) => {
   try {
-    const {
-      interviewRoundId,
-      applicationId,
-      timeRange, // [startTime, endTime]
-      meetingLink,
-      notes,
-    } = req.body;
+    const { interviewRoundId, applicationId, timeRange, meetingLink, notes } =
+      req.body;
 
     // Validate required fields
     if (
@@ -127,13 +123,18 @@ exports.createInterviewSession = async (req, res, next) => {
       status: "scheduled",
     });
 
-    // Update application status if needed
-    if (
-      application.status === "applied" ||
-      application.status === "phone_screen"
-    ) {
-      application.status = "interview";
-      await application.save();
+    // Push interview session to existing onboarding or create new
+    const existingOnboarding = await Onboarding.findOne({ applicationId });
+
+    if (existingOnboarding) {
+      existingOnboarding.InterviewSession.push(interviewSession._id);
+      await existingOnboarding.save();
+    } else {
+      const newOnboarding = new Onboarding({
+        applicationId,
+        InterviewSession: [interviewSession._id],
+      });
+      await newOnboarding.save();
     }
 
     // Send email notifications
@@ -158,7 +159,7 @@ exports.createInterviewSession = async (req, res, next) => {
   } catch (err) {
     res.status(400).json({
       success: false,
-      error: err.message,
+      message: err.message,
     });
   }
 };
@@ -240,12 +241,12 @@ exports.updateInterviewSessionStatus = async (req, res, next) => {
         });
       }
       session.outcome = status;
-    } 
+    }
     // Status update
     else if (status) {
       const validStatus = [
         "scheduled",
-        "in_progress", 
+        "in_progress",
         "completed",
         "cancelled",
         "rescheduled",
@@ -256,12 +257,13 @@ exports.updateInterviewSessionStatus = async (req, res, next) => {
           message: "Invalid status value",
         });
       }
- 
+
       // Additional validation for completed status
       if (status === "completed" && session.outcome === "pending") {
         return res.status(400).json({
           success: false,
-          message: "Cannot mark as completed when outcome is pending. Please set outcome first.",
+          message:
+            "Cannot mark as completed when outcome is pending. Please set outcome first.",
         });
       }
 
@@ -301,6 +303,10 @@ exports.deleteInterviewSession = async (req, res, next) => {
         error: "No interview session found with that ID",
       });
     }
+    await Onboarding.findOneAndUpdate(
+      { applicationId: session.applicationId },
+      { $pull: { InterviewSession: session._id } }
+    );
 
     await session.deleteOne();
 
