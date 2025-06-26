@@ -64,6 +64,14 @@ app.use(
   require("./routes/setting/emailNotificationRouter.js")
 );
 
+
+// permission
+app.use(
+  "/api/v1/permission",
+  require("./routes/permissionRoutes.js")
+);
+
+
 // access For Only Developer
 
 app.use(

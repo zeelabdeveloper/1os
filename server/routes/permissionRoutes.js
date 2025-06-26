@@ -1,11 +1,14 @@
+// routes/permissionRoutes.js
 const express = require("express");
 const router = express.Router();
-const permissionController = require("../controllers/permissionController");
  
+// Tree and permissions management
+const permissionController = require("../controllers/permissionController");
 
-router.get("/routes",   permissionController.getAllRoutes);
-router.get("/role/:roleId", permissionController.getRolePermissions);
-router.put("/role/:roleId", permissionController.updatePermissions);
-router.delete("/role/:roleId", permissionController.deletePermissions);
+router.get("/tree", permissionController.getPermissionTree);
+router.get("/tree/:roleId", permissionController.getPermissionTree);
+router.put("/:roleId", permissionController.updateRolePermissions);
+router.get("/summary", permissionController.getRolePermissionsSummary);
+
 
 module.exports = router;

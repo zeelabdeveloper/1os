@@ -7,7 +7,7 @@ const PermissionSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  childRoutes: [{
+  permissions: [{
     route: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ChildRoute',
@@ -16,6 +16,10 @@ const PermissionSchema = new mongoose.Schema({
     access: {
       type: Boolean,
       default: false
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
     }
   }],
   createdAt: {
@@ -26,11 +30,21 @@ const PermissionSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 PermissionSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
+});
+
+PermissionSchema.virtual('allowedRoutes', {
+  ref: 'ChildRoute',
+  localField: 'permissions.route',
+  foreignField: '_id',
+  match: { 'permissions.access': true }
 });
 
 module.exports = mongoose.model("Permission", PermissionSchema);

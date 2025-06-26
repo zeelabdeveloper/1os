@@ -1,87 +1,141 @@
-const Permission = require("../models/Permission");
-const AllRoute = require("../models/developer/AllRoute");
+const Permission = require("../models/developer/Permission");
+const AllRoute = require("../models/developer/CreateRoute");
 const ChildRoute = require("../models/developer/ChildRoute");
-const { ErrorResponse, SuccessResponse } = require("../utils/response");
 
-// Get all routes with children for permission management
-exports.getAllRoutes = async (req, res) => {
+exports.getPermissionTree = async (req, res) => {
   try {
-    const routes = await AllRoute.find().populate('child');
-    return new SuccessResponse(res, "Routes fetched successfully", routes);
+    const { roleId } = req.params;
+    
+    const routeHeaders = await AllRoute.find().populate({
+      path: 'child',
+      select: 'url label'
+    }).lean();
+    
+    let existingPermissions = [];
+    if (roleId) {
+      const permissionDoc = await Permission.findOne({ role: roleId });
+      if (permissionDoc) {
+        existingPermissions = permissionDoc.permissions
+          .filter(p => p.access)
+          .map(p => p.route.toString());
+      }
+    }
+    
+    const tree = routeHeaders.map(header => ({
+      key: `header-${header._id}`,
+      title: header.header,
+      children: header.child.map(child => ({
+        key: child._id.toString(),
+        title: child.label,
+        path: child.url,
+        isLeaf: true,
+        disabled: false,
+        selected: roleId ? existingPermissions.includes(child._id.toString()) : false
+      }))
+    }));
+    
+    return res.status(200).json({
+      success: true,
+      message: "Permission tree fetched successfully",
+      data: tree
+    });
   } catch (error) {
-    return new ErrorResponse(res, error.message);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
-// Get permissions for a specific role
-exports.getRolePermissions = async (req, res) => {
+exports.updateRolePermissions = async (req, res) => {
   try {
     const { roleId } = req.params;
-    const permission = await Permission.findOne({ role: roleId }).populate('childRoutes.route');
+    const { selectedRoutes } = req.body;
     
-    if (!permission) {
-      return new SuccessResponse(res, "No permissions found for this role", { childRoutes: [] });
+    if (!Array.isArray(selectedRoutes)) {
+      return res.status(400).json({
+        success: false,
+        message: "selectedRoutes must be an array"
+      });
     }
     
-    return new SuccessResponse(res, "Permissions fetched successfully", permission);
-  } catch (error) {
-    return new ErrorResponse(res, error.message);
-  }
-};
-
-// Create or update permissions for a role
-exports.updatePermissions = async (req, res) => {
-  try {
-    const { roleId } = req.params;
-    const { childRoutes } = req.body;
+    const allChildRoutes = await ChildRoute.find({ 
+      _id: { $in: selectedRoutes } 
+    });
     
-    // Validate input
-    if (!Array.isArray(childRoutes)) {
-      return new ErrorResponse(res, "childRoutes must be an array", 400);
+    if (allChildRoutes.length !== selectedRoutes.length) {
+      return res.status(400).json({
+        success: false,
+        message: "One or more route IDs are invalid"
+      });
     }
     
-    // Check if permission exists
     let permission = await Permission.findOne({ role: roleId });
     
     if (!permission) {
-      // Create new permission
       permission = new Permission({
         role: roleId,
-        childRoutes: childRoutes.map(route => ({
-          route: route._id,
+        permissions: selectedRoutes.map(routeId => ({
+          route: routeId,
           access: true
         }))
       });
     } else {
-      // Update existing permission
-      permission.childRoutes = childRoutes.map(route => ({
-        route: route._id,
-        access: true
+      const existingPermissions = new Map();
+      permission.permissions.forEach(p => {
+        existingPermissions.set(p.route.toString(), p.access);
+      });
+      
+      const allRouteIds = allChildRoutes.map(r => r._id.toString());
+      
+      permission.permissions = allRouteIds.map(routeId => ({
+        route: routeId,
+        access: selectedRoutes.includes(routeId),
+        createdAt: existingPermissions.has(routeId) 
+          ? existingPermissions.get(routeId).createdAt 
+          : new Date()
       }));
     }
     
     await permission.save();
-    await permission.populate('childRoutes.route');
     
-    return new SuccessResponse(res, "Permissions updated successfully", permission);
-  } catch (error) {
-    return new ErrorResponse(res, error.message);
+    return res.status(200).json({
+      success: true,
+      message: "Permissions updated successfully",
+      data: await Permission.findById(permission._id)
+        .populate('permissions.route')
+    });
+  } catch (error) {console.log(error)
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 
-// Delete permissions for a role
-exports.deletePermissions = async (req, res) => {
+exports.getRolePermissionsSummary = async (req, res) => {
   try {
-    const { roleId } = req.params;
+    const permissions = await Permission.find()
+      .populate('role', 'name')
+      .populate('permissions.route', 'label url');
     
-    const result = await Permission.deleteOne({ role: roleId });
+    const summary = permissions.map(perm => ({
+      roleId: perm.role._id,
+      roleName: perm.role.name,
+      totalRoutes: perm.permissions.length,
+      allowedRoutes: perm.permissions.filter(p => p.access).length,
+      lastUpdated: perm.updatedAt
+    }));
     
-    if (result.deletedCount === 0) {
-      return new ErrorResponse(res, "No permissions found for this role", 404);
-    }
-    
-    return new SuccessResponse(res, "Permissions deleted successfully");
+    return res.status(200).json({
+      success: true,
+      message: "Permissions summary fetched successfully",
+      data: summary
+    });
   } catch (error) {
-    return new ErrorResponse(res, error.message);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
