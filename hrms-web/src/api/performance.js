@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../axiosConfig";
 
 export const createIndicator = async (data) => {
   const res = await axios.post("/api/v1/performance/indicators", data);

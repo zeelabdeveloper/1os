@@ -1,5 +1,3 @@
-// src/pages/Login.jsx
-
 import { Form, Input, Button, Typography } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useMutation } from "@tanstack/react-query";
@@ -8,7 +6,6 @@ import { loginUser } from "../api/auth";
 import { useNavigate } from "react-router-dom";
 import { useMediaQuery } from "react-responsive";
 import { FullLogo, LoginBackground, ZeelabShop1 } from "../locale/local";
- 
 
 const { Title } = Typography;
 

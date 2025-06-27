@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../axiosConfig";
 export const fetchStaffAnalytics = async () => {
   const { data } = await axios.get("/api/v1/analytics/staff");
   return data;

@@ -1,5 +1,4 @@
-import axios from "axios";
-
+import axios from "../axiosConfig";
 export const createJob = async (data) => {
   const { dat } = await axios.post("/api/v1/jobs", data);
   return dat;

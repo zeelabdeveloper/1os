@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "../axiosConfig";
 
 export const fetchsetting = async () => {
   const response = await axios.get("/api/v1/settings");

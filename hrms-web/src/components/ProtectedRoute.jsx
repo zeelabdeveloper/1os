@@ -5,7 +5,7 @@ import { verifyUser } from "../api/auth";
 import Loading from "./Loading";
 import toast from "react-hot-toast";
 
-const ProtectedRoute = ({ children, requiredRoles = [] }) => {
+const ProtectedRoute = ({ children }) => {
   const location = useLocation();
   const { isAuthenticated, loginSuccess, logout } = useAuthStore();
 
