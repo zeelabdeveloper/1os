@@ -2,16 +2,18 @@
 import React, { useState } from "react";
 import { Layout, Tabs, theme, Spin, Alert } from "antd";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import axios from "../../axiosConfig";
 import DailyAttendance from "./createAttendance/DailyAttendance";
 import AttendanceHistory from "./createAttendance/AttendanceHistory";
 import LeaveRequest from "./createAttendance/LeaveRequest";
 import Reports from "./createAttendance/Reports";
+import useAuthStore from "../../stores/authStore";
 
 const { Header, Content } = Layout;
 const { TabPane } = Tabs;
 
 const AttendanceSystem = () => {
+   const {user}=useAuthStore()
   const {
     token: { colorBgContainer },
   } = theme.useToken();
@@ -23,11 +25,11 @@ const AttendanceSystem = () => {
   } = useQuery({
     queryKey: ["currentUser"],
     queryFn: async () => {
-      const response = await axios.get("/api/v1/user/staff/685d24dd2fd550d8d845da7e");
+      const response = await axios.get(`/api/v1/user/staff/${user._id}`);
       return response.data;
     },
   });
-console.log(error)
+console.log(userData)
   const [activeTab, setActiveTab] = useState("daily");
 
   if (isLoading) return <Spin size="large" fullscreen />;

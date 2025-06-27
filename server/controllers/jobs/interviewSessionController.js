@@ -2,7 +2,7 @@ const Application = require("../../models/jobs/applicationSchema");
 const InterViewRound = require("../../models/jobs/InterviewRound");
 const InterviewSession = require("../../models/jobs/InterviewSession");
 const Onboarding = require("../../models/jobs/Onboarding");
-
+const mongoose=require('mongoose')
 // @desc    Get single interview session
 // @route   GET /api/v1/interview/interviewSessions/:id
 // @access  Private
@@ -35,6 +35,37 @@ exports.getInterviewSession = async (req, res, next) => {
     });
   }
 };
+
+
+exports.getInterviewRoundsByInterviewer = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Validate if userId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
+    const interviewRounds = await InterViewRound.find({ interviewer: userId })
+      .populate('interviewer', 'name email')
+      .sort({ roundNumber: 1 }); 
+
+    res.status(200).json({
+      success: true,
+      data: interviewRounds,
+      message: interviewRounds.length > 0 
+        ? 'Interview rounds fetched successfully' 
+        : 'No interview rounds found for this user'
+    });
+  } catch (error) {
+    console.error('Error fetching interview rounds:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching interview rounds'
+    });
+  }
+};
+
 
 // @desc    Create new interview session
 // @route   POST /api/v1/interview/interviewSessions

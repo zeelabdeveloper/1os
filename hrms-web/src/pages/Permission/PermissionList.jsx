@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Button,
   Card,
@@ -12,25 +12,25 @@ import {
   Table,
   Tag,
   Tree,
-  Typography
-} from 'antd';
+  Typography,
+} from "antd";
 import {
   CheckOutlined,
   CloseOutlined,
   SaveOutlined,
   SearchOutlined,
   UserOutlined,
-  TeamOutlined
-} from '@ant-design/icons';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { debounce } from 'lodash';
+  TeamOutlined,
+} from "@ant-design/icons";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { debounce } from "lodash";
 
-import { fetchRoles } from '../../api/auth';
+import { fetchRoles } from "../../api/auth";
 import {
   getPermissionTree,
   updateRolePermissions,
-  getRolePermissionsSummary
-} from '../../api/permissionService';
+  getRolePermissionsSummary,
+} from "../../api/permissionService";
 
 const { Title, Text } = Typography;
 const { DirectoryTree } = Tree;
@@ -41,47 +41,44 @@ const PermissionsManager = () => {
   const [expandedKeys, setExpandedKeys] = useState([]);
   const [checkedKeys, setCheckedKeys] = useState([]);
   const [autoExpandParent, setAutoExpandParent] = useState(true);
-  const [searchValue, setSearchValue] = useState('');
+  const [searchValue, setSearchValue] = useState("");
   const queryClient = useQueryClient();
 
   const { data: roles, isLoading: rolesLoading } = useQuery({
-    queryKey: ['roles'],
+    queryKey: ["roles"],
     queryFn: fetchRoles,
-    staleTime: 1000 * 60 * 5
+    staleTime: 1000 * 60 * 5,
   });
 
-  const {
-    data: permissionTree,
-    isLoading: treeLoading
-  } = useQuery({
-    queryKey: ['permissionTree', selectedRole],
+  const { data: permissionTree, isLoading: treeLoading } = useQuery({
+    queryKey: ["permissionTree", selectedRole],
     queryFn: () => getPermissionTree(selectedRole),
-    enabled: !!selectedRole
+    enabled: !!selectedRole,
   });
 
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
-    queryKey: ['permissionsSummary'],
-    queryFn: getRolePermissionsSummary
+    queryKey: ["permissionsSummary"],
+    queryFn: getRolePermissionsSummary,
   });
 
   const updatePermissions = useMutation({
     mutationFn: (selectedRoutes) =>
       updateRolePermissions(selectedRole, selectedRoutes),
     onSuccess: () => {
-      queryClient.invalidateQueries(['permissionTree', selectedRole]);
-      queryClient.invalidateQueries(['permissionsSummary']);
-    }
+      queryClient.invalidateQueries(["permissionTree", selectedRole]);
+      queryClient.invalidateQueries(["permissionsSummary"]);
+    },
   });
 
   useEffect(() => {
     if (permissionTree?.data && selectedRole) {
       const selected = permissionTree.data
-        .flatMap(header => header.children)
-        .filter(child => child.selected)
-        .map(child => child.key);
+        .flatMap((header) => header.children)
+        .filter((child) => child.selected)
+        .map((child) => child.key);
 
       setCheckedKeys(selected);
-      setExpandedKeys(permissionTree.data.map(header => header.key));
+      setExpandedKeys(permissionTree.data.map((header) => header.key));
     } else {
       setCheckedKeys([]);
     }
@@ -89,14 +86,15 @@ const PermissionsManager = () => {
 
   const handleRoleChange = (roleId) => {
     setSelectedRole(roleId);
-    setSearchValue('');
+    setSearchValue("");
   };
 
   const handleCheck = (checked) => {
-    const onlyLeafChecked = permissionTree?.data
-      ?.flatMap(header => header.children)
-      ?.filter(child => checked.includes(child.key))
-      ?.map(child => child.key) || [];
+    const onlyLeafChecked =
+      permissionTree?.data
+        ?.flatMap((header) => header.children)
+        ?.filter((child) => checked.includes(child.key))
+        ?.map((child) => child.key) || [];
 
     setCheckedKeys(onlyLeafChecked);
   };
@@ -110,22 +108,23 @@ const PermissionsManager = () => {
     setSearchValue(value);
 
     if (!value) {
-      setExpandedKeys(permissionTree?.data?.map(header => header.key) || []);
+      setExpandedKeys(permissionTree?.data?.map((header) => header.key) || []);
       return;
     }
 
     const matchedKeys = [];
     const expanded = [];
 
-    permissionTree?.data?.forEach(header => {
-      const matchedChildren = header.children.filter(child =>
-        child.title.toLowerCase().includes(value.toLowerCase()) ||
-        child.path.toLowerCase().includes(value.toLowerCase())
+    permissionTree?.data?.forEach((header) => {
+      const matchedChildren = header.children.filter(
+        (child) =>
+          child.title.toLowerCase().includes(value.toLowerCase()) ||
+          child.path.toLowerCase().includes(value.toLowerCase())
       );
 
       if (matchedChildren.length > 0) {
         expanded.push(header.key);
-        matchedKeys.push(...matchedChildren.map(child => child.key));
+        matchedKeys.push(...matchedChildren.map((child) => child.key));
       }
     });
 
@@ -136,13 +135,16 @@ const PermissionsManager = () => {
   const filteredTreeData = useMemo(() => {
     if (!searchValue || !permissionTree?.data) return permissionTree?.data;
 
-    return permissionTree.data.map(header => ({
-      ...header,
-      children: header.children.filter(child =>
-        child.title.toLowerCase().includes(searchValue.toLowerCase()) ||
-        child.path.toLowerCase().includes(searchValue.toLowerCase())
-      )
-    })).filter(header => header.children.length > 0);
+    return permissionTree.data
+      .map((header) => ({
+        ...header,
+        children: header.children.filter(
+          (child) =>
+            child.title.toLowerCase().includes(searchValue.toLowerCase()) ||
+            child.path.toLowerCase().includes(searchValue.toLowerCase())
+        ),
+      }))
+      .filter((header) => header.children.length > 0);
   }, [permissionTree, searchValue]);
 
   const handleSave = () => {
@@ -154,19 +156,19 @@ const PermissionsManager = () => {
     if (!permissionTree?.data) return;
 
     const allLeafKeys = permissionTree.data
-      .flatMap(header => header.children)
-      .map(child => child.key);
+      .flatMap((header) => header.children)
+      .map((child) => child.key);
 
     setCheckedKeys(select ? allLeafKeys : []);
   };
 
   return (
-    <div className="permissions-manager p-4 bg-gray-50 min-h-screen">
+    <div className="permissions-manager p-4 bg-gray-50 overflow-y-auto  h-[92vh]">
       <Row gutter={[16, 16]}>
         <Col span={24}>
           <Card
             className="shadow-md rounded-xl"
-            headStyle={{ backgroundColor: '#f0f5ff' }}
+            headStyle={{ backgroundColor: "#f0f5ff" }}
           >
             <Title level={3} className="!mb-0 text-indigo-600">
               <TeamOutlined className="mr-2" />
@@ -187,19 +189,19 @@ const PermissionsManager = () => {
                 ) : (
                   <Select
                     size="large"
-                    style={{ width: '100%' }}
+                    style={{ width: "100%" }}
                     placeholder="Select a role"
                     onChange={handleRoleChange}
                     value={selectedRole}
                     optionLabelProp="label"
-                    options={roles?.map(role => ({
+                    options={roles?.map((role) => ({
                       value: role._id,
                       label: (
                         <span>
                           <UserOutlined className="mr-2 text-blue-600" />
                           {role.name}
                         </span>
-                      )
+                      ),
                     }))}
                   />
                 )}
@@ -252,7 +254,11 @@ const PermissionsManager = () => {
         </Col>
 
         <Col span={16}>
-          <Card title="Route Permissions" className="rounded-xl shadow-sm" loading={treeLoading}>
+          <Card
+            title="Route Permissions"
+            className="rounded-xl shadow-sm"
+            loading={treeLoading}
+          >
             {treeLoading ? (
               <Skeleton active paragraph={{ rows: 10 }} />
             ) : permissionTree?.data ? (
@@ -273,7 +279,9 @@ const PermissionsManager = () => {
                       <div className="tree-leaf-node">
                         <span className="tree-leaf-title">
                           {node.title}
-                          <Tag color="geekblue" className="ml-2">{node.path}</Tag>
+                          <Tag color="geekblue" className="ml-2">
+                            {node.path}
+                          </Tag>
                         </span>
                         {checkedKeys.includes(node.key) ? (
                           <CheckOutlined className="text-green-500" />
@@ -293,7 +301,10 @@ const PermissionsManager = () => {
         </Col>
 
         <Col span={8}>
-          <Card title="Permissions Summary" className="rounded-xl shadow-sm mb-4">
+          <Card
+            title="Permissions Summary"
+            className="rounded-xl shadow-sm mb-4"
+          >
             {summaryLoading ? (
               <Skeleton active paragraph={{ rows: 4 }} />
             ) : summaryData?.data ? (
@@ -303,27 +314,29 @@ const PermissionsManager = () => {
                 pagination={false}
                 columns={[
                   {
-                    title: 'Role',
-                    dataIndex: 'roleName',
-                    key: 'roleName'
+                    title: "Role",
+                    dataIndex: "roleName",
+                    key: "roleName",
                   },
                   {
-                    title: 'Allowed',
-                    dataIndex: 'allowedRoutes',
-                    key: 'allowedRoutes',
+                    title: "Allowed",
+                    dataIndex: "allowedRoutes",
+                    key: "allowedRoutes",
                     render: (allowed, record) => (
-                      <Tag color="blue">{allowed} / {record.totalRoutes}</Tag>
-                    )
+                      <Tag color="blue">
+                        {allowed} / {record.totalRoutes}
+                      </Tag>
+                    ),
                   },
                   {
-                    title: 'Last Updated',
-                    dataIndex: 'lastUpdated',
-                    key: 'lastUpdated',
-                    render: (date) => new Date(date).toLocaleString()
-                  }
+                    title: "Last Updated",
+                    dataIndex: "lastUpdated",
+                    key: "lastUpdated",
+                    render: (date) => new Date(date).toLocaleString(),
+                  },
                 ]}
                 onRow={(record) => ({
-                  onClick: () => handleRoleChange(record.roleId)
+                  onClick: () => handleRoleChange(record.roleId),
                 })}
               />
             ) : (
@@ -335,9 +348,9 @@ const PermissionsManager = () => {
             {selectedRole && checkedKeys.length > 0 ? (
               <div className="selected-permissions-list">
                 {permissionTree?.data
-                  ?.flatMap(header => header.children)
-                  ?.filter(child => checkedKeys.includes(child.key))
-                  ?.map(child => (
+                  ?.flatMap((header) => header.children)
+                  ?.filter((child) => checkedKeys.includes(child.key))
+                  ?.map((child) => (
                     <div key={child.key} className="selected-permission-item">
                       <Text ellipsis>{child.title}</Text>
                       <Tag color="green">{child.path}</Tag>
@@ -348,7 +361,11 @@ const PermissionsManager = () => {
                 </div>
               </div>
             ) : (
-              <Empty description={selectedRole ? "No routes selected" : "No role selected"} />
+              <Empty
+                description={
+                  selectedRole ? "No routes selected" : "No role selected"
+                }
+              />
             )}
           </Card>
         </Col>
@@ -356,7 +373,7 @@ const PermissionsManager = () => {
 
       <style jsx global>{`
         .permissions-manager {
-          font-family: 'Inter', sans-serif;
+          font-family: "Inter", sans-serif;
         }
 
         .tree-leaf-node {

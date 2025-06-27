@@ -90,15 +90,7 @@ const UserSchema = new mongoose.Schema({
     default: false,
   },
   lastLogin: Date,
-  loginAttempts: {
-    type: Number,
-    default: 0,
-  },
-
-  accountSuspended: {
-    type: Boolean,
-    default: false,
-  },
+  
 
   createdAt: {
     type: Date,

@@ -16,8 +16,9 @@ import {
 } from "antd";
 import { FileTextOutlined } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import axios from "../../../axiosConfig";
 import dayjs from "dayjs";
+import toast from "react-hot-toast";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -46,14 +47,14 @@ const LeaveRequest = ({ user }) => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["leaveRequests", user._id]);
+      queryClient.invalidateQueries(["leaveRequests", user?._id]);
       setIsModalVisible(false);
       form.resetFields();
-      message.success("Leave request submitted successfully");
+      toast.success("Leave request submitted successfully");
     },
     onError: (error) => {
-      message.error(
-        error.response?.data?.message || "Failed to submit leave request"
+      toast.error(
+        error?.response?.data?.message || "Failed to submit leave request"
       );
     },
   });
@@ -170,7 +171,7 @@ const LeaveRequest = ({ user }) => {
 
       <Table
         columns={columns}
-        dataSource={leaveRequests}
+        dataSource={Array.isArray(leaveRequests) && leaveRequests}
         rowKey="_id"
         loading={isLoading}
         pagination={{

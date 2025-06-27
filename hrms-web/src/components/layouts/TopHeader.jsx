@@ -1,4 +1,3 @@
- 
 import { Layout, Button, Dropdown, Avatar, Space, Badge, Modal } from "antd";
 import {
   BellOutlined,
@@ -19,7 +18,7 @@ const TopHeader = () => {
   const { user, logout } = useAuthStore((state) => state);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const navigate = useNavigate();
-console.log("fgfgfgf")
+
   const notifications = [
     { id: 1, title: "New report generated", time: "2 hours ago" },
     { id: 2, title: "System update available", time: "1 day ago" },
@@ -27,7 +26,7 @@ console.log("fgfgfgf")
 
   const handleMenuClick = (e) => {
     if (e.key === "1") {
-      navigate("/profile");
+      navigate("/profiles");
     } else if (e.key === "3") {
       setIsLogoutModalOpen(true);
     }
@@ -45,11 +44,7 @@ console.log("fgfgfgf")
       label: "Profile",
       icon: <UserOutlined />,
     },
-    {
-      key: "2",
-      label: "Settings",
-      icon: <UserOutlined />,
-    },
+
     { type: "divider" },
     {
       key: "3",
@@ -88,7 +83,7 @@ console.log("fgfgfgf")
             className="hidden sm:flex"
           />
 
-          <Dropdown
+          {/* <Dropdown
             menu={{
               items: notifications.map((item) => ({
                 key: item.id,
@@ -109,7 +104,7 @@ console.log("fgfgfgf")
                 icon={<BellOutlined className="text-gray-500" />}
               />
             </Badge>
-          </Dropdown>
+          </Dropdown> */}
 
           <Dropdown
             menu={{

@@ -2,6 +2,10 @@ const Role = require("../models/Role");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const Department = require("../models/Department");
+const nodemailer = require("nodemailer");
+const sendEmail = require("../services/forgetpassmail");
+const Permission = require("../models/developer/Permission");
+
 const createToken = (userId) => {
   return jwt.sign(userId, process.env.JWT_SECRET, {
     expiresIn: "7d",
@@ -12,108 +16,119 @@ exports.loginUser = async (req, res) => {
   const { employeeId, password } = req.body;
 
   try {
-    if (!password || password.length < 4) {
-      return res.status(400).json({
-        message: "Password must be at least 4 characters long",
-      });
-    }
+    if (!password || password.length < 4)
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 4 characters long" });
+    if (!employeeId)
+      return res.status(400).json({ message: "Please provide an employee ID" });
 
-    if (!employeeId) {
-      return res.status(400).json({
-        message: "Please provide either employee ID",
-      });
-    }
+    const userAgg = await User.aggregate([
+      {
+        $lookup: {
+          from: "employeeids",
+          localField: "EmployeeId",
+          foreignField: "_id",
+          as: "employeeIdDetails",
+        },
+      },
+      { $unwind: "$employeeIdDetails" },
+      { $match: { "employeeIdDetails.employeeId": employeeId.toUpperCase() } },
+      { $limit: 1 },
+    ]);
 
-    const user = await User.findOne({ employeeId }).populate("roles");
+    const user = userAgg[0];
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
-    if (!user) {
-      return res.status(401).json({
-        message: "Invalid credentials",
-      });
-    }
+    if (!user.isActive)
+      return res
+        .status(403)
+        .json({ message: "Account is deactivated. Contact administrator" });
 
-    // 3. Check if account is accountSuspended
-    if (user.accountSuspended) {
-      const lockTime = new Date(user.updatedAt);
-      const unlockTime = new Date(lockTime.getTime() + 30 * 60 * 1000);
+    const fullUser = await User.findById(user._id);
+    const isMatch = await fullUser.comparePassword(password);
 
-      if (new Date() < unlockTime) {
-        return res.status(403).json({
-          message: `Account locked. Try again after ${unlockTime}`,
-        });
-      } else {
-        user.accountSuspended = false;
-        user.loginAttempts = 0;
-        await user.save();
-      }
-    }
+    // if (!isMatch)
+    //   return res.status(401).json({ message: "Invalid credentials" });
 
-    // 4. Check if account is active
-    if (!user.isActive) {
-      return res.status(403).json({
-        message: "Account is deactivated. Contact administrator",
-      });
-    }
+    fullUser.lastLogin = new Date();
+    await fullUser.save();
 
-    // 5. Verify password
-    const isMatch = await user.comparePassword(password);
-
-    if (!isMatch) {
-      user.loginAttempts += 1;
-      if (user.loginAttempts >= 5) {
-        user.accountSuspended = true;
-        await user.save();
-        return res.status(403).json({
-          message: "Too many failed attempts. Account locked for 30 minutes",
-        });
-      }
-
-      await user.save();
-      return res.status(401).json({
-        message: `Invalid credentials. ${
-          5 - user.loginAttempts
-        } attempts remaining`,
-      });
-    }
-
-    user.loginAttempts = 0;
-    user.lastLogin = new Date();
-    await user.save();
-
-    // 7. Generate JWT token
     const token = createToken({
-      userId: user._id,
-      employeeId: user.employeeId,
-      roles: user.roles,
+      userId: fullUser._id,
     });
 
-    // 8. Set secure cookie
     res.cookie("token", token, {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: 365 * 24 * 60 * 60 * 1000,
       path: "/",
     });
 
-    return res.status(200).json({
-      success: true,
-      message: "Login successful",
-      user: {
-        id: user._id,
-        employeeId: user.employeeId,
-        fullName: user.fullName,
-        email: user.email,
-        roles: user.roles,
-        designation: user.designation,
-        department: user.department,
-      },
-    });
+    return res.status(200).json({ success: true, message: "Login successful" });
   } catch (error) {
     console.error("Login error:", error);
-    return res.status(500).json({
-      message: "Server error during authentication",
+    return res
+      .status(500)
+      .json({ message: "Server error during authentication" });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) return res.status(400).json({ message: "Email is required" });
+
+  try {
+    const user = await User.findOne({ email })
+      .select("+password")
+      .populate("EmployeeId");
+    console.log(user);
+    if (!user) {
+      return res.status(404).json({ message: "No user found with this email" });
+    }
+
+    const tempPassword = Math.random().toString(36).slice(-8);
+    user.password = tempPassword;
+    await user.save();
+
+    const mailOptions = {
+      from: `"Zeelab Pharmacy" <${process.env.MAIL_USER}>`,
+      to: user.email,
+      subject: "Zeelab - Your Temporary Password",
+      html: `
+        <h3>Hello ${user.fullName},</h3>
+        <p>Your temporary password is:</p>
+        <h2 style="color: #22c55e;">${tempPassword}</h2>
+        <p>Your Employee Id is:</p>
+        <h2 style="color: #22c55e;">${user?.EmployeeId?.employeeId}</h2>
+        <p>Please log in and change your password immediately.</p>
+        <br/>
+        <p>Thanks,<br/>Zeelab Team</p>
+      `,
+    };
+
+    const emailResult = await sendEmail(mailOptions);
+
+    if (!emailResult.success) {
+      return res.status(500).json({
+        success: false,
+        message:
+          emailResult.error?.message ||
+          "Failed to send email. Please try again.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Temporary password sent to your email.",
     });
+  } catch (err) {
+    console.error("Forgot password error:", err);
+    return res
+      .status(500)
+      .json({ message: err.message || "Internal server error" });
   }
 };
 
@@ -199,68 +214,105 @@ exports.createDepartment = async (req, res) => {
 
 exports.verifyToken = async (req, res) => {
   try {
+    // 1. Extract token from cookies or Authorization header
     const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
-
+console.log(token)
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Authorization token required",
+        message: "Access denied. No token provided.",
       });
     }
 
+    // 2. Verify JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 3. Find user in database
+    // 3. Find the user and populate Organization if it's a referenced field
     const user = await User.findById(decoded.userId)
       .select("-password -__v")
-      .populate("roles");
+      .populate([
+        { path: "Organization", strictPopulate: false },
+        { path: "EmployeeId", strictPopulate: false },
+      ]);
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: "User not found.",
       });
     }
 
     if (!user.isActive) {
       return res.status(403).json({
         success: false,
-        message: "Account is deactivated",
+        message: "Your account has been deactivated. Please contact the admin.",
       });
     }
 
-    // 5. Return verified user data
+    // 4. Check if user's organization and role exist
+    const roleId = user?.Organization?.role;
+    if (!roleId) {
+      return res.status(403).json({
+        success: false,
+        message: "User's role information is missing. Contact admin.",
+      });
+    }
+
+    // 5. Fetch permissions for that role
+    const allPermission = await Permission.findOne({ role: roleId }).populate({
+      path: "permissions.route",
+      model: "ChildRoute",
+      strictPopulate: false,
+    });
+
+    if (
+      !allPermission ||
+      !Array.isArray(allPermission.permissions) ||
+      allPermission.permissions.length === 0
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not assigned any permissions. Contact your manager.",
+      });
+    }
+
+    const allowedRoutes = allPermission.permissions
+      .filter((p) => p.access && p.route)
+      .map((p) => ({
+        url: p?.route?.url,
+        label: p?.route?.label,
+      }));
+console.log(allowedRoutes)
     return res.status(200).json({
-      success: true,
-      user: {
-        id: user._id,
-        email: user.email,
-        fullName: user.fullName,
-        roles: user.roles,
-        isActive: user.isActive,
-      },
+      success: true, 
+      permissions: allowedRoutes,
+      user,
+      employeeId: user?.EmployeeId,
     });
   } catch (error) {
-    if (error instanceof jwt.JsonWebTokenError) {
+    console.error("Token verification error:", error.message);
+
+    if (error.name === "JsonWebTokenError") {
       return res.status(401).json({
         success: false,
-        message: "Invalid or expired token",
+        message: "Invalid authentication token.",
       });
     }
 
-    if (error instanceof jwt.TokenExpiredError) {
+    if (error.name === "TokenExpiredError") {
       return res.status(401).json({
         success: false,
-        message: "Token expired",
+        message: "Authentication token has expired.",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: "Server error during authentication",
+      message: "An unexpected error occurred during token verification.",
     });
   }
 };
+
 exports.fetchUser = async (req, res) => {
   try {
     const token = req.cookies.token || req.headers.authorization?.split(" ")[1];

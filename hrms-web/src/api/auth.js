@@ -7,11 +7,14 @@ export const loginUser = async (credentials) => {
   return response.data;
 };
 
-export const verifyUser = async (credentials) => {
-  const response = await axios.get("/api/v1/auth/verify", {
-    withCredentials: true,
-  });
+export const verifyUser = async () => {
+  const response = await axios.get("/api/v1/auth/verify");
   return response.data;
+};
+
+export const sendForgotPasswordEmail = async ({ email }) => {
+  const res = await axios.post("/api/v1/forgot-password", { email });
+  return res.data;
 };
 
 export const fetchUser = async (credentials) => {
@@ -122,7 +125,7 @@ export const fetchEmployees = async (isCocoStaff) => {
 
 export const fetchRoles = async () => {
   const response = await axios.get(`/api/v1/company/roles`);
- 
+
   return response.data;
 };
 export const fetchStoreRoles = async () => {
@@ -143,7 +146,7 @@ export const fetchRoleByDepartment = async (department) => {
   const response = await axios.get(
     `/api/v1/company/branch/department/role/${department}`
   );
-console.log(department)
+  console.log(department);
   return response.data.data;
 };
 
@@ -221,8 +224,6 @@ export const fetchUserById = async ({ id, data }) => {
   });
   return response.data;
 };
-
-
 
 export const fetchUsersByRole = async (roleId) => {
   const response = await axios.get(`/api/v1/user/roles/${roleId}`);

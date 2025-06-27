@@ -48,7 +48,7 @@ const InterviewRoundManagement = () => {
     queryKey: ["departments"],
     queryFn: () => fetchRoles(),
   });
-  
+
   // Fetch interviewers based on selected department
   const { data: interviewers, isLoading: interviewersLoading } = useQuery({
     queryKey: ["interviewers", selectedDepartment],
@@ -58,7 +58,7 @@ const InterviewRoundManagement = () => {
 
   // Memoized filtered interview rounds
   const filteredInterviewRounds = useMemo(() => {
-    return interviewRounds?.filter(
+    return  Array.isArray(interviewRounds) && interviewRounds?.filter(
       (round) =>
         round.name.toLowerCase().includes(searchText.toLowerCase()) ||
         round.interviewer?.name.toLowerCase().includes(searchText.toLowerCase())
@@ -172,7 +172,7 @@ const InterviewRoundManagement = () => {
                 <Select
                   placeholder="Select Role"
                   onChange={handleDepartmentChange}
-                  options={departments?.map((d) => ({
+                  options={  Array.isArray(departments) &&  departments?.map((d) => ({
                     value: d._id,
                     label: d.name,
                   }))}
@@ -189,7 +189,7 @@ const InterviewRoundManagement = () => {
                   loading={interviewersLoading}
                   options={interviewers?.map((i) => ({
                     value: i._id,
-                    label: `${i.firstName} ${i.lastName || ''} (${i.email})`,
+                    label: `${i.firstName} ${i.lastName || ""} (${i.email})`,
                   }))}
                 />
               </Form.Item>
@@ -223,9 +223,9 @@ const InterviewRoundManagement = () => {
                   onClick={() => handleUpdate(record._id)}
                   loading={updateMutation.isLoading}
                 />
-                <Button 
-                  icon={<FiEdit />} 
-                  onClick={handleEditCancel} 
+                <Button
+                  icon={<FiEdit />}
+                  onClick={handleEditCancel}
                   disabled={updateMutation.isLoading}
                 />
               </>
@@ -237,14 +237,14 @@ const InterviewRoundManagement = () => {
                     setEditingId(record._id);
                     const departmentId = record.interviewer?.department?._id;
                     setSelectedDepartment(departmentId);
-                    
+
                     setTimeout(() => {
                       form.setFieldsValue({
                         roundNumber: record.roundNumber,
                         name: record.name,
                         role: departmentId,
                         interviewer: record.interviewer?._id,
-                        description: record.description
+                        description: record.description,
                       });
                     }, 0);
                   }}
@@ -341,7 +341,7 @@ const InterviewRoundManagement = () => {
       <Form form={form} component={false}>
         <Table
           columns={columns}
-          dataSource={filteredInterviewRounds}
+          dataSource={ Array.isArray(filteredInterviewRounds) &&  filteredInterviewRounds}
           rowKey="_id"
           loading={isLoading}
           pagination={{ pageSize: 10 }}
@@ -370,18 +370,17 @@ const InterviewRoundManagement = () => {
           >
             <Input />
           </Form.Item>
-          <Form.Item
-            name="role"
-            label="Role"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="role" label="Role" rules={[{ required: true }]}>
             <Select
               placeholder="Select Role"
               onChange={handleDepartmentChange}
-              options={departments?.map((d) => ({
-                value: d._id,
-                label: d.name,
-              }))}
+              options={
+                Array.isArray(departments) &&
+                departments?.map((d) => ({
+                  value: d._id,
+                  label: d.name,
+                }))
+              }
             />
           </Form.Item>
           <Form.Item
@@ -395,7 +394,7 @@ const InterviewRoundManagement = () => {
               loading={interviewersLoading}
               options={interviewers?.map((i) => ({
                 value: i._id,
-                label: `${i.firstName} ${i.lastName || ''} (${i.email})`,
+                label: `${i.firstName} ${i.lastName || ""} (${i.email})`,
               }))}
             />
           </Form.Item>

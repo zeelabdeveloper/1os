@@ -1,30 +1,26 @@
 import { Form, Input, Button, Typography } from "antd";
-import { UserOutlined, LockOutlined, KeyOutlined } from "@ant-design/icons";
-import { useMutation } from "@tanstack/react-query";
+import { MailOutlined } from "@ant-design/icons";
 import toast from "react-hot-toast";
-import { loginUser } from "../api/auth";
+import { useMutation } from "@tanstack/react-query";
+import { sendForgotPasswordEmail } from "../api/auth.js";
 import { useNavigate } from "react-router-dom";
 import { useMediaQuery } from "react-responsive";
 import { FullLogo, LoginBackground, ZeelabShop1 } from "../locale/local";
 
 const { Title } = Typography;
 
-const Login = () => {
+const ForgotPassword = () => {
   const navigate = useNavigate();
   const isDesktop = useMediaQuery({ minWidth: 992 });
 
   const mutation = useMutation({
-    mutationFn: loginUser,
-    onSuccess: (data) => {
-      console.log(data);
-      toast.success(`Welcome to Zeelab Pharmacy!`);
-
-      navigate("/dashboard");
+    mutationFn: sendForgotPasswordEmail,
+    onSuccess: (res) => {
+      toast.success(res.message || "Password reset link sent to email!");
+      navigate("/login");
     },
-    onError: (error) => {
-      const message =
-        error.response?.data?.message || "Something went wrong, try again!";
-      toast.error(message);
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Failed to send password reset link");
     },
   });
 
@@ -127,10 +123,10 @@ const Login = () => {
               className="bg-white/70 w-full p-2 rounded-lg text-center text-[#22c55e] font-bold flex items-center justify-center gap-x-2"
               style={styles.sliderText}
             >
-              <span className="   font-extrabold  text-[#7FBF2A]"> Dava</span>
-              <span className="   font-extrabold  text-[#281870]"> Asli</span>
-              <span className="   font-extrabold  text-[#177B9D]"> Dam</span>
-              <span className="   font-extrabold  text-[#7FBF2A]"> Par</span>
+              <span className="font-extrabold text-[#7FBF2A]">Dava</span>
+              <span className="font-extrabold text-[#281870]">Asli</span>
+              <span className="font-extrabold text-[#177B9D]">Dam</span>
+              <span className="font-extrabold text-[#7FBF2A]">Par</span>
             </p>
           </div>
         </div>
@@ -151,7 +147,7 @@ const Login = () => {
         </Title>
 
         <Form
-          name="login"
+          name="forgot-password"
           autoComplete="on"
           onFinish={onFinish}
           layout="vertical"
@@ -159,30 +155,16 @@ const Login = () => {
           style={{ width: "100%" }}
         >
           <Form.Item
-            name="employeeId"
-            label="Employee Id"
+            name="email"
+            label="Email"
             rules={[
-              { required: true, message: "Please enter your Employee id!" },
-              { type: "text", message: "Enter a valid Employee id!" },
+              { required: true, message: "Please enter your email!" },
+              { type: "email", message: "Please enter a valid email!" },
             ]}
           >
             <Input
-              autoComplete="employeeId"
-              prefix={<UserOutlined style={{ color: "#22c55e" }} />}
-              placeholder="Employee Id"
-              size="large"
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="password"
-            label="Password"
-            rules={[{ required: true, message: "Please enter your password!" }]}
-          >
-            <Input.Password
-              autoComplete="current-password"
-              prefix={<LockOutlined style={{ color: "#22c55e" }} />}
-              placeholder="Password"
+              prefix={<MailOutlined style={{ color: "#22c55e" }} />}
+              placeholder="Enter your registered email"
               size="large"
             />
           </Form.Item>
@@ -199,11 +181,11 @@ const Login = () => {
                 border: "none",
               }}
             >
-              {mutation.isPending ? "Logging in..." : "Login"}
+              {mutation.isPending ? "Sending..." : "Send Reset Link"}
             </Button>
-            <div style={{ textAlign: "left", marginTop: 16 }}>
+            <div style={{ textAlign: "center", marginTop: 16 }}>
               <a
-                href="/forget-pass"
+                href="/login"
                 style={{
                   color: "white",
                   display: "flex",
@@ -212,8 +194,7 @@ const Login = () => {
                   gap: 8,
                 }}
               >
-                <KeyOutlined />
-                Forgot Password?
+                Back to Login
               </a>
             </div>
           </Form.Item>
@@ -223,4 +204,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default ForgotPassword;

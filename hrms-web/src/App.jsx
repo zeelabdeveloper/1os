@@ -10,9 +10,11 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import ProtectedRoute from "./components/ProtectedRoute";
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const NotFound = lazy(() => import("./components/NotFound"));
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
+ 
 
 const queryClient = new QueryClient();
 
@@ -204,11 +206,12 @@ const App = () => {
 
                 {/* system Setting/ */}
 
-                <Route path="/settings" element={lazyLoad("settings")} />
+                <Route path="/controllers" element={lazyLoad("settings")} />
                 <Route path="/developer-settings" element={lazyLoad("DeveloperSetting")} />
               </Route>
 
               <Route path="/login" element={<Login />} />
+              <Route path="/forget-pass" element={<ForgotPassword />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

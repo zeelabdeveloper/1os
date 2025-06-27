@@ -8,7 +8,7 @@ const ChildRoute = require("../models/developer/ChildRoute");
 router.post("/", async (req, res) => {
   try {
     const { header, child } = req.body;
-    
+    console.log(header,child)
     // First create all child items
     const createdChildren = await ChildRoute.insertMany(child);
     const childIds = createdChildren.map(c => c._id);

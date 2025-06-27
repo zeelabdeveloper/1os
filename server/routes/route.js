@@ -6,22 +6,17 @@ const {
   verifyToken,
   createDepartment,
   createRole,
+  forgotPassword,
 } = require("../controllers/authController");
 
- 
-
 const router = express.Router();
-  
+
 router.post("/login", loginUser);
+router.post("/forgot-password", forgotPassword);
 router.get("/auth/verify", verifyToken);
 router.get("/fetchUser", fetchUser);
 router.post("/createUser", createUser);
 router.post("/createRole", createRole);
 router.post("/departments", createDepartment);
 
-
-
-
-
- 
 module.exports = router;

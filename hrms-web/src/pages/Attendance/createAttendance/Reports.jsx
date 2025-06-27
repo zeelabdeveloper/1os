@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, Typography, DatePicker, Table, Progress, Row, Col, Statistic } from 'antd';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import axios from '../../../axiosConfig';
 import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;

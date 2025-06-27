@@ -41,7 +41,7 @@ import {
   CheckOutlined,
   DeliveredProcedureOutlined,
 } from "@ant-design/icons";
-import axios from "axios";
+import axios from "../../axiosConfig";
 import dayjs from "dayjs";
 import { format } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

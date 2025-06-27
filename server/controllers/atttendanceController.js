@@ -379,6 +379,7 @@ exports.requestLeave = async (req, res) => {
     await attendance.save();
     res.status(201).json(attendance);
   } catch (err) {
+    console.log( err)
     res.status(400).json({ message: err.message });
   }
 };

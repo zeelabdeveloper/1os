@@ -4,14 +4,16 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
-
+const morgan = require("morgan");
 dotenv.config();
 
 const app = express();
 
 // Connect DB
 connectDB();
+
 app.use("/uploads", express.static("uploads"));
+app.use(morgan("tiny"));
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
@@ -21,6 +23,16 @@ app.use(
     credentials: true,
   })
 );
+
+// app.use(
+//   cors({
+//     origin: (origin, callback) => {
+
+//       callback(null, origin || "*");
+//     },
+//     credentials: true,
+//   })
+// );
 
 // Routes
 app.use("/api/v1", require("./routes/route.js"));
@@ -38,11 +50,12 @@ app.use("/api/v1/store/roles", require("./routes/store/storeRoles.js"));
 app.use("/api/v1/stores", require("./routes/store/store.js"));
 app.use("/api/v1/jobs", require("./routes/jobsRoute.js"));
 app.use("/api/v1/recruitment", require("./routes/recruitment.js"));
+
 app.use(
   "/api/v1/interview/interviewSessions",
   require("./routes/interviewSessions.js")
 );
-// app.use("/api/v1/onboarding", require("./routes/onboarding.js"));
+
 app.use("/api/v1/analytics", require("./routes/analytics.js"));
 app.use("/api/v1/documents", require("./routes/documentRoutes.js"));
 app.use("/api/v1/assets", require("./routes/AssetRoute.js"));
@@ -64,13 +77,8 @@ app.use(
   require("./routes/setting/emailNotificationRouter.js")
 );
 
-
 // permission
-app.use(
-  "/api/v1/permission",
-  require("./routes/permissionRoutes.js")
-);
-
+app.use("/api/v1/permission", require("./routes/permissionRoutes.js"));
 
 // access For Only Developer
 

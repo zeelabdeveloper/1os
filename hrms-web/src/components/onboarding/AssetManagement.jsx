@@ -20,7 +20,7 @@ import {
   CloseOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import axios from "../../axiosConfig";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
 

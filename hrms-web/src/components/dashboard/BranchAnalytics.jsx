@@ -79,12 +79,12 @@ const BranchAnalytics = () => {
   ];
 
   // Prepare data for charts
-  const branchDistributionData = data?.map(item => ({
+  const branchDistributionData =Array.isArray(data) && data?.map(item => ({
     type: `${item.branchName} (${item.branchCode})`,
     value: item.staffCount
   })) || [];
 
-  const statusDistributionData = data?.flatMap(item => [
+  const statusDistributionData =Array.isArray(data) && data?.flatMap(item => [
     {
       type: `${item.branchName} Active`,
       value: item.activeStaff,
@@ -171,7 +171,7 @@ const BranchAnalytics = () => {
         {data?.length > 0 ? (
           <Table
             columns={columns}
-            dataSource={data}
+            dataSource={ Array.isArray(data) &&  data}
             rowKey="_id"
             pagination={false}
             bordered

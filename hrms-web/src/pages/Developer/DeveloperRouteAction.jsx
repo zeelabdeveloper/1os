@@ -13,7 +13,7 @@ import {
   Alert,
 } from "antd";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import axios from "../../axiosConfig";
 import toast from "react-hot-toast";
 
 const ADMIN_USERNAME = import.meta.env.VITE_DEVELOPER_USERNAME;
@@ -99,7 +99,7 @@ const HeaderPanel = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["headers"],
     queryFn: fetchHeaders,
-    enabled: isAuthenticated, // Only fetch data if authenticated
+    enabled: isAuthenticated,  
   });
 
   const createMutation = useMutation({

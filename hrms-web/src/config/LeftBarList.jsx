@@ -257,12 +257,6 @@ const menuItems = [
 
   {
     key: "/settings",
-    icon: <RiListSettingsLine />,
-    label: "Settings",
-  },
-
-  {
-    key: "/settings",
     icon: <MdOutlineSettingsSuggest />,
     label: "Settings",
 
@@ -279,6 +273,11 @@ const menuItems = [
       {
         key: "/developer-settings",
         label: "Developer Access",
+      },
+      {
+        key: "/controllers",
+
+        label: "Settings",
       },
     ],
   },

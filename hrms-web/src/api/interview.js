@@ -1,5 +1,5 @@
 // api/interview.js
-import axios from "axios";
+import axios from "../axiosConfig";
 
 export const fetchInterviewRounds = async () => {
   const { data } = await axios.get("/api/v1/jobs/interview/interviewRounds");
@@ -26,6 +26,6 @@ export const deleteInterviewRound = async (id) => {
 
 export const fetchInterviewersByrole = async (roleID) => {
   const { data } = await axios.get(`/api/v1/user/roles/${roleID}`);
-  console.log(data);
+  
   return data?.data || [];
 };
