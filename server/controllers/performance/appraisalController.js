@@ -7,10 +7,10 @@ const { default: mongoose } = require("mongoose");
 const createAppraisal = async (req, res) => {
   console.log("dffdgfdgdfdd")
   try {
-    const { branch, department, role, user, month, year } = req.body;
+    const {  reviewer, department, role, user, month, year } = req.body;
 
     // Validate required fields
-    if (!branch || !department || !role || !user || !month || !year) {
+    if (    !department || !role || !user || !month || !year) {
       return res.status(400).json({
         success: false,
         message: "All required fields must be provided",
@@ -59,7 +59,7 @@ const createAppraisal = async (req, res) => {
     // Create new appraisal
     const appraisal = new Appraisal({
       ...req.body,
-      reviewer: req?.user?.id || "683fed6e4171723fde1cba1a"
+      reviewer: reviewer  
     });
 
     const createdAppraisal = await appraisal.save();
@@ -91,12 +91,13 @@ const createAppraisal = async (req, res) => {
 // @access  Private/Admin
 const getAppraisals = async (req, res) => {
   try {
-    const { status, year, month } = req.query;
+    const { status, year,user, month } = req.query;
     let query = {};
-    
+    console.log(req.body)
     if (status) query.status = status;
     if (year) query.year = year;
     if (month) query.month = month;
+     if(user) query.user = user;
 
     const appraisals = await Appraisal.find(query)
       .populate("branch", "name")

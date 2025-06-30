@@ -21,7 +21,6 @@ import {
   fetchBranches,
   fetchDepartmentsByBranch,
   fetchRoleByDepartment,
-  fetchUserById,
   fetchUsersByRole,
 } from "../../api/auth";
 import { toast } from "react-hot-toast";
@@ -176,7 +175,7 @@ const AppraisalForm = ({ visible, onClose, editData }) => {
       strengths: values.strengths || [],
       areasForImprovement: values.areasForImprovement || [],
       feedback: values.feedback || "",
-      reviewer: "683fed6e4171723fde1cba1a" 
+      reviewer: "683fed6e4171723fde1cba1a",
     };
 
     if (editData) {

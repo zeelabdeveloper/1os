@@ -9,22 +9,22 @@ const storeSchema = new mongoose.Schema({
   },
   storeId: {
     type: String,
-    unique: true,
+     
     trim: true
   },
   storeName: {
     type: String,
-    required: true,
+     
     trim: true
   },
   storeAddress: {
     type: String,
-    required: true,
+    
     trim: true
   },
   city: {
     type: String,
-    required: true,
+     
     trim: true
   },
   district: {
@@ -33,12 +33,12 @@ const storeSchema = new mongoose.Schema({
   },
   state: {
     type: String,
-    required: true,
+     
     trim: true
   },
   pincode: {
     type: String,
-    required: true,
+     
     trim: true
   },
   gstNumber: {
@@ -74,7 +74,7 @@ const storeSchema = new mongoose.Schema({
   storeGroup: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'StoreGroup',
-    required: true
+    
   },
   isActive: {
     type: Boolean,

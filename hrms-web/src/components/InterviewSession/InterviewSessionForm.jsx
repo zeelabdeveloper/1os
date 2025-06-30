@@ -15,7 +15,7 @@ import {
   Alert
 } from 'antd';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import axios from 'axios';
+import axios from '../../axiosConfig';
 import dayjs from 'dayjs';
 import { fetchApplicationById } from '../../api/jobs';
 import { fetchInterviewRounds } from '../../api/interview';

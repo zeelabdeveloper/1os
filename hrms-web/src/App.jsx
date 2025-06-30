@@ -14,7 +14,6 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const NotFound = lazy(() => import("./components/NotFound"));
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
- 
 
 const queryClient = new QueryClient();
 
@@ -30,15 +29,16 @@ const App = () => {
                 path="/"
                 element={
                   <ProtectedRoute>
-                  <Home />
+                    <Home />
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<Navigate to="/dashboard" />} />
+                <Route index element={<Navigate to="/" />} />
                 <Route path="dashboard" element={lazyLoad("Dashboard")} />
+                <Route path="/" element={lazyLoad("Dashboard")} />
                 <Route path="categories" element={lazyLoad("Categories")} />
                 <Route path="profiles" element={lazyLoad("Profile")} />
-                
+
                 <Route
                   path="/coco/userlist"
                   element={lazyLoad("Coco/UserList")}
@@ -55,11 +55,16 @@ const App = () => {
                   path="/coco/request-list"
                   element={lazyLoad("Coco/RequestList")}
                 />
+                <Route path="/coco/store" element={lazyLoad("Coco/Store")} />
                 {/* Accounts  */}
                 <Route
                   path="/Account/list"
                   element={lazyLoad("Account/AccountList")}
                 />
+
+                {/* Teams */}
+
+                <Route path="/team/logs" element={lazyLoad("Team/Members")} />
 
                 {/* permissions */}
 
@@ -124,6 +129,14 @@ const App = () => {
                 <Route
                   path="/performance/appraisals"
                   element={lazyLoad("performance/appraisals")}
+                />
+                <Route
+                  path="/performance/appraisals/team"
+                  element={lazyLoad("performance/ManageTeamAppraisals")}
+                />
+                <Route
+                  path="/performance/appraisal"
+                  element={lazyLoad("performance/ManageMyAppraisals")}
                 />
                 <Route
                   path="/performance/feedback"
@@ -207,7 +220,10 @@ const App = () => {
                 {/* system Setting/ */}
 
                 <Route path="/controllers" element={lazyLoad("settings")} />
-                <Route path="/developer-settings" element={lazyLoad("DeveloperSetting")} />
+                <Route
+                  path="/developer-settings"
+                  element={lazyLoad("DeveloperSetting")}
+                />
               </Route>
 
               <Route path="/login" element={<Login />} />

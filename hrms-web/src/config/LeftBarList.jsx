@@ -3,9 +3,10 @@ import {
   UserOutlined,
   MediumOutlined,
   ClockCircleOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import { FcDataConfiguration } from "react-icons/fc";
-import { RiListSettingsLine } from "react-icons/ri";
+
 import { IoIosAnalytics, IoIosPaper } from "react-icons/io";
 import { FaHouseChimneyMedical } from "react-icons/fa6";
 
@@ -17,7 +18,7 @@ import {
 
 const menuItems = [
   {
-    key: "/dashboard",
+    key: "/",
     icon: <DashboardOutlined />,
     label: "Dashboard",
   },
@@ -60,6 +61,17 @@ const menuItems = [
     ],
   },
   {
+    key: "team",
+    icon: <TeamOutlined />,
+    label: "My Team",
+    children: [
+      {
+        key: "/team/logs",
+        label: "Members",
+      },
+    ],
+  },
+  {
     key: "Coco Management",
     icon: <FaHouseChimneyMedical />,
     label: "Coco Management",
@@ -79,6 +91,10 @@ const menuItems = [
       {
         key: "/coco/request-list",
         label: "Request List",
+      },
+      {
+        key: "/coco/store",
+        label: "Store",
       },
     ],
   },
@@ -159,6 +175,14 @@ const menuItems = [
       {
         key: "/performance/appraisals",
         label: "Appraisals",
+      },
+      {
+        key: "/performance/appraisals/team",
+        label: "Team Appraisals",
+      },
+      {
+        key: "/performance/appraisal",
+        label: "My Appraisals",
       },
     ],
   },

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Table,
   Button,
@@ -10,14 +10,19 @@ import {
   Select,
   Image,
   Modal,
+  Spin,
+  Badge,
 } from "antd";
 import {
   DownloadOutlined,
   SearchOutlined,
   CameraOutlined,
+  SyncOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 import { CSVLink } from "react-csv";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "../../axiosConfig";
 import AttendanceApprovalPopup from "../../components/modals/AttendanceApprovalPopup";
 
 const { RangePicker } = DatePicker;
@@ -57,7 +62,7 @@ const TimeWithPhoto = ({ time, photo, type, onPhotoClick }) => (
 
 // Main component
 const Attendance = () => {
-  // State management
+  const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
     dateRange: [],
     status: null,
@@ -72,170 +77,64 @@ const Attendance = () => {
     photoPreview: "",
     photoType: "",
   });
+  const [exportData, setExportData] = useState([]);
 
-  // Mock data generator
-  const generateMockData = (count) => {
-    return Array.from({ length: count }, (_, i) => ({
-      key: i + 1,
-      srNo: i + 1,
-      name: `User ${i + 1}`,
-      userId: `UID${1000 + i}`,
-      mobileNo: `98765${Math.floor(10000 + Math.random() * 90000)}`,
-      store: `Store ${Math.floor(1 + Math.random() * 5)}`,
-      manager: `Manager ${Math.floor(1 + Math.random() * 3)}`,
-      loginTime: moment()
-        .subtract(Math.floor(Math.random() * 10), "days")
-        .set({
-          hour: 9 + Math.floor(Math.random() * 2),
-          minute: Math.floor(Math.random() * 60),
-        })
-        .format("YYYY-MM-DD HH:mm:ss"),
-      logoutTime: moment()
-        .subtract(Math.floor(Math.random() * 10), "days")
-        .set({
-          hour: 18 + Math.floor(Math.random() * 2),
-          minute: Math.floor(Math.random() * 60),
-        })
-        .format("YYYY-MM-DD HH:mm:ss"),
-      loginPhoto: `https://randomuser.me/api/portraits/${
-        Math.random() > 0.5 ? "men" : "women"
-      }/${Math.floor(Math.random() * 50)}.jpg`,
-      logoutPhoto: `https://randomuser.me/api/portraits/${
-        Math.random() > 0.5 ? "men" : "women"
-      }/${Math.floor(Math.random() * 50)}.jpg`,
-      hours: `${Math.floor(8 + Math.random() * 2)}h ${Math.floor(
-        Math.random() * 60
-      )}m`,
-      status: ["approved", "pending", "rejected"][
-        Math.floor(Math.random() * 3)
-      ],
-      report: ["On Time", "Late", "Early Leave"][Math.floor(Math.random() * 3)],
-    }));
-  };
+  // Fetch attendance data with TanStack Query
+  const {
+    data: attendanceData,
+    isLoading,
 
-  const attendanceData = generateMockData(50);
-
-  // Filter data based on current filters
-  const filteredData = attendanceData.filter((record) => {
-    const matchesDate =
-      filters.dateRange.length === 0 ||
-      (moment(record.loginTime).isSameOrAfter(filters.dateRange[0]) &&
-        moment(record.loginTime).isSameOrBefore(filters.dateRange[1]));
-
-    const matchesStatus = !filters.status || record.status === filters.status;
-
-    const matchesSearch =
-      !filters.searchText ||
-      Object.keys(record).some(
-        (key) =>
-          typeof record[key] === "string" &&
-          record[key].toLowerCase().includes(filters.searchText.toLowerCase())
-      );
-
-    return matchesDate && matchesStatus && matchesSearch;
-  });
-
-  // Columns configuration
-  const columns = [
-    {
-      title: "Sr. No",
-      dataIndex: "srNo",
-      key: "srNo",
-      width: 80,
-
-      sorter: (a, b) => a.srNo - b.srNo,
-    },
-    {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
-      width: 150,
-
-      sorter: (a, b) => a.name.localeCompare(b.name),
-    },
-    {
-      title: "User ID",
-      dataIndex: "userId",
-      key: "userId",
-      fixed: "left",
-      width: 120,
-    },
-    {
-      title: "Mobile No",
-      dataIndex: "mobileNo",
-      key: "mobileNo",
-      width: 150,
-    },
-    {
-      title: "Store",
-      dataIndex: "store",
-      key: "store",
-      width: 120,
-    },
-    {
-      title: "Manager",
-      dataIndex: "manager",
-      key: "manager",
-      width: 150,
-    },
-    {
-      title: "Login Time",
-      dataIndex: "loginTime",
-      key: "loginTime",
-      width: 200,
-      sorter: (a, b) => moment(a.loginTime).unix() - moment(b.loginTime).unix(),
-      render: (time, record) => (
-        <TimeWithPhoto
-          time={time}
-          photo={record.loginPhoto}
-          type="login"
-          onPhotoClick={showPhotoModal}
-        />
-      ),
-    },
-    {
-      title: "Logout Time",
-      dataIndex: "logoutTime",
-      key: "logoutTime",
-      width: 200,
-      sorter: (a, b) =>
-        moment(a.logoutTime).unix() - moment(b.logoutTime).unix(),
-      render: (time, record) => (
-        <TimeWithPhoto
-          time={time}
-          photo={record.logoutPhoto}
-          type="logout"
-          onPhotoClick={showPhotoModal}
-        />
-      ),
-    },
-    {
-      title: "Hours",
-      dataIndex: "hours",
-      key: "hours",
-      width: 120,
-      sorter: (a, b) => {
-        const [ah, am] = a.hours.split(" ").map((part) => parseInt(part));
-        const [bh, bm] = b.hours.split(" ").map((part) => parseInt(part));
-        return ah * 60 + am - (bh * 60 + bm);
+    isFetching,
+  } = useQuery({
+    queryKey: [
+      "attendancelist",
+      {
+        page: pagination.current,
+        limit: pagination.pageSize,
+        startDate: filters.dateRange[0]?.format("YYYY-MM-DD"),
+        endDate: filters.dateRange[1]?.format("YYYY-MM-DD"),
+        status: filters.status,
+        search: filters.searchText,
       },
+    ],
+    queryFn: async ({ queryKey }) => {
+      const [, params] = queryKey;
+      const response = await axios.get(
+        "/api/v1/attendance/getAttendanceRecords",
+        {
+          params: {
+            page: params.page,
+            limit: params.pageSize,
+            status: params.status,
+            startDate: params.startDate,
+            endDate: params.endDate,
+            search: params.search,
+          },
+        }
+      );
+      return response.data;
     },
-    {
-      title: "Report",
-      dataIndex: "report",
-      key: "report",
-      width: 150,
-      render: (report) => <ReportTag report={report} />,
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      width: 150,
-      fixed: "right",
-      render: (status) => <StatusTag status={status} />,
-    },
-  ];
+    keepPreviousData: true,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
+console.log(attendanceData)
+  // Export data handler
+  const handleExport = async () => {
+    try {
+      const params = {
+        startDate: filters.dateRange[0]?.format("YYYY-MM-DD"),
+        endDate: filters.dateRange[1]?.format("YYYY-MM-DD"),
+        status: filters.status,
+      };
+
+      const { data } = await axios.get("/api/attendance", {
+        params: { ...params, limit: 1000 },
+      });
+      setExportData(data.data);
+    } catch (err) {
+      console.error("Export failed:", err);
+    }
+  };
 
   // Event handlers
   const showPhotoModal = (photo, type) => {
@@ -269,12 +168,20 @@ const Attendance = () => {
       ...filters,
       dateRange: dates,
     });
+    setPagination({
+      ...pagination,
+      current: 1,
+    });
   };
 
   const handleStatusFilterChange = (value) => {
     setFilters({
       ...filters,
       status: value,
+    });
+    setPagination({
+      ...pagination,
+      current: 1,
     });
   };
 
@@ -284,20 +191,116 @@ const Attendance = () => {
       status: null,
       searchText: "",
     });
+    setPagination({
+      ...pagination,
+      current: 1,
+    });
   };
 
-  const handleTableChange = (pagination) => {
-    setPagination(pagination);
+  const handleTableChange = (newPagination) => {
+    setPagination({
+      current: newPagination.current,
+      pageSize: newPagination.pageSize,
+    });
   };
+
+  // Columns configuration
+  const columns = useMemo(
+    () => [
+      {
+        title: "Sr. No",
+        dataIndex: "srNo",
+        key: "srNo",
+        width: 80,
+        render: (_, __, index) =>
+          (pagination.current - 1) * pagination.pageSize + index + 1,
+      },
+      {
+        title: "Name",
+        dataIndex: ["userId", "fullName"],
+        key: "name",
+        width: 150,
+        sorter: (a, b) => a.userId.fullName.localeCompare(b.userId.fullName),
+      },
+      {
+        title: "Employee ID",
+        dataIndex: ["userId", "EmployeeId" , "employeeId"   ],
+        key: "employeeId",
+        fixed: "left",
+        width: 120,
+      },
+      {
+        title: "Date",
+        dataIndex: "date",
+        key: "date",
+        width: 120,
+        render: (date) => moment(date).format("DD-MM-YYYY"),
+        sorter: (a, b) => moment(a.date).unix() - moment(b.date).unix(),
+      },
+      {
+        title: "Check In",
+        dataIndex: "checkInTime",
+        key: "checkInTime",
+        width: 150,
+        render: (time, record) => (
+          <TimeWithPhoto
+            time={time}
+            photo={record.checkInPhoto}
+            type="checkIn"
+            onPhotoClick={showPhotoModal}
+          />
+        ),
+        sorter: (a, b) =>
+          moment(a.checkInTime || 0).unix() - moment(b.checkInTime || 0).unix(),
+      },
+      {
+        title: "Check Out",
+        dataIndex: "checkOutTime",
+        key: "checkOutTime",
+        width: 150,
+        render: (time, record) => (
+          <TimeWithPhoto
+            time={time}
+            photo={record.checkOutPhoto}
+            type="checkOut"
+            onPhotoClick={showPhotoModal}
+          />
+        ),
+        sorter: (a, b) =>
+          moment(a.checkOutTime || 0).unix() -
+          moment(b.checkOutTime || 0).unix(),
+      },
+      {
+        title: "Hours",
+        dataIndex: "hoursWorked",
+        key: "hoursWorked",
+        width: 120,
+        render: (hours) =>
+          hours
+            ? `${Math.floor(hours)}h ${Math.round((hours % 1) * 60)}m`
+            : "-",
+        sorter: (a, b) => (a.hoursWorked || 0) - (b.hoursWorked || 0),
+      },
+      {
+        title: "Status",
+        dataIndex: "status",
+        key: "status",
+        width: 150,
+        fixed: "right",
+        render: (status) => <StatusTag status={status} />,
+      },
+    ],
+    [pagination.current, pagination.pageSize]
+  );
 
   return (
     <div style={{ padding: 24, height: "92vh", overflowY: "auto" }}>
       <Card
         title="Attendance Records"
         extra={
-          <Space className={"hidden"}>
+          <Space>
             <Input.Search
-              placeholder="Search records..."
+              placeholder="Search employees..."
               allowClear
               enterButton={<SearchOutlined />}
               size="middle"
@@ -324,9 +327,22 @@ const Attendance = () => {
               <Option value="pending">Pending</Option>
               <Option value="rejected">Rejected</Option>
             </Select>
+            <Button
+              icon={<SyncOutlined />}
+              onClick={handleResetFilters}
+              disabled={
+                !filters.dateRange.length &&
+                !filters.status &&
+                !filters.searchText
+              }
+            >
+              Reset
+            </Button>
             <CSVLink
-              data={filteredData}
+              data={exportData}
               filename={`attendance_${moment().format("YYYYMMDD")}.csv`}
+              asyncOnClick
+              onClick={handleExport}
             >
               <Button type="primary" icon={<DownloadOutlined />}>
                 Export
@@ -335,32 +351,39 @@ const Attendance = () => {
           </Space>
         }
       >
-        <Space className="  flex justify-end w-full">
-          <AttendanceApprovalPopup />
+        <Space className="flex justify-end w-full mb-4">
+      
+            <AttendanceApprovalPopup />
+          
         </Space>
 
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          scroll={{ x: 1500 }}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: filteredData.length,
-            showSizeChanger: true,
-            pageSizeOptions: ["10", "20", "50", "100"],
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} of ${total} records`,
-          }}
-          onChange={handleTableChange}
-          rowClassName={(record) => `row-status-${record.status}`}
-        />
+        <Spin spinning={isLoading || isFetching}>
+          <Table
+            columns={columns}
+            dataSource={attendanceData?.data || []}
+            scroll={{ x: 1500 }}
+            pagination={{
+              current: pagination.current,
+              pageSize: pagination.pageSize,
+              total: attendanceData?.pagination?.total || 0,
+              showSizeChanger: true,
+              pageSizeOptions: ["10", "20", "50", "100"],
+              showTotal: (total, range) =>
+                `${range[0]}-${range[1]} of ${total} records`,
+            }}
+            onChange={handleTableChange}
+            rowKey="_id"
+            rowClassName={(record) => `row-status-${record.status}`}
+          />
+        </Spin>
       </Card>
 
       {/* Photo Modal */}
       <Modal
-        title={`${modalState.photoType === "login" ? "Login" : "Logout"} Photo`}
-        visible={modalState.isPhotoModalVisible}
+        title={`${
+          modalState.photoType === "checkIn" ? "Check-In" : "Check-Out"
+        } Photo`}
+        open={modalState.isPhotoModalVisible}
         footer={null}
         onCancel={closePhotoModal}
       >

@@ -1,7 +1,9 @@
 // controllers/attendanceController.js
 const Attendance = require("../models/Attendance.js");
 const mongoose = require("mongoose");
+const User = require("../models/User");
 const dayjs = require("dayjs");
+const { startOfDay, endOfDay } = require("date-fns");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
 const isSameOrBefore = require("dayjs/plugin/isSameOrBefore");
@@ -136,6 +138,113 @@ exports.getHistory = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.getAttendanceRecords = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      isApproved,
+      startDate,
+      endDate,
+      search,
+    } = req.query;
+    const skip = (page - 1) * limit;
+
+    console.log(req.query);
+    // Build filter object
+    const filter = {};
+    if (status) filter.status = status;
+    if (isApproved) filter.isApproved = isApproved == "true" ? true : false;
+    if (startDate && endDate) {
+      filter.date = {
+        $gte: startOfDay(new Date(startDate)),
+        $lte: endOfDay(new Date(endDate)),
+      };
+    }
+    if (search) {
+      filter.$or = [
+        { "userId.firstName": { $regex: search, $options: "i" } },
+        { "userId.employeeId": { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const [records, total] = await Promise.all([
+      Attendance.find(filter)
+        .populate({
+          path: "userId",
+          populate: [
+            {
+              path: "EmployeeId", // Nested populate under userId
+              model: "EmployeeId", // optional if not detected
+            },
+
+            {
+              path: "Profile",
+              model: "Profile", // optional if clear
+            },
+          ],
+        })
+
+        .sort({ date: -1 })
+        .skip(skip)
+        .limit(limit),
+      Attendance.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: records,
+      pagination: {
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / limit),
+        limit: Number(limit),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching attendance records",
+      error: error.message,
+    });
+  }
+};
+
+// Update attendance status
+exports.updateAttendanceStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const updatedRecord = await Attendance.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    ).populate("userId", "name");
+
+    if (!updatedRecord) {
+      return res.status(404).json({
+        success: false,
+        message: "Attendance record not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: updatedRecord,
+      message: `Attendance status updated to ${status}`,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating attendance status",
+      error: error.message,
+    });
+  }
+};
+
 exports.getHistoryByMonthly = async (req, res) => {
   try {
     const { userId, month } = req.query;
@@ -334,10 +443,12 @@ exports.getMonthlySummary = async (req, res) => {
   }
 };
 exports.updateAttendance = async (req, res) => {
+  console.log(req.body);
   try {
     const attendance = await Attendance.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { ...req.body, isApproved: true },
+
       {
         new: true,
       }
@@ -346,8 +457,8 @@ exports.updateAttendance = async (req, res) => {
     if (!attendance) {
       return res.status(404).json({ message: "Attendance not found" });
     }
-
-    res.json(attendance);
+    console.log("fhgfhg");
+    res.status(200).json({ message: "Updated" });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -379,7 +490,7 @@ exports.requestLeave = async (req, res) => {
     await attendance.save();
     res.status(201).json(attendance);
   } catch (err) {
-    console.log( err)
+    console.log(err);
     res.status(400).json({ message: err.message });
   }
 };

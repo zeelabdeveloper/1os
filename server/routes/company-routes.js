@@ -17,6 +17,7 @@ const {
   deleteRole,
   updateRole,
   getRoleByDepartment,
+  getDepartmentOfHead,
 } = require("../controllers/componyOperation");
 
 
@@ -32,9 +33,10 @@ router.get("/departments", getAllDepartments);
 router.get("/departments/head", getHeadOfDepartments);
 router.get("/branch/department/:branchId", getDepartmentsByBranch);
 router.get("/branch/department/role/:departmentId", getRoleByDepartment);
+router.get("/Head/department/:Head", getDepartmentOfHead);
 
 router.post("/departments", createDepartment);
-router.put("/departments/componyDepartment/:id", updateDepartment);
+router.put("/departments/:id", updateDepartment);
 router.delete("/departments/:id", deleteDepartment);
 
 

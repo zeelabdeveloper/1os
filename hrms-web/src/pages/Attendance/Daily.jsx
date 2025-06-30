@@ -6,6 +6,7 @@ import axios from "../../axiosConfig";
 import DailyAttendance from "./createAttendance/DailyAttendance";
 import AttendanceHistory from "./createAttendance/AttendanceHistory";
 import LeaveRequest from "./createAttendance/LeaveRequest";
+import RegularizationList from "./createAttendance/RegularizationList";
 import Reports from "./createAttendance/Reports";
 import useAuthStore from "../../stores/authStore";
 
@@ -13,7 +14,7 @@ const { Header, Content } = Layout;
 const { TabPane } = Tabs;
 
 const AttendanceSystem = () => {
-   const {user}=useAuthStore()
+  const { user } = useAuthStore();
   const {
     token: { colorBgContainer },
   } = theme.useToken();
@@ -29,7 +30,7 @@ const AttendanceSystem = () => {
       return response.data;
     },
   });
-console.log(userData)
+  console.log(userData);
   const [activeTab, setActiveTab] = useState("daily");
 
   if (isLoading) return <Spin size="large" fullscreen />;
@@ -43,6 +44,8 @@ console.log(userData)
         return <AttendanceHistory user={userData?.data} />;
       case "leave":
         return <LeaveRequest user={userData?.data} />;
+      case "RegularizationList":
+        return <RegularizationList user={userData?.data} />;
       case "reports":
         return <Reports user={userData?.data} />;
       default:
@@ -61,6 +64,7 @@ console.log(userData)
           <TabPane tab="Daily Attendance" key="daily" />
           <TabPane tab="Attendance History" key="history" />
           <TabPane tab="Leave Requests" key="leave" />
+          <TabPane tab="Regularization Settle" key="RegularizationList" />
           <TabPane tab="Reports" key="reports" />
         </Tabs>
       </Header>

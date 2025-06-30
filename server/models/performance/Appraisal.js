@@ -5,22 +5,22 @@ const AppraisalSchema = new mongoose.Schema(
     branch: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "CompanyBranch",
-      required: [true, "Branch is required"],
+      
     },
     department: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Department",
-      required: [true, "Department is required"],
+    
     },
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",
-      required: [true, "Role is required"],
+      
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "User is required"],
+      
     },
     month: {
       type: String,
@@ -89,7 +89,7 @@ const AppraisalSchema = new mongoose.Schema(
     reviewer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "Reviewer is required"]
+      
     },
     status: {
       type: String,

@@ -1,149 +1,42 @@
-// import React, { useEffect, useState } from "react";
-// import { Table, Card, Skeleton, Empty, Tag } from "antd";
-// import useAuthStore from "../stores/authStore";
-// import { toast } from "react-hot-toast";
-// import axios from "../axiosConfig";
 
-// const InterviewRoundsPanel = () => {
-//   const { user } = useAuthStore();
-//   const [loading, setLoading] = useState(true);
-//   const [interviewRounds, setInterviewRounds] = useState([]);
-//   const [hasRounds, setHasRounds] = useState(false);
-
-//   useEffect(() => {
-//     const fetchInterviewRounds = async () => {
-//       try {
-//         setLoading(true);
-//         const response = await axios.get(
-//           `/api/v1/interview/interviewSessions/interview-rounds/by-interviewer/${user._id}`
-//         );
-
-//         if (response.data.success) {
-//           setInterviewRounds(response.data.data);
-//           const hasAssignedRounds = response.data.data.length > 0;
-//           setHasRounds(hasAssignedRounds);
-
-//           if (hasAssignedRounds) {
-//             toast.success(
-//               `You have ${response.data.data.length} interview rounds`
-//             );
-//           }
-//         }
-//       } catch (error) {
-//         console.error("Error fetching interview rounds:", error);
-//         toast.error(
-//           error.response?.data?.message || "Failed to fetch interview rounds"
-//         );
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     if (user?._id) {
-//       fetchInterviewRounds();
-//     }
-//   }, [user]);
-
-//   const columns = [
-//     {
-//       title: "Round Name",
-//       dataIndex: "name",
-//       key: "name",
-//       render: (text) => <strong>{text}</strong>,
-//     },
-//     {
-//       title: "Round Number",
-//       dataIndex: "roundNumber",
-//       key: "roundNumber",
-//       align: "center",
-//       render: (num) => <Tag color="blue">Round {num}</Tag>,
-//     },
-//     {
-//       title: "Description",
-//       dataIndex: "description",
-//       key: "description",
-//       ellipsis: true,
-//     },
-//     {
-//       title: "Created At",
-//       dataIndex: "createdAt",
-//       key: "createdAt",
-//       render: (date) => new Date(date).toLocaleDateString(),
-//     },
-//   ];
-
-//   if (loading) {
-//     return (
-//       <Card title="Your Interview Rounds" style={{ margin: "20px" }}>
-//         <Skeleton active paragraph={{ rows: 4 }} />
-//       </Card>
-//     );
-//   }
-
-//   // Don't render anything if no rounds are assigned
-//   if (!hasRounds) {
-//     return null;
-//   }
-
-//   return (
-//     <div style={{ padding: "24px" }}>
-//       <Card title="Your Assigned Interview Rounds" bordered={false}>
-//         <Table
-//           columns={columns}
-//           dataSource={Array.isArray(interviewRounds) && interviewRounds}
-//           rowKey="_id"
-//           pagination={{ pageSize: 5 }}
-//           scroll={{ x: true }}
-//         />
-//       </Card>
-//     </div>
-//   );
-// };
-
-// export default InterviewRoundsPanel;
-
-
-import React, { useEffect, useState } from "react";
 import { Card, Skeleton, Tag, Empty } from "antd";
-import useAuthStore from "../stores/authStore";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+import useAuthStore from "../stores/authStore";
 import axios from "../axiosConfig";
+import InterviewSessionNotifications from "./InterviewSessionChecker";
+
+const fetchInterviewRounds = async (userId) => {
+  const response = await axios.get(
+    `/api/v1/interview/interviewSessions/interview-rounds/by-interviewer/${userId}`
+  );
+  if (!response.data.success) {
+    throw new Error(
+      response.data.message || "Failed to fetch interview rounds"
+    );
+  }
+  return response.data.data || [];
+};
 
 const InterviewRoundsPanel = () => {
   const { user } = useAuthStore();
-  const [loading, setLoading] = useState(true);
-  const [interviewRounds, setInterviewRounds] = useState([]);
 
-  useEffect(() => {
-    const fetchInterviewRounds = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(
-          `/api/v1/interview/interviewSessions/interview-rounds/by-interviewer/${user._id}`
-        );
-
-        if (response.data.success) {
-          setInterviewRounds(response.data.data || []);
-          if (response.data.data.length > 0) {
-            toast.success(
-              `You have ${response.data.data.length} interview rounds assigned`
-            );
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching interview rounds:", error);
-        toast.error(
-          error.response?.data?.message || "Failed to fetch interview rounds"
-        );
-      } finally {
-        setLoading(false);
+  const { data: interviewRounds = [], isLoading } = useQuery({
+    queryKey: ["interviewRounds", user?._id],
+    queryFn: () => fetchInterviewRounds(user._id),
+    enabled: !!user?._id,
+    onSuccess: (data) => {
+      if (data.length > 0) {
+        toast.success(`You have ${data.length} interview rounds assigned`);
       }
-    };
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to fetch interview rounds");
+    },
+  });
 
-    if (user?._id) {
-      fetchInterviewRounds();
-    }
-  }, [user]);
+  // ✅ If no interview rounds, render nothing
+  if (!isLoading && interviewRounds.length === 0) return null;
 
   return (
     <div className="flex flex-col lg:flex-row p-4 gap-4">
@@ -154,37 +47,16 @@ const InterviewRoundsPanel = () => {
           bordered={false}
           className="shadow-md rounded-2xl"
         >
-          {loading ? (
+          {isLoading ? (
             <Skeleton active paragraph={{ rows: 4 }} />
-          ) : interviewRounds.length > 0 ? (
-            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-              {interviewRounds.map((round) => (
-                <Card
-                  key={round._id}
-                  className="border border-gray-200 shadow-sm hover:shadow-md transition-all"
-                >
-                  <h3 className="text-lg font-semibold text-blue-600">
-                    {round.name}
-                  </h3>
-                  <div className="flex items-center justify-between mt-1 text-sm">
-                    <Tag color="blue">Round {round.roundNumber}</Tag>
-                    <span className="text-gray-500">
-                      {new Date(round.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 mt-2 line-clamp-2">
-                    {round.description || "No description provided."}
-                  </p>
-                </Card>
-              ))}
-            </div>
           ) : (
-            <Empty description="No Interview Rounds Assigned" />
+            <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+              <InterviewSessionNotifications />
+            </div>
           )}
         </Card>
       </div>
 
-      {/* Right Side: Notification Slider */}
       <div className="w-full lg:w-1/3">
         <Card
           title="Notifications"
@@ -198,12 +70,6 @@ const InterviewRoundsPanel = () => {
               >
                 <p className="text-blue-700 font-medium">
                   ✅ {round.name} (Round {round.roundNumber})
-                </p>
-                <p className="text-gray-600 text-sm">
-                  Scheduled on:{" "}
-                  <strong>
-                    {new Date(round.createdAt).toLocaleDateString()}
-                  </strong>
                 </p>
               </div>
             ))

@@ -42,6 +42,7 @@ app.use("/api/v1/company", require("./routes/company-routes.js"));
 app.use("/api/v1/user", require("./routes/user-route.js"));
 app.use("/api/v1/helper", require("./routes/helper-route.js"));
 app.use("/api/v1/attendance", require("./routes/attendance-routes.js"));
+app.use("/api/v1/regularization", require("./routes/regularization.js"));
 app.use(
   "/api/v1/store/storeGroups",
   require("./routes/store/storeGroupRoutes.js")
@@ -62,6 +63,9 @@ app.use("/api/v1/assets", require("./routes/AssetRoute.js"));
 app.use("/api/v1/trainings", require("./routes/TrainingRoutes.js"));
 app.use("/api/v1/letters", require("./routes/RelevantLetterRoutes.js"));
 app.use("/api/v1/manage-letter", require("./routes/letterTemplates.js"));
+app.use("/api/v1/stores", require("./routes/storeRoutes.js"));
+app.use("/api/v1/storeuser", require("./routes/storeuser.js"));
+app.use("/api/v1/team", require("./routes/team.js"));
 app.use(
   "/api/v1/performance",
   require("./routes/performance/performanceRouter.js")

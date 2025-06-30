@@ -1,3 +1,4 @@
+const Onboarding = require("../../models/jobs/Onboarding");
 const LetterTemplate = require("../../models/LetterTemplate");
 
 const letterTemplateController = {
@@ -118,7 +119,6 @@ const letterTemplateController = {
     try {
       const deletedTemplate = await LetterTemplate.findOneAndDelete({
         _id: req.params.id,
-       
       });
 
       if (!deletedTemplate) {
@@ -138,10 +138,10 @@ const letterTemplateController = {
 
   // Generate letter from template
   generateLetter: async (req, res) => {
+    console.log(req.body);
     try {
       const template = await LetterTemplate.findOne({
-        _id: req.params.id,
-        createdBy: req.user.id,
+        _id: req.body.templateId,
       });
 
       if (!template) {
@@ -150,26 +150,14 @@ const letterTemplateController = {
           .json({ success: false, message: "Template not found" });
       }
 
-      const { variableValues } = req.body;
-
-      // Replace variables in content
-      let generatedContent = template.content;
-      template.variables.forEach((variable) => {
-        if (variableValues[variable.name]) {
-          const regex = new RegExp(`{${variable.name}}`, "g");
-          generatedContent = generatedContent.replace(
-            regex,
-            variableValues[variable.name]
-          );
-        }
-      });
-
-      // If email sending is requested
-
+      const ApplicationDetails = await Onboarding.findOne({
+        applicationId: req.body.applicationId,
+      }).populate("applicationId");
+      console.log(ApplicationDetails);
       res.json({
         success: true,
-        message: "Letter generated successfully",
-        data: { content: generatedContent },
+        message: "Letter sent successfully",
+        ApplicationDetails,
       });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server error" });

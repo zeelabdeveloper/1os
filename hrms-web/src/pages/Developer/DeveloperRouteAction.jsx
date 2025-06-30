@@ -99,7 +99,7 @@ const HeaderPanel = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["headers"],
     queryFn: fetchHeaders,
-    enabled: isAuthenticated,  
+    // enabled: isAuthenticated,  
   });
 
   const createMutation = useMutation({
@@ -238,9 +238,9 @@ const HeaderPanel = () => {
     },
   ];
 
-  if (!isAuthenticated) {
-    return <LoginForm onLoginSuccess={handleLoginSuccess} />;
-  }
+  // if (!isAuthenticated) {
+  //   return <LoginForm onLoginSuccess={handleLoginSuccess} />;
+  // }
 
   return (
     <Card

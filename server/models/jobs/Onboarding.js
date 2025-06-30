@@ -6,7 +6,7 @@ const onboardingSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Application",
       required: true,
-      unique: true,
+       
     },
 
     InterviewSession: [

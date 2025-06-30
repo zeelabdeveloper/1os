@@ -32,6 +32,7 @@ import dayjs from "dayjs";
 import axios from "../../axiosConfig";
 import { useStores } from "../../hooks/useStores";
 import toast from "react-hot-toast";
+import useAuthStore from "../../stores/authStore";
 
 const { useBreakpoint } = Grid;
 const { Title, Text } = Typography;
@@ -40,25 +41,15 @@ const { Option } = Select;
 // API Configuration
 
 // API functions with proper error handling
-const fetchUsers = async () => {
+const fetchUsers = async (id) => {
   try {
-    const response = await axios.get(`/api/v1/storeuser`);
+    const response = await axios.get(`/api/v1/team/allusers/${id}`);
+
     return response.data;
   } catch (error) {
     // Axios error may contain response with message
     const errorMessage =
       error.response?.data?.message || "Failed to fetch users";
-    throw new Error(errorMessage);
-  }
-};
-const createUser = async (userData) => {
-  try {
-    const response = await axios.post(`/api/v1/storeuser`, userData);
-    return response.data;
-  } catch (error) {
-    // Axios error handling
-    const errorMessage =
-      error.response?.data?.message || "Failed to create user";
     throw new Error(errorMessage);
   }
 };
@@ -88,6 +79,7 @@ const deleteUser = async (userId) => {
 };
 
 const UserManagement = () => {
+  const { user } = useAuthStore();
   const [form] = Form.useForm();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
@@ -102,33 +94,18 @@ const UserManagement = () => {
   const csvLinkRef = useRef();
 
   // Fetch data with error handling
-  const {
-    data: users,
-    isLoading,
-    error: usersError,
-  } = useQuery({
+  const { data: users, isLoading } = useQuery({
     queryKey: ["users"],
-    queryFn: fetchUsers,
+    queryFn: () => fetchUsers(user?._id),
     onError: (error) => {
       message.error(error.message);
     },
+    enabled: user._id && true,
   });
 
   const { data: stores, error: storesError } = useStores();
 
   // Mutations with proper error handling
-  const createMutation = useMutation({
-    mutationFn: createUser,
-    onSuccess: (data) => {
-      toast.success(data.message || "User created successfully");
-      queryClient.invalidateQueries(["users"]);
-      setIsModalVisible(false);
-      form.resetFields();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to create user");
-    },
-  });
 
   const updateMutation = useMutation({
     mutationFn: updateUser,
@@ -143,24 +120,6 @@ const UserManagement = () => {
       toast.error(error.message || "Failed to update user");
     },
   });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteUser,
-    onSuccess: (data, userId) => {
-      toast.success(data?.message || `User deleted successfully`);
-      queryClient.invalidateQueries(["users"]);
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to delete user");
-    },
-  });
-
-  // Handlers
-  const handleCreate = () => {
-    setEditingUser(null);
-    form.resetFields();
-    setIsModalVisible(true);
-  };
 
   const handleEdit = (user) => {
     setEditingUser(user);
@@ -184,10 +143,6 @@ const UserManagement = () => {
     setIsViewModalVisible(true);
   };
 
-  const handleDelete = (userId) => {
-    deleteMutation.mutate(userId);
-  };
-
   const handleSubmit = () => {
     form
       .validateFields()
@@ -202,7 +157,6 @@ const UserManagement = () => {
         if (editingUser) {
           updateMutation.mutate({ ...userData, id: editingUser._id });
         } else {
-          createMutation.mutate(userData);
         }
       })
       .catch((error) => {
@@ -229,10 +183,6 @@ const UserManagement = () => {
     setFilterStatus(value);
   };
 
-  const handleRoleFilter = (value) => {
-    setFilterRole(value);
-  };
-
   const handleResetFilters = () => {
     setSearchText("");
     setFilterStatus(null);
@@ -244,7 +194,7 @@ const UserManagement = () => {
   };
 
   // Filter and search logic
-  const filteredData = users?.filter((item) => {
+  const filteredData =Array.isArray(users) &&  users?.filter((item) => {
     const matchesSearch = searchText
       ? `${item.firstName} ${item.lastName}`
           .toLowerCase()
@@ -345,24 +295,6 @@ const UserManagement = () => {
             onClick={() => handleEdit(record)}
             tooltip="Edit"
           />
-          <Popconfirm
-            title="Are you sure to delete this user?"
-            onConfirm={() => handleDelete(record._id)}
-            okText="Yes"
-            cancelText="No"
-            okButtonProps={{ danger: true }}
-          >
-            <Button
-              type="text"
-              danger
-              icon={<DeleteOutlined />}
-              tooltip="Delete"
-              loading={
-                deleteMutation.isLoading &&
-                deleteMutation.variables === record._id
-              }
-            />
-          </Popconfirm>
         </Space>
       ),
     },
@@ -373,20 +305,8 @@ const UserManagement = () => {
       <Card
         title={
           <Title level={4} style={{ margin: 0 }}>
-            User Management
+            My Team
           </Title>
-        }
-        extra={
-          <Space>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreate}
-              loading={createMutation.isLoading}
-            >
-              {screens.md ? "Create User" : "Create"}
-            </Button>
-          </Space>
         }
       >
         <Space direction="vertical" style={{ width: "100%" }}>
@@ -456,7 +376,7 @@ const UserManagement = () => {
         open={isModalVisible}
         onOk={handleSubmit}
         onCancel={handleCancel}
-        confirmLoading={createMutation.isLoading || updateMutation.isLoading}
+        confirmLoading={updateMutation.isPending}
         width={700}
         maskClosable={false}
       >

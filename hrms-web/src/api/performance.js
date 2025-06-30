@@ -43,12 +43,13 @@ export const deleteGoal = async (id) => {
 };
 
 export const fetchAppraisals = async (filters = {}) => {
-  const { status, year, month } = filters;
+  const { status, year,user, month } = filters;
   let query = {};
 
   if (status) query.status = status;
   if (year) query.year = year;
   if (month) query.month = month;
+  if (user) query.user = month;
 
   const response = await axios.get("/api/v1/performance/appraisals", { params: query });
   return response.data.data;

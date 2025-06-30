@@ -37,7 +37,7 @@ import {
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
 import UserAppraisalModal from "../../Tab/UserAppraisalModal.JSX";
-import AppraisalForm from "../../components/performance/AppraisalForm";
+import AppraisalForm from "../../components/performance/AppraisalFormForTeam";
 
 const { Title, Text } = Typography;
 const { Option } = Select;

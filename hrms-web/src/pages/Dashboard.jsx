@@ -1,13 +1,14 @@
-import InterviewRoundsPanel from "../components/InterviewRoundUserChecker";
+import InterviewSessionNotifications from "../components/InterviewSessionChecker";
 import useAuthStore from "../stores/authStore";
-import SystemDashboard from "./DashBoardForSystem/SystemDashboard";
+// import SystemDashboard from "./DashBoardForSystem/SystemDashboard";
 
 function Dashboard() {
   const { user } = useAuthStore();
   return (
     <div className="h-[92vh] overflow-y-auto ">
-      <InterviewRoundsPanel />
-      <SystemDashboard />
+      <InterviewSessionNotifications />
+
+      {/* <SystemDashboard /> */}
     </div>
   );
 }

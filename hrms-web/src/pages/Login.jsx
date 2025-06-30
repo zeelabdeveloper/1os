@@ -18,8 +18,7 @@ const Login = () => {
     onSuccess: (data) => {
       console.log(data);
       toast.success(`Welcome to Zeelab Pharmacy!`);
-
-      navigate("/dashboard");
+      window.location.href = "/";
     },
     onError: (error) => {
       const message =

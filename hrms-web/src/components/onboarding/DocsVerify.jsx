@@ -107,7 +107,7 @@ const DocumentVerification = memo(() => {
       const response = await axios.post(
         "https://api.cloudinary.com/v1_1/dikxwu8om/image/upload",
         formData,
-        {
+        {  withCredentials: false, 
           onUploadProgress: (e) => {
             if (e.lengthComputable) {
               const percent = Math.round((e.loaded / e.total) * 100);

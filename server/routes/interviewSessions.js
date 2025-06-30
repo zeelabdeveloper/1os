@@ -8,6 +8,7 @@ const {
   getSessionsForInterviewer,
   updateInterviewSessionStatus,
   getInterviewRoundsByInterviewer,
+  getInterviewByInterviewer,
 } = require("../controllers/jobs/interviewSessionController");
 const router = express.Router();
 
@@ -24,6 +25,9 @@ router.route("/:applicationId").get(getSessionsForApplication);
 router
   .route("/interview-rounds/by-interviewer/:userId")
   .get(getInterviewRoundsByInterviewer);
+router
+  .route("/by-interviewer/:userId")
+  .get(getInterviewByInterviewer);
 router.route("/:interviewerId").get(getSessionsForInterviewer);
 
 module.exports = router;

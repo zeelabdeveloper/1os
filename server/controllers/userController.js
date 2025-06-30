@@ -406,67 +406,123 @@ module.exports = {
         await User.findByIdAndUpdate(req.params.empId, req.body.personal);
       }
       if (req.body?.profile) {
-        await Profile.findByIdAndUpdate(
-          user.Profile,
+        if (user?.Profile) {
+          await Profile.findByIdAndUpdate(
+            user.Profile,
 
-          {
-            ...req.body.profile,
-          }
-        );
+            {
+              ...req.body.profile,
+            }
+          );
+        } else {
+          const newProfile = new Profile({ ...req.body.profile, user: empId });
+          const savedProfile = await newProfile.save();
+          await User.findByIdAndUpdate(empId, { Profile: savedProfile._id });
+        }
       }
-      if (req.body?.organization) {
-        await Organization.findByIdAndUpdate(
-          user.Organization,
 
-          {
+      if (req.body?.organization) {
+        if (user?.Organization) {
+          await Organization.findByIdAndUpdate(user.Organization, {
             ...req.body.organization,
-          }
-        );
+          });
+        } else {
+          const newOrganization = new Organization({
+            ...req.body.organization,
+            user: empId,
+          });
+          const savedOrganization = await newOrganization.save();
+          await User.findByIdAndUpdate(empId, {
+            Organization: savedOrganization._id,
+          });
+        }
       }
       if (req.body?.bank) {
-        await Bank.findByIdAndUpdate(
-          user.Bank,
-
-          {
-            ...req.body.bank,
-          }
-        );
+        if (user?.Bank) {
+          await Bank.findByIdAndUpdate(user.Bank, { ...req.body.bank });
+        } else {
+          const newBank = new Bank({ ...req.body.bank, user: empId });
+          const savedBank = await newBank.save();
+          await User.findByIdAndUpdate(empId, { Bank: savedBank._id });
+        }
       }
       if (req.body?.salary) {
-        await Salary.findByIdAndUpdate(
-          user.Salary,
-
-          {
-            ...req.body.salary,
-          }
-        );
-      }
-
-      if (req.body?.document?.length > 0) {
-        const docsToUpdate = req.body.document.filter((doc) => doc._id);
-        const docsToCreate = req.body.document.filter((doc) => !doc._id);
-
-        // Update existing docs
-        if (docsToUpdate.length > 0) {
-          await Promise.all(
-            docsToUpdate.map((doc) => Document.findByIdAndUpdate(doc._id, doc))
-          );
-        }
-
-        // Create new docs & add their IDs to user.Document
-        if (docsToCreate.length > 0) {
-          const newDocs = docsToCreate.map((doc) => ({
-            ...doc,
-            user: empId, // Link to the user
-          }));
-
-          const createdDocs = await Document.insertMany(newDocs);
-
-          // Add new document IDs to user.Document array
-          user.Document.push(...createdDocs.map((doc) => doc._id));
-          await user.save();
+        if (user?.Salary) {
+          await Salary.findByIdAndUpdate(user.Salary, { ...req.body.salary });
+        } else {
+          const newSalary = new Salary({ ...req.body.salary, user: empId });
+          const savedSalary = await newSalary.save();
+          await User.findByIdAndUpdate(empId, { Salary: savedSalary._id });
         }
       }
+
+      // if (req.body?.document?.length > 0) {
+      //   const docsToUpdate = req.body.document.filter((doc) => doc._id);
+      //   const docsToCreate = req.body.document.filter((doc) => !doc._id);
+
+      //   // Update existing docs
+      //   if (docsToUpdate.length > 0) {
+      //     await Promise.all(
+      //       docsToUpdate.map((doc) => Document.findByIdAndUpdate(doc._id, doc))
+      //     );
+      //   }
+
+      //   // Create new docs & add their IDs to user.Document
+      //   if (docsToCreate.length > 0) {
+      //     const newDocs = docsToCreate.map((doc) => ({
+      //       ...doc,
+      //       user: empId, // Link to the user
+      //     }));
+
+      //     const createdDocs = await Document.insertMany(newDocs);
+
+      //     // Add new document IDs to user.Document array
+      //     user.Document.push(...createdDocs.map((doc) => doc._id));
+      //     await user.save();
+      //   }
+      // }
+
+
+
+
+if (req.body?.document?.length > 0) {
+  const docsToUpdate = req.body.document.filter((doc) => doc._id);
+  const docsToCreate = req.body.document.filter((doc) => !doc._id);
+
+  // ✅ Update existing documents
+  if (docsToUpdate.length > 0) {
+    await Promise.all(
+      docsToUpdate.map((doc) =>
+        Document.findByIdAndUpdate(doc._id, doc, { new: true })
+      )
+    );
+  }
+
+  // ✅ Create new documents and add to user
+  if (docsToCreate.length > 0) {
+    const newDocs = docsToCreate.map((doc) => ({
+      ...doc,
+      user: empId, // associate new document with user
+    }));
+
+    const createdDocs = await Document.insertMany(newDocs);
+
+    // Ensure user.Document is initialized (Array)
+    if (!Array.isArray(user.Document)) {
+      user.Document = [];
+    }
+
+    user.Document.push(...createdDocs.map((doc) => doc._id));
+    await user.save();
+  }
+}
+
+
+
+
+
+
+
 
       return res.status(200).json({ message: "Data Updated!" });
     } catch (error) {

@@ -1,5 +1,310 @@
-import React, { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+// import React, { useState } from "react";
+// import { useQuery, useMutation, QueryClient } from "@tanstack/react-query";
+// import axios from "../../axiosConfig";
+// import {
+//   Table,
+//   Tag,
+//   Space,
+//   Button,
+//   Modal,
+//   Select,
+//   Card,
+//   Popconfirm,
+//   message,
+//   Badge,
+//   Avatar,
+//   Typography,
+// } from "antd";
+// import {
+//   EditOutlined,
+//   DeleteOutlined,
+//   CalendarOutlined,
+//   UserOutlined,
+//   ClockCircleOutlined,
+//   CheckCircleOutlined,
+//   CloseCircleOutlined,
+//   ExclamationCircleOutlined,
+// } from "@ant-design/icons";
+// import dayjs from "dayjs";
+// import InterviewSessionForm from "./InterviewSessionForm";
+// import toast from "react-hot-toast";
+
+// const { Text } = Typography;
+// const { Option } = Select;
+
+// const getCandidateIdFromUrl = () => {
+//   const query = new URLSearchParams(window.location.search);
+//   return query.get("id");
+// };
+
+// const candidateId = getCandidateIdFromUrl();
+
+// const fetchInterviewSessions = async () => {
+//   const { data } = await axios.get(
+//     `/api/v1/interview/interviewSessions/${candidateId}`
+//   );
+//   return data;
+// };
+
+// const deleteInterviewSession = async (id) => {
+//   await axios.delete(`/api/v1/interview/interviewSessions/${id}`);
+// };
+
+// const updateInterviewStatus = async ({ id, status, isOutCome }) => {
+//   const { data } = await axios.patch(
+//     `/api/v1/interview/interviewSessions/${id}`,
+//     { status, isOutCome }
+//   );
+//   return data;
+// };
+
+// const InterviewSessionList = () => {
+//   const [isModalVisible, setIsModalVisible] = useState(false);
+//   const [selectedSession, setSelectedSession] = useState(null);
+//   const queryClient = new QueryClient();
+//   const { data: sessions, isLoading } = useQuery({
+//     queryKey: ["interviewSessions"],
+//     queryFn: fetchInterviewSessions,
+//   });
+
+//   const deleteMutation = useMutation({
+//     mutationFn: deleteInterviewSession,
+//     onSuccess: () => {
+//       toast.success("Interview session deleted successfully");
+
+//       queryClient.invalidateQueries(["interviewSessions"]);
+//     },
+//     onError: () => {
+//       toast.error("Failed to delete interview session");
+//     },
+//   });
+
+//   const statusMutation = useMutation({
+//     mutationFn: updateInterviewStatus,
+//     onSuccess: (s) => {
+//       toast.success(s.message || "Status updated successfully");
+//       queryClient.invalidateQueries(["interviewSessions"]);
+//     },
+//     onError: (err) => {
+//       console.log(err);
+//       toast.error(err.response.data.message || "Failed to update status");
+//     },
+//   });
+
+//   const handleStatusChange = (id, newStatus, isOutCome) => {
+//     statusMutation.mutate({ id, status: newStatus, isOutCome });
+//   };
+
+//   const handleEdit = (session) => {
+//     setSelectedSession(session);
+//     setIsModalVisible(true);
+//   };
+
+//   const handleCreate = () => {
+//     setSelectedSession(null);
+//     setIsModalVisible(true);
+//   };
+
+//   const handleCancel = () => {
+//     setIsModalVisible(false);
+//   };
+
+//   const getStatusTag = (status, record) => {
+//     const statusMap = {
+//       scheduled: { color: "blue", icon: <ClockCircleOutlined /> },
+//       in_progress: { color: "orange", icon: <ClockCircleOutlined /> },
+//       completed: { color: "green", icon: <CheckCircleOutlined /> },
+//       cancelled: { color: "red", icon: <CloseCircleOutlined /> },
+//       rescheduled: { color: "purple", icon: <ExclamationCircleOutlined /> },
+//     };
+
+//     return (
+//       <Select
+//         defaultValue={status}
+//         style={{ width: 150 }}
+//         onChange={(value) => handleStatusChange(record._id, value)}
+//         bordered={false}
+//       >
+//         {Object.keys(statusMap).map((key) => (
+//           <Option key={key} value={key}>
+//             <Tag color={statusMap[key].color} icon={statusMap[key].icon}>
+//               {key.replace("_", " ")}
+//             </Tag>
+//           </Option>
+//         ))}
+//       </Select>
+//     );
+//   };
+
+//   const getOutcomeTag = (outcome, record) => {
+//     const outcomeMap = {
+//       selected: { color: "success", text: "Selected" },
+//       rejected: { color: "error", text: "Rejected" },
+//       hold: { color: "warning", text: "On Hold" },
+//       pending: { color: "default", text: "Pending" },
+//     };
+
+//     return (
+//       <Select
+//         defaultValue={outcome}
+//         style={{ width: 120 }}
+//         onChange={(value) => handleStatusChange(record._id, value, true)}
+//         bordered={false}
+//       >
+//         {Object.keys(outcomeMap).map((key) => (
+//           <Option key={key} value={key}>
+//             <Badge status={outcomeMap[key].color} text={outcomeMap[key].text} />
+//           </Option>
+//         ))}
+//       </Select>
+//     );
+//   };
+
+//   const columns = [
+//     {
+//       title: "Candidate",
+//       dataIndex: ["application", "name"],
+//       key: "candidate",
+//       render: (text, record) => (
+//         <Space>
+//           <Avatar src={record.applicationId?.photo} icon={<UserOutlined />} />
+//           <div>
+//             <Text strong>{record.applicationId?.name}</Text>
+//             <br />
+//             <Text type="secondary">{record.applicationId?.email}</Text>
+//           </div>
+//         </Space>
+//       ),
+//     },
+
+//     {
+//       title: "Interview Round",
+//       dataIndex: ["interviewRound", "name"],
+//       key: "round",
+//       render: (text, record) => (
+//         <div>
+//           <Text strong>{record.interviewRoundId?.name}</Text>
+//           <br />
+//           <Text type="secondary">
+//             Round {record.interviewRoundId?.roundNumber}
+//           </Text>
+//         </div>
+//       ),
+//     },
+//     {
+//       title: "Interviewer",
+//       dataIndex: ["interviewRoundId", "interviewer", "fullName"],
+//       key: "interviewer",
+//       render: (text) => <Tag icon={<UserOutlined />}>{text}</Tag>,
+//     },
+//     {
+//       title: "Schedule",
+//       dataIndex: "startTime",
+//       key: "schedule",
+//       render: (_, record) => (
+//         <Space direction="vertical" size={0}>
+//           <Text>
+//             <CalendarOutlined /> {dayjs(record.startTime).format("DD MMM YYYY")}
+//           </Text>
+//           <Text type="secondary">
+//             {dayjs(record.startTime).format("h:mm A")} -{" "}
+//             {dayjs(record.endTime).format("h:mm A")}
+//           </Text>
+//           {record.meetingLink && (
+//             <a
+//               href={record.meetingLink}
+//               target="_blank"
+//               rel="noopener noreferrer"
+//             >
+//               Join Meeting
+//             </a>
+//           )}
+//         </Space>
+//       ),
+//     },
+//     {
+//       title: "Status",
+//       dataIndex: "status",
+//       key: "status",
+//       render: (status, record) => getStatusTag(status, record),
+//     },
+//     {
+//       title: "Outcome",
+//       dataIndex: "outcome",
+//       key: "outcome",
+//       render: (outcome, record) => getOutcomeTag(outcome, record),
+//     },
+//     {
+//       title: "Actions",
+//       key: "actions",
+//       fixed: "right",
+//       render: (_, record) => (
+//         <Space size="middle">
+//           <Button
+//             type="link"
+//             icon={<EditOutlined />}
+//             onClick={() => handleEdit(record)}
+//           />
+//           <Popconfirm
+//             title="Are you sure to delete this session?"
+//             onConfirm={() => deleteMutation.mutate(record._id)}
+//             okText="Yes"
+//             cancelText="No"
+//           >
+//             <Button type="link" danger icon={<DeleteOutlined />} />
+//           </Popconfirm>
+//         </Space>
+//       ),
+//     },
+//   ];
+
+//   return (
+//     <div className="">
+//       <Card
+//         title="Interview Sessions"
+//         extra={
+//           <Button type="primary" onClick={handleCreate}>
+//             Schedule New Session
+//           </Button>
+//         }
+//       >
+//         <Table
+//           columns={columns}
+//           dataSource={Array.isArray(sessions) && sessions}
+//           rowKey="_id"
+//           loading={isLoading}
+//           pagination={{ pageSize: 10 }}
+//           scroll={{ x: 1300 }}
+//           bordered
+//         />
+//       </Card>
+
+//       <Modal
+//         title={selectedSession ? "Edit Session" : "New Session"}
+//         open={isModalVisible}
+//         onCancel={handleCancel}
+//         footer={null}
+//         width={800}
+//         destroyOnClose
+//       >
+//         <InterviewSessionForm
+//           session={selectedSession}
+//           onSuccess={() => {
+//             setIsModalVisible(false);
+//             refetch();
+//           }}
+//         />
+//       </Modal>
+//     </div>
+//   );
+// };
+
+// export default InterviewSessionList;
+
+
+
+import React, { useState, useCallback, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "../../axiosConfig";
 import {
   Table,
@@ -7,15 +312,12 @@ import {
   Space,
   Button,
   Modal,
- 
   Select,
- 
   Card,
   Popconfirm,
-  message,
-  Badge,
   Avatar,
   Typography,
+  Badge,
 } from "antd";
 import {
   EditOutlined,
@@ -34,14 +336,18 @@ import toast from "react-hot-toast";
 const { Text } = Typography;
 const { Option } = Select;
 
+// Memoized components to prevent unnecessary re-renders
+const MemoizedAvatar = React.memo(Avatar);
+const MemoizedTag = React.memo(Tag);
+const MemoizedButton = React.memo(Button);
+const MemoizedText = React.memo(Text);
+
 const getCandidateIdFromUrl = () => {
   const query = new URLSearchParams(window.location.search);
   return query.get("id");
 };
 
-const candidateId = getCandidateIdFromUrl();
-
-const fetchInterviewSessions = async () => {
+const fetchInterviewSessions = async (candidateId) => {
   const { data } = await axios.get(
     `/api/v1/interview/interviewSessions/${candidateId}`
   );
@@ -52,33 +358,33 @@ const deleteInterviewSession = async (id) => {
   await axios.delete(`/api/v1/interview/interviewSessions/${id}`);
 };
 
-const updateInterviewStatus = async ({ id, status , isOutCome   }) => {
+const updateInterviewStatus = async ({ id, status, isOutCome }) => {
   const { data } = await axios.patch(
     `/api/v1/interview/interviewSessions/${id}`,
-    { status , isOutCome   }
+    { status, isOutCome }
   );
   return data;
 };
 
 const InterviewSessionList = () => {
+  const candidateId = useMemo(() => getCandidateIdFromUrl(), []);
+  const queryClient = useQueryClient();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
 
-  const {
-    data: sessions,
-    isLoading,
-    refetch,
-  } = useQuery({
-    queryKey: ["interviewSessions"],
-    queryFn: fetchInterviewSessions,
+  // Query for interview sessions
+  const { data: sessions = [], isLoading } = useQuery({
+    queryKey: ["interviewSessions", candidateId],
+    queryFn: () => fetchInterviewSessions(candidateId),
+    staleTime: 500,
   });
-  console.log(sessions);
+
+  // Mutations
   const deleteMutation = useMutation({
     mutationFn: deleteInterviewSession,
     onSuccess: () => {
       toast.success("Interview session deleted successfully");
-      
-      refetch();
+      queryClient.invalidateQueries(["interviewSessions", candidateId]);
     },
     onError: () => {
       toast.error("Failed to delete interview session");
@@ -88,34 +394,39 @@ const InterviewSessionList = () => {
   const statusMutation = useMutation({
     mutationFn: updateInterviewStatus,
     onSuccess: (s) => {
-      toast.success( s.message || "Status updated successfully");
-      refetch();
+      toast.success(s.message || "Status updated successfully");
+      queryClient.invalidateQueries(["interviewSessions", candidateId]);
     },
     onError: (err) => {
-      console.log(err)
-      toast.error( err.response.data.message ||  "Failed to update status");
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to update status");
     },
   });
 
-  const handleStatusChange = (id, newStatus  , isOutCome  ) => {
-    statusMutation.mutate({ id, status: newStatus  ,  isOutCome });
-  };
+  // Memoized handlers
+  const handleStatusChange = useCallback(
+    (id, newStatus, isOutCome) => {
+      statusMutation.mutate({ id, status: newStatus, isOutCome });
+    },
+    [statusMutation]
+  );
 
-  const handleEdit = (session) => {
+  const handleEdit = useCallback((session) => {
     setSelectedSession(session);
     setIsModalVisible(true);
-  };
+  }, []);
 
-  const handleCreate = () => {
+  const handleCreate = useCallback(() => {
     setSelectedSession(null);
     setIsModalVisible(true);
-  };
+  }, []);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setIsModalVisible(false);
-  };
+  }, []);
 
-  const getStatusTag = (status, record) => {
+  // Memoized status and outcome tag components
+  const getStatusTag = useCallback((status, record) => {
     const statusMap = {
       scheduled: { color: "blue", icon: <ClockCircleOutlined /> },
       in_progress: { color: "orange", icon: <ClockCircleOutlined /> },
@@ -133,16 +444,16 @@ const InterviewSessionList = () => {
       >
         {Object.keys(statusMap).map((key) => (
           <Option key={key} value={key}>
-            <Tag color={statusMap[key].color} icon={statusMap[key].icon}>
+            <MemoizedTag color={statusMap[key].color} icon={statusMap[key].icon}>
               {key.replace("_", " ")}
-            </Tag>
+            </MemoizedTag>
           </Option>
         ))}
       </Select>
     );
-  };
+  }, [handleStatusChange]);
 
-  const getOutcomeTag = (outcome, record) => {
+  const getOutcomeTag = useCallback((outcome, record) => {
     const outcomeMap = {
       selected: { color: "success", text: "Selected" },
       rejected: { color: "error", text: "Rejected" },
@@ -154,7 +465,7 @@ const InterviewSessionList = () => {
       <Select
         defaultValue={outcome}
         style={{ width: 120 }}
-        onChange={(value) => handleStatusChange(record._id, value ,  true  )}
+        onChange={(value) => handleStatusChange(record._id, value, true)}
         bordered={false}
       >
         {Object.keys(outcomeMap).map((key) => (
@@ -164,36 +475,36 @@ const InterviewSessionList = () => {
         ))}
       </Select>
     );
-  };
+  }, [handleStatusChange]);
 
-  const columns = [
+  // Memoized table columns
+  const columns = useMemo(() => [
     {
       title: "Candidate",
       dataIndex: ["application", "name"],
       key: "candidate",
       render: (text, record) => (
         <Space>
-          <Avatar src={record.applicationId?.photo} icon={<UserOutlined />} />
+          <MemoizedAvatar src={record.applicationId?.photo} icon={<UserOutlined />} />
           <div>
-            <Text strong>{record.applicationId?.name}</Text>
+            <MemoizedText strong>{record.applicationId?.name}</MemoizedText>
             <br />
-            <Text type="secondary">{record.applicationId?.email}</Text>
+            <MemoizedText type="secondary">{record.applicationId?.email}</MemoizedText>
           </div>
         </Space>
       ),
     },
-   
     {
       title: "Interview Round",
       dataIndex: ["interviewRound", "name"],
       key: "round",
       render: (text, record) => (
         <div>
-          <Text strong>{record.interviewRoundId?.name}</Text>
+          <MemoizedText strong>{record.interviewRoundId?.name}</MemoizedText>
           <br />
-          <Text type="secondary">
+          <MemoizedText type="secondary">
             Round {record.interviewRoundId?.roundNumber}
-          </Text>
+          </MemoizedText>
         </div>
       ),
     },
@@ -201,7 +512,7 @@ const InterviewSessionList = () => {
       title: "Interviewer",
       dataIndex: ["interviewRoundId", "interviewer", "fullName"],
       key: "interviewer",
-      render: (text) => <Tag icon={<UserOutlined />}>{text}</Tag>,
+      render: (text) => <MemoizedTag icon={<UserOutlined />}>{text}</MemoizedTag>,
     },
     {
       title: "Schedule",
@@ -209,13 +520,13 @@ const InterviewSessionList = () => {
       key: "schedule",
       render: (_, record) => (
         <Space direction="vertical" size={0}>
-          <Text>
+          <MemoizedText>
             <CalendarOutlined /> {dayjs(record.startTime).format("DD MMM YYYY")}
-          </Text>
-          <Text type="secondary">
+          </MemoizedText>
+          <MemoizedText type="secondary">
             {dayjs(record.startTime).format("h:mm A")} -{" "}
             {dayjs(record.endTime).format("h:mm A")}
-          </Text>
+          </MemoizedText>
           {record.meetingLink && (
             <a
               href={record.meetingLink}
@@ -246,7 +557,7 @@ const InterviewSessionList = () => {
       fixed: "right",
       render: (_, record) => (
         <Space size="middle">
-          <Button
+          <MemoizedButton
             type="link"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
@@ -257,26 +568,26 @@ const InterviewSessionList = () => {
             okText="Yes"
             cancelText="No"
           >
-            <Button type="link" danger icon={<DeleteOutlined />} />
+            <MemoizedButton type="link" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
       ),
     },
-  ];
+  ], [getStatusTag, getOutcomeTag, handleEdit, deleteMutation]);
 
   return (
     <div className="">
       <Card
         title="Interview Sessions"
         extra={
-          <Button type="primary" onClick={handleCreate}>
+          <MemoizedButton type="primary" onClick={handleCreate}>
             Schedule New Session
-          </Button>
+          </MemoizedButton>
         }
       >
         <Table
           columns={columns}
-          dataSource={Array.isArray(sessions) && sessions}
+          dataSource={Array.isArray(sessions) ? sessions : []}
           rowKey="_id"
           loading={isLoading}
           pagination={{ pageSize: 10 }}
@@ -297,7 +608,7 @@ const InterviewSessionList = () => {
           session={selectedSession}
           onSuccess={() => {
             setIsModalVisible(false);
-            refetch();
+            queryClient.invalidateQueries(["interviewSessions", candidateId]);
           }}
         />
       </Modal>
@@ -305,4 +616,4 @@ const InterviewSessionList = () => {
   );
 };
 
-export default InterviewSessionList;
+export default React.memo(InterviewSessionList);

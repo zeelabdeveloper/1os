@@ -35,7 +35,7 @@ exports.addBranch = async (req, res) => {
       return res.status(400).json({ message: "Branch code already exists" });
     }
 
-    const branch = new Branch({ code, name }); 
+    const branch = new Branch({ code, name });
     await branch.save();
     res.status(201).json({ data: branch, message: "Added New Branch" });
   } catch (err) {
@@ -53,7 +53,7 @@ exports.updateBranch = async (req, res) => {
       { code, name },
       { new: true, runValidators: true }
     );
-console.log(branch)
+    console.log(branch);
     if (!branch) {
       return res.status(404).json({ message: "Branch not found" });
     }
@@ -147,8 +147,30 @@ exports.getDepartmentsByBranch = async (req, res) => {
     });
   }
 };
+exports.getDepartmentOfHead = async (req, res) => {
+  try {
+    const { Head } = req.params;
+    const departments = await Department.find({ head: Head }).select(
+      "_id name code isActive"
+    );
+
+    res.json({
+      success: true,
+      data: departments,
+      message: "Departments fetched successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch departments",
+      error: error.message,
+    });
+  }
+};
+
 exports.getRoleByDepartment = async (req, res) => {
-  console.log( "hjjkhkjhk")
+  console.log("hjjkhkjhk");
   try {
     const { departmentId } = req.params;
     const role = await Role.find({ departmentId: departmentId }).select(

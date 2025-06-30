@@ -3,11 +3,13 @@ import {
   Card,
   Button,
   Avatar,
-  Progress,
   Divider,
   Tag,
   message,
   Modal,
+  Spin,
+  Progress,
+  Badge,
 } from "antd";
 import {
   CheckOutlined,
@@ -19,50 +21,72 @@ import {
   CalendarOutlined,
   InfoCircleOutlined,
   EyeOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "../../axiosConfig";
+import moment from "moment";
+import toast from "react-hot-toast";
+import useAuthStore from "../../stores/authStore";
 
 const AttendanceApprovalPopup = () => {
-  // Sample data
-  const [attendanceRequests, setAttendanceRequests] = useState([
-    {
-      id: 1,
-      userId: "EMP001",
-      userName: "John Doe",
-      userPhoto: "https://randomuser.me/api/portraits/men/1.jpg",
-      date: "2023-06-15",
-      timeIn: "09:15 AM",
-      timeOut: "06:30 PM",
-      status: "pending",
-      reason: "Traffic delay",
-      location: "Office Main Gate",
-      photoProof: "https://via.placeholder.com/400x300?text=Entry+Photo",
-      totalHours: "8.5",
-      lateMinutes: 15,
-    },
-    {
-      id: 2,
-      userId: "EMP002",
-      userName: "Jane Smith",
-      userPhoto: "https://randomuser.me/api/portraits/women/1.jpg",
-      date: "2023-06-15",
-      timeIn: "08:45 AM",
-      timeOut: "05:30 PM",
-      status: "pending",
-      reason: "Early leave - Doctor appointment",
-      location: "Office Reception",
-      photoProof: "https://via.placeholder.com/400x300?text=Exit+Photo",
-      totalHours: "8.75",
-      lateMinutes: 0,
-    },
-  ]);
-
+  const queryClient = useQueryClient();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const currentRequest = attendanceRequests[currentIndex];
+  // Fetch pending attendance requests
+  const { data: pendingRequests = [], isLoading } = useQuery({
+    queryKey: ["pendingAttendance"],
+    queryFn: async () => {
+      const { data } = await axios.get(
+        "/api/v1/attendance/getAttendanceRecords?isApproved=false&limit=100"
+      );
 
-  // Keyboard event handler
+      return data.data;
+    },
+  });
+  console.log(pendingRequests);
+  const currentRequest = pendingRequests[currentIndex] || null;
+  const { user } = useAuthStore();
+  // Approve mutation
+  const approveMutation = useMutation({
+    mutationFn: (id) =>
+      axios.put(`/api/v1/attendance/${id}`, {
+        approvedBy: user?._id,
+        status: "approved",
+        isApproved: true,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["pendingAttendance"]);
+      toast.success("Attendance approved successfully!");
+      moveToNext();
+    },
+    onError: (ee) => {
+      toast.error(
+        ee?.response?.data?.message || "Failed to approve attendance"
+      );
+    },
+  });
+
+  // Reject mutation
+  const rejectMutation = useMutation({
+    mutationFn: (id) =>
+      axios.put(`/api/v1/attendance/${id}`, {
+        approvedBy: user?._id,
+        status: "rejected",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["pendingAttendance"]);
+      toast.error("Attendance rejected!");
+      moveToNext();
+    },
+    onError: (ee) => {
+      console.log(ee)
+      toast.error(ee?.response?.data?.message || "Failed to reject attendance");
+    },
+  });
+
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!isModalOpen) return;
@@ -91,11 +115,11 @@ const AttendanceApprovalPopup = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isModalOpen, currentIndex, attendanceRequests]);
+  }, [isModalOpen, currentIndex, pendingRequests]);
 
   const showModal = () => {
     setIsModalOpen(true);
-    setCurrentIndex(0); // Reset to first request when opening
+    setCurrentIndex(0);
   };
 
   const handleCancel = () => {
@@ -103,35 +127,17 @@ const AttendanceApprovalPopup = () => {
   };
 
   const handleApprove = () => {
-    if (loading) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      const updatedRequests = [...attendanceRequests];
-      updatedRequests[currentIndex].status = "approved";
-      setAttendanceRequests(updatedRequests);
-      message.success("Attendance approved successfully!");
-      setLoading(false);
-      moveToNext();
-    }, 500);
+    if (!currentRequest) return;
+    approveMutation.mutate(currentRequest._id);
   };
 
   const handleReject = () => {
-    if (loading) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      const updatedRequests = [...attendanceRequests];
-      updatedRequests[currentIndex].status = "rejected";
-      setAttendanceRequests(updatedRequests);
-      message.warning("Attendance rejected!");
-      setLoading(false);
-      moveToNext();
-    }, 500);
+    if (!currentRequest) return;
+    rejectMutation.mutate(currentRequest._id);
   };
 
   const moveToNext = () => {
-    if (currentIndex < attendanceRequests.length - 1) {
+    if (currentIndex < pendingRequests.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
       message.info("No more pending requests");
@@ -145,22 +151,30 @@ const AttendanceApprovalPopup = () => {
     }
   };
 
+  // Calculate late minutes
+  const calculateLateMinutes = (checkInTime) => {
+    if (!checkInTime) return 0;
+    const checkIn = moment(checkInTime);
+    const expectedTime = moment(checkIn).set({ hour: 9, minute: 30 }); // 9:00 AM
+    return Math.max(0, checkIn.diff(expectedTime, "minutes"));
+  };
+
   return (
     <div>
-      {/* Button to open the modal */}
-      <Button
-        type="primary"
-        icon={<EyeOutlined />}
-        onClick={showModal}
-        className="bg-blue-500   hover:bg-blue-600"
-      >
-        Review Attendance Requests ({attendanceRequests.length})
-      </Button>
+      <Badge count={pendingRequests.length} overflowCount={9}>
+        <Button
+          type="primary"
+          icon={<EyeOutlined />}
+          onClick={showModal}
+          className="bg-blue-500 hover:bg-blue-600"
+        >
+          Review Attendance Requests
+        </Button>
+      </Badge>
 
-      {/* Modal/Popup */}
       <Modal
         title={`Attendance Approval (${currentIndex + 1}/${
-          attendanceRequests.length
+          pendingRequests.length
         })`}
         open={isModalOpen}
         onCancel={handleCancel}
@@ -168,8 +182,20 @@ const AttendanceApprovalPopup = () => {
         width={900}
         centered
         className="max-w-[95vw]"
+        destroyOnClose
       >
-        {attendanceRequests.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <Spin size="large" />
+          </div>
+        ) : pendingRequests.length === 0 ? (
+          <div className="text-center py-12">
+            <ExclamationCircleOutlined className="text-3xl text-gray-400 mb-4" />
+            <p className="text-gray-500 text-lg">
+              No pending attendance requests
+            </p>
+          </div>
+        ) : (
           <Card
             className="border-0"
             actions={[
@@ -177,8 +203,9 @@ const AttendanceApprovalPopup = () => {
                 type="primary"
                 icon={<CheckOutlined />}
                 onClick={handleApprove}
-                loading={loading}
+                loading={approveMutation.isLoading}
                 className="bg-green-500 hover:bg-green-600"
+                block
               >
                 Approve (Enter)
               </Button>,
@@ -186,7 +213,8 @@ const AttendanceApprovalPopup = () => {
                 danger
                 icon={<CloseOutlined />}
                 onClick={handleReject}
-                loading={loading}
+                loading={rejectMutation.isLoading}
+                block
               >
                 Reject (Delete)
               </Button>,
@@ -198,14 +226,16 @@ const AttendanceApprovalPopup = () => {
                 <div className="flex flex-col items-center mb-4">
                   <Avatar
                     size={120}
-                    src={currentRequest.userPhoto}
+                    src={currentRequest?.userId?.Profile?.photo}
                     icon={<UserOutlined />}
-                    className="mb-3 border-2 border-blue-200"
+                    className="mb-3  border-2 border-blue-200"
                   />
-                  <h2 className="text-xl font-semibold">
-                    {currentRequest.userName}
+                  <h2 className="text-xl font-semibold text-center">
+                    {currentRequest?.userId?.fullName || "Unknown User"}
                   </h2>
-                  <p className="text-gray-500">{currentRequest.userId}</p>
+                  <p className="text-gray-500">
+                    {currentRequest?.userId?.EmployeeId?.employeeId || "N/A"}
+                  </p>
                 </div>
 
                 <Divider />
@@ -214,21 +244,36 @@ const AttendanceApprovalPopup = () => {
                   <div className="flex items-center">
                     <CalendarOutlined className="text-blue-500 mr-2" />
                     <span className="font-medium">Date:</span>
-                    <span className="ml-2">{currentRequest.date}</span>
+                    <span className="ml-2">
+                      {moment(currentRequest?.date).format("DD MMM YYYY")}
+                    </span>
                   </div>
+                  {currentRequest?.leaveType && (
+                    <div className="flex items-center">
+                      <CalendarOutlined className="text-blue-500 mr-2" />
+                      <span className="font-medium">Leave type:</span>
+                      <span className="ml-2">{currentRequest?.leaveType}</span>
+                    </div>
+                  )}
 
                   <div className="flex items-center">
                     <ClockCircleOutlined className="text-blue-500 mr-2" />
                     <span className="font-medium">Time In:</span>
                     <Tag
                       color={
-                        currentRequest.lateMinutes > 0 ? "orange" : "green"
+                        calculateLateMinutes(currentRequest?.checkInTime) > 0
+                          ? "orange"
+                          : "green"
                       }
                       className="ml-2"
                     >
-                      {currentRequest.timeIn}
-                      {currentRequest.lateMinutes > 0 &&
-                        ` (Late by ${currentRequest.lateMinutes} mins)`}
+                      {currentRequest?.checkInTime
+                        ? moment(currentRequest?.checkInTime).format("hh:mm A")
+                        : "N/A"}
+                      {calculateLateMinutes(currentRequest?.checkInTime) > 0 &&
+                        ` (Late by ${calculateLateMinutes(
+                          currentRequest?.checkInTime
+                        )} mins)`}
                     </Tag>
                   </div>
 
@@ -236,7 +281,9 @@ const AttendanceApprovalPopup = () => {
                     <ClockCircleOutlined className="text-blue-500 mr-2" />
                     <span className="font-medium">Time Out:</span>
                     <Tag color="blue" className="ml-2">
-                      {currentRequest.timeOut}
+                      {currentRequest?.checkOutTime
+                        ? moment(currentRequest?.checkOutTime).format("hh:mm A")
+                        : "N/A"}
                     </Tag>
                   </div>
 
@@ -244,14 +291,22 @@ const AttendanceApprovalPopup = () => {
                     <InfoCircleOutlined className="text-blue-500 mr-2" />
                     <span className="font-medium">Total Hours:</span>
                     <span className="ml-2">
-                      {currentRequest.totalHours} hours
+                      {currentRequest?.hoursWorked
+                        ? `${Math.floor(
+                            currentRequest?.hoursWorked
+                          )}h ${Math.round(
+                            (currentRequest?.hoursWorked % 1) * 60
+                          )}m`
+                        : "N/A"}
                     </span>
                   </div>
 
-                  {currentRequest.reason && (
+                  {currentRequest?.remarks && (
                     <div className="bg-yellow-50 p-3 rounded">
-                      <p className="font-medium text-yellow-800">Reason:</p>
-                      <p className="text-yellow-700">{currentRequest.reason}</p>
+                      <p className="font-medium text-yellow-800">Remarks:</p>
+                      <p className="text-yellow-700">
+                        {currentRequest?.remarks}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -263,44 +318,56 @@ const AttendanceApprovalPopup = () => {
                   <h3 className="font-semibold text-lg mb-2">
                     Attendance Proof
                   </h3>
-                  <div className="border rounded-lg overflow-hidden">
-                    <img
-                      src={currentRequest.photoProof}
-                      alt="Attendance proof"
-                      className="w-full h-auto object-cover"
-                    />
+                  <div className="border rounded-lg overflow-hidden bg-gray-100">
+                    {currentRequest?.checkInPhoto ? (
+                      <img
+                        src={currentRequest?.checkInPhoto}
+                        alt="Check-in proof"
+                        className="w-full h-64 object-contain"
+                      />
+                    ) : (
+                      <div className="flex justify-center items-center h-64 text-gray-400">
+                        No photo available
+                      </div>
+                    )}
                   </div>
                   <p className="text-gray-500 mt-2">
-                    Location: {currentRequest.location}
+                    Location: {currentRequest?.location || "Not specified"}
                   </p>
                 </div>
 
-                {/* Navigation buttons - visible even in modal */}
-                <div className="flex justify-between mt-6">
-                  <Button
-                    icon={<LeftOutlined />}
-                    onClick={moveToPrevious}
-                    disabled={currentIndex === 0}
-                  >
-                    Previous (←)
-                  </Button>
-                  <Button
-                    icon={<RightOutlined />}
-                    onClick={moveToNext}
-                    disabled={currentIndex === attendanceRequests.length - 1}
-                  >
-                    Next (→)
-                  </Button>
+                {/* Progress and navigation */}
+                <div className="mt-4">
+                  <Progress
+                    percent={Math.round(
+                      ((currentIndex + 1) / pendingRequests.length) * 100
+                    )}
+                    status="active"
+                    showInfo={false}
+                  />
+                  <div className="flex justify-between mt-4">
+                    <Button
+                      icon={<LeftOutlined />}
+                      onClick={moveToPrevious}
+                      disabled={currentIndex === 0}
+                    >
+                      Previous (←)
+                    </Button>
+                    <span className="text-gray-500 self-center">
+                      {currentIndex + 1} of {pendingRequests.length}
+                    </span>
+                    <Button
+                      icon={<RightOutlined />}
+                      onClick={moveToNext}
+                      disabled={currentIndex === pendingRequests.length - 1}
+                    >
+                      Next (→)
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           </Card>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
-              No pending attendance requests
-            </p>
-          </div>
         )}
       </Modal>
     </div>

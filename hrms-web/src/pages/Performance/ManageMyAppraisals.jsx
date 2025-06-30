@@ -13,7 +13,6 @@ import {
   Row,
   Col,
   Badge,
-  
   Statistic,
 } from "antd";
 import {
@@ -32,12 +31,11 @@ import {
   submitAppraisal,
   exportAppraisalsToPDF,
 } from "../../api/performance";
- 
 
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
 import UserAppraisalModal from "../../Tab/UserAppraisalModal.JSX";
-import AppraisalForm from "../../components/performance/AppraisalForm";
+import useAuthStore from "../../stores/authStore";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -57,11 +55,13 @@ const statusOptions = [
 ];
 
 const AppraisalList = () => {
+  const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
     status: null,
     year: dayjs().year(),
     month: null,
+    user: user?._id,
   });
 
   const [formVisible, setFormVisible] = useState(false);
@@ -506,13 +506,6 @@ const AppraisalList = () => {
           />
         </div>
       </Card>
-
-      {/* Modals */}
-      <AppraisalForm
-        visible={formVisible}
-        onClose={() => setFormVisible(false)}
-        editData={selectedAppraisal}
-      />
 
       <UserAppraisalModal
         visible={detailVisible}

@@ -25,7 +25,7 @@ import {
 import { FaExclamationCircle } from "react-icons/fa";
 
 import * as api from "../../api/auth";
- 
+
 import toast from "react-hot-toast";
 
 // Custom debounce hook
@@ -62,8 +62,8 @@ const BranchSelect = ({
     loading={loading}
     size="large"
     notFoundContent={loading ? <Spin size="small" /> : "No branches found"}
-    value={value}  
-    onChange={onChange}   
+    value={value}
+    onChange={onChange}
   >
     {branches.map((branch) => (
       <Select.Option key={branch._id} value={branch._id}>
@@ -105,7 +105,7 @@ const EmployeeSelect = ({ loading, employees, onSearch, value, onChange }) => {
     >
       {filteredEmployees.map((emp) => (
         <Select.Option key={emp._id} value={emp._id}>
-          {emp?.firstName} ({emp.employeeId})
+          {emp?.firstName} ({emp?.EmployeeId?.employeeId})
         </Select.Option>
       ))}
     </Select>
@@ -430,6 +430,7 @@ const DepartmentManagement = () => {
         render: (head, record) =>
           editingId === record._id ? (
             <Form.Item name="head">
+              {console.log(head)}
               <EmployeeSelect
                 loading={isEmployeesLoading}
                 employees={employees}
@@ -437,7 +438,7 @@ const DepartmentManagement = () => {
               />
             </Form.Item>
           ) : (
-            (head?.employeeId && head?.fullName + " " + head?.employeeId) || "-"
+            (head?.EmployeeId && head?.firstName) || "-"
           ),
       },
       {
@@ -445,7 +446,7 @@ const DepartmentManagement = () => {
         dataIndex: "isActive",
         render: (isActive, record) =>
           editingId === record._id ? (
-            <Form.Item name="isActive" valuePropName="checked">
+            <Form.Item name="isActive">
               <Select>
                 <Select.Option value={true}>Active</Select.Option>
                 <Select.Option value={false}>Inactive</Select.Option>

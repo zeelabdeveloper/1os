@@ -216,7 +216,7 @@ exports.verifyToken = async (req, res) => {
   try {
     // 1. Extract token from cookies or Authorization header
     const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
-console.log(token)
+
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -228,12 +228,40 @@ console.log(token)
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // 3. Find the user and populate Organization if it's a referenced field
-    const user = await User.findById(decoded.userId)
-      .select("-password -__v")
-      .populate([
-        { path: "Organization", strictPopulate: false },
-        { path: "EmployeeId", strictPopulate: false },
-      ]);
+   const user = await User.findById(decoded.userId)
+  .select("-password -__v")
+  .populate([
+    {
+      path: "Organization",
+      strictPopulate: false,
+      populate: [
+        {
+          path: "branch",
+          model: "CompanyBranch",
+          strictPopulate: false,
+        },
+        {
+          path: "department",
+          model: "Department",
+          strictPopulate: false,
+        },
+        {
+          path: "role",
+          model: "Role",
+          strictPopulate: false,
+        },
+      ],
+    },
+    { path: "EmployeeId", strictPopulate: false },
+    { path: "Profile", strictPopulate: false },
+    { path: "Bank", strictPopulate: false },
+    { path: "Salary", strictPopulate: false },
+    { path: "Experience", strictPopulate: false },
+    { path: "Asset", strictPopulate: false },
+    { path: "Document", strictPopulate: false },
+    { path: "Store", strictPopulate: false },
+  ]);
+
 
     if (!user) {
       return res.status(404).json({
@@ -282,7 +310,7 @@ console.log(token)
         url: p?.route?.url,
         label: p?.route?.label,
       }));
-console.log(allowedRoutes)
+
     return res.status(200).json({
       success: true, 
       permissions: allowedRoutes,

@@ -1,4 +1,4 @@
-const Store = require("../../models/stores/store");
+const Store = require("../../models/Store");
 const StoreGroup = require("../../models/stores/StoreGroup");
 
  

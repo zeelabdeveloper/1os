@@ -162,9 +162,10 @@ const { Sider } = Layout;
 const { SubMenu } = Menu;
 
 const LeftMenu = () => {
-  const { user, webSetting, EmployeeId, permissions } = useAuthStore(
+  const { user, webSetting, permissions } = useAuthStore(
     (state) => state
   );
+ 
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);

@@ -28,7 +28,7 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
- reportingto: {
+  reportingto: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
   },
@@ -84,13 +84,16 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  Store: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Store",
+  },
 
   isActive: {
     type: Boolean,
     default: false,
   },
   lastLogin: Date,
-  
 
   createdAt: {
     type: Date,
