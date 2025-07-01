@@ -52,8 +52,8 @@ exports.loginUser = async (req, res) => {
     const fullUser = await User.findById(user._id);
     const isMatch = await fullUser.comparePassword(password);
 
-    // if (!isMatch)
-    //   return res.status(401).json({ message: "Invalid credentials" });
+    if (!isMatch)
+      return res.status(401).json({ message: "Invalid credentials" });
 
     fullUser.lastLogin = new Date();
     await fullUser.save();
@@ -64,7 +64,8 @@ exports.loginUser = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === "production",
+      secure: false,
+      // secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: 365 * 24 * 60 * 60 * 1000,
       path: "/",
