@@ -244,3 +244,4 @@ function lazyLoad(pageName) {
   const Component = lazy(() => import(`./pages/${pageName}`));
   return <Component />;
 }
+ 

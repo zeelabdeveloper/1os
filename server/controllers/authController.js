@@ -3,8 +3,12 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const Department = require("../models/Department");
 const nodemailer = require("nodemailer");
+const mongoose = require("mongoose");
 const sendEmail = require("../services/forgetpassmail");
 const Permission = require("../models/developer/Permission");
+const Onboarding = require("../models/jobs/Onboarding");
+const EmployeeId = require("../models/EmployeeId");
+const Application = require("../models/jobs/applicationSchema");
 
 const createToken = (userId) => {
   return jwt.sign(userId, process.env.JWT_SECRET, {
@@ -173,6 +177,146 @@ exports.createUser = async (req, res) => {
   }
 };
 
+exports.checkEmployeeConversion = async (req, res) => {
+  console.log("sfsfd");
+  try {
+    const { applicationId } = req.query;
+
+    // Find if this application has been converted to a user
+    const usefr = await Application.findById(applicationId);
+    const user = await User.findOne({ email: usefr.email });
+ 
+    if (!user) {
+      return res.status(200).json({ isConverted: false });
+    }
+
+    res.status(200).json({
+      isConverted: true,
+      employee: user,
+    });
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.convertUserFromOnboarding = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { applicationId, password, confirmPassword } = req.body;
+
+    // Validate password match
+    if (password !== confirmPassword) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    // Find the onboarding details and related application
+    const onboardingDetails = await Onboarding.findOne({ applicationId })
+      .populate("applicationId")
+      .session(session);
+
+    if (!onboardingDetails) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Onboarding record not found" });
+    }
+
+    const application = onboardingDetails.applicationId;
+    if (!application) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      email: application.email,
+    }).session(session);
+    if (existingUser) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    // Create new user from application data
+    const newUser = await User.create(
+      [
+        {
+          firstName: application.name.split(" ")[0],
+          lastName: application.name.split(" ").slice(1).join(" ") || "",
+          email: application.email,
+          password: password,
+          contactNumber: application.phone,
+          isActive: false,
+          ...onboardingDetails.toObject(),
+        },
+      ],
+      { session }
+    );
+
+    const docNo = await EmployeeId.countDocuments().session(session);
+    const newEmployee = new EmployeeId({
+      employeeId: `EMP-${docNo + 1}`,
+      user: newUser[0]._id,
+    });
+
+    const savedEmployee = await newEmployee.save({ session });
+
+    // Update user with employee reference
+    newUser[0].EmployeeId = savedEmployee._id;
+    await newUser[0].save({ session });
+
+    // Update application status
+    application.status = "hired";
+    await application.save({ session });
+
+    // Commit transaction if all operations succeed
+    await session.commitTransaction();
+
+    // Send confirmation email (don't await to not block response)
+    sendConfirmationEmail(newUser[0], password).catch(console.error);
+
+    res.status(201).json({
+      message: "User created successfully",
+      user: newUser[0],
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    console.error(error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  } finally {
+    session.endSession();
+  }
+};
+
+// Email sending function
+async function sendConfirmationEmail(user, tempPassword) {
+  try {
+    const mailOptions = {
+      from: process.env.MAIL_USER,
+      to: user.email,
+      subject: "Welcome to Our Company!",
+      html: `
+        <h1>Welcome ${user.firstName}!</h1>
+        <p>Your account has been successfully created.</p>
+        <p>Here are your login details:</p>
+        <ul>
+          <li>Email: ${user.email}</li>
+          <li>Temporary Password: ${tempPassword}</li>
+        </ul>
+        <p>Please change your password after first login.</p>
+        <p>Best regards,<br/>HR Team</p>
+      `,
+    };
+
+    await sendEmail(mailOptions);
+    console.log("Confirmation email sent to", user.email);
+  } catch (error) {
+    console.error("Failed to send confirmation email:", error);
+    throw error;
+  }
+}
+
 // Create Department
 exports.createDepartment = async (req, res) => {
   try {
@@ -228,40 +372,39 @@ exports.verifyToken = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // 3. Find the user and populate Organization if it's a referenced field
-   const user = await User.findById(decoded.userId)
-  .select("-password -__v")
-  .populate([
-    {
-      path: "Organization",
-      strictPopulate: false,
-      populate: [
+    const user = await User.findById(decoded.userId)
+      .select("-password -__v")
+      .populate([
         {
-          path: "branch",
-          model: "CompanyBranch",
+          path: "Organization",
           strictPopulate: false,
+          populate: [
+            {
+              path: "branch",
+              model: "CompanyBranch",
+              strictPopulate: false,
+            },
+            {
+              path: "department",
+              model: "Department",
+              strictPopulate: false,
+            },
+            {
+              path: "role",
+              model: "Role",
+              strictPopulate: false,
+            },
+          ],
         },
-        {
-          path: "department",
-          model: "Department",
-          strictPopulate: false,
-        },
-        {
-          path: "role",
-          model: "Role",
-          strictPopulate: false,
-        },
-      ],
-    },
-    { path: "EmployeeId", strictPopulate: false },
-    { path: "Profile", strictPopulate: false },
-    { path: "Bank", strictPopulate: false },
-    { path: "Salary", strictPopulate: false },
-    { path: "Experience", strictPopulate: false },
-    { path: "Asset", strictPopulate: false },
-    { path: "Document", strictPopulate: false },
-    { path: "Store", strictPopulate: false },
-  ]);
-
+        { path: "EmployeeId", strictPopulate: false },
+        { path: "Profile", strictPopulate: false },
+        { path: "Bank", strictPopulate: false },
+        { path: "Salary", strictPopulate: false },
+        { path: "Experience", strictPopulate: false },
+        { path: "Asset", strictPopulate: false },
+        { path: "Document", strictPopulate: false },
+        { path: "Store", strictPopulate: false },
+      ]);
 
     if (!user) {
       return res.status(404).json({
@@ -312,7 +455,7 @@ exports.verifyToken = async (req, res) => {
       }));
 
     return res.status(200).json({
-      success: true, 
+      success: true,
       permissions: allowedRoutes,
       user,
       employeeId: user?.EmployeeId,

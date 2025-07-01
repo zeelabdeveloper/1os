@@ -16,7 +16,7 @@ router.post("/", async (req, res) => {
         .status(400)
         .json({ message: "User with this email already exists" });
     }
-    console.log(req.body);
+    
     // Step 1: Create the user
     const user = new User({
       isCocoEmployee: true,

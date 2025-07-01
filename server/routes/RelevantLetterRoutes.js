@@ -1,6 +1,6 @@
 const express = require('express');
 const {   getLetterTemplatesByType,
-  generateLetter } = require('../controllers/Content/letterTemplates');
+  generateLetter , viewLetter   } = require('../controllers/Content/letterTemplates');
 const router = express.Router();
  
  
@@ -9,6 +9,7 @@ const router = express.Router();
 
 // Generate and send letter
 router.post('/generate',   generateLetter);
+router.get('/generated',   viewLetter);
 
 // // Get all sent letters for user
 // router.get('/sent',   getSentLetters);

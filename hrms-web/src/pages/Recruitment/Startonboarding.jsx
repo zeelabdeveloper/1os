@@ -42,8 +42,6 @@
 
 // export default App;
 
-
-
 import { useState, useCallback, memo } from "react";
 import { Layout } from "antd";
 import InterviewSessionDetail from "../../components/InterviewSession/InterviewSessionDetail";
@@ -52,6 +50,7 @@ import DocumentVerification from "../../components/onboarding/DocsVerify";
 import AssetManagement from "../../components/onboarding/AssetManagement";
 import TrainingManagement from "../../components/onboarding/TrainingManagement";
 import LetterManagement from "../../components/onboarding/LetterManagement";
+import ConvertToEMP from "../../components/onboarding/ConverToEMP";
 
 const { Header, Content } = Layout;
 
@@ -78,22 +77,23 @@ function InterviewManagementApp() {
   return (
     <Layout className="h-[92vh] overflow-y-auto">
       <MemoizedAppHeader />
-      
+
       <Content className="p-6">
         <div className="space-y-6">
           <MemoizedInterviewSessionList onSelectSession={handleSelectSession} />
-          
+
           {selectedSession && (
             <MemoizedInterviewSessionDetail
               sessionId={selectedSession._id}
               onEdit={handleEditComplete}
             />
           )}
-          
+
           <MemoizedDocumentVerification />
           <MemoizedAssetManagement />
           <MemoizedTrainingManagement />
           <MemoizedLetterManagement />
+          <ConvertToEMP />
         </div>
       </Content>
     </Layout>

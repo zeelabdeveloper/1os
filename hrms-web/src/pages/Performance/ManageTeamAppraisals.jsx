@@ -39,7 +39,7 @@ import dayjs from "dayjs";
 import UserAppraisalModal from "../../Tab/UserAppraisalModal.JSX";
 import AppraisalForm from "../../components/performance/AppraisalFormForTeam";
 
-const { Title, Text } = Typography;
+const { Title,   } = Typography;
 const { Option } = Select;
 
 const statusColors = {

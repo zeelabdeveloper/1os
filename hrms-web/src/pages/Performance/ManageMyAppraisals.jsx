@@ -62,6 +62,7 @@ const AppraisalList = () => {
     year: dayjs().year(),
     month: null,
     user: user?._id,
+    isMyAppraisal:true,
   });
 
   const [formVisible, setFormVisible] = useState(false);
@@ -72,6 +73,7 @@ const AppraisalList = () => {
     data: appraisals = [],
     isLoading,
     isError,
+    
   } = useQuery({
     queryKey: ["appraisals", filters],
     queryFn: () => fetchAppraisals(filters),
@@ -86,6 +88,7 @@ const AppraisalList = () => {
     onError: (error) => {
       toast.error(error.response?.data?.message || "Error deleting appraisal");
     },
+    
   });
 
   const submitMutation = useMutation({
@@ -271,52 +274,7 @@ const AppraisalList = () => {
             />
           </Tooltip>
 
-          {record.status === "Draft" && (
-            <>
-              <Tooltip title="Edit">
-                <Button
-                  icon={<EditOutlined />}
-                  type="text"
-                  size="small"
-                  onClick={() => handleEdit(record)}
-                />
-              </Tooltip>
-              <Tooltip title="Submit">
-                <Button
-                  icon={<CheckOutlined />}
-                  type="text"
-                  size="small"
-                  onClick={() => handleSubmit(record._id)}
-                  loading={
-                    submitMutation.isPending &&
-                    submitMutation.variables === record._id
-                  }
-                />
-              </Tooltip>
-            </>
-          )}
-
-          <Popconfirm
-            title="Delete this appraisal?"
-            description="This action cannot be undone"
-            onConfirm={() => handleDelete(record._id)}
-            okText="Delete"
-            cancelText="Cancel"
-            okButtonProps={{ danger: true }}
-          >
-            <Tooltip title="Delete">
-              <Button
-                icon={<DeleteOutlined />}
-                danger
-                type="text"
-                size="small"
-                loading={
-                  deleteMutation.isPending &&
-                  deleteMutation.variables === record._id
-                }
-              />
-            </Tooltip>
-          </Popconfirm>
+           
         </Space>
       ),
     },
@@ -344,13 +302,7 @@ const AppraisalList = () => {
               >
                 Filters
               </Button>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={handleCreate}
-              >
-                New Appraisal
-              </Button>
+              
               <Button
                 icon={<FilePdfOutlined />}
                 onClick={handleExport}

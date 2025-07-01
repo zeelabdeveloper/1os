@@ -9,8 +9,8 @@ const UserSchema = new mongoose.Schema({
   },
   lastName: {
     type: String,
-    required: true,
-    trim: true,
+    
+   
   },
 
   email: {
@@ -34,12 +34,7 @@ const UserSchema = new mongoose.Schema({
   },
   contactNumber: {
     type: String,
-    validate: {
-      validator: function (v) {
-        return /^\d{10}$/.test(v);
-      },
-      message: (props) => `${props.value} is not a valid phone number!`,
-    },
+    
   },
   EmployeeId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -79,6 +74,26 @@ const UserSchema = new mongoose.Schema({
       ref: "Document",
     },
   ],
+  InterviewSession: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "InterviewSession",
+      },
+    ],
+
+
+  Trainings: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Training",
+      },
+    ],
+    Letters: [{}],
+
+
+
+
+
 
   dateOfJoining: {
     type: Date,

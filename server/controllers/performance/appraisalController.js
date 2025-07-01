@@ -5,12 +5,12 @@ const { default: mongoose } = require("mongoose");
 // @route   POST /api/appraisals
 // @access  Private/Admin
 const createAppraisal = async (req, res) => {
-  console.log("dffdgfdgdfdd")
+  console.log("dffdgfdgdfdd");
   try {
-    const {  reviewer, department, role, user, month, year } = req.body;
+    const { reviewer, department, role, user, month, year } = req.body;
 
     // Validate required fields
-    if (    !department || !role || !user || !month || !year) {
+    if (!department || !role || !user || !month || !year) {
       return res.status(400).json({
         success: false,
         message: "All required fields must be provided",
@@ -21,13 +21,14 @@ const createAppraisal = async (req, res) => {
     const existingAppraisal = await Appraisal.findOne({
       user,
       month,
-      year
+      year,
     });
 
     if (existingAppraisal) {
       return res.status(400).json({
         success: false,
-        message: "Appraisal already exists for this user in the selected month and year",
+        message:
+          "Appraisal already exists for this user in the selected month and year",
       });
     }
 
@@ -37,7 +38,7 @@ const createAppraisal = async (req, res) => {
       "productivity",
       "teamwork",
       "communication",
-      "initiative"
+      "initiative",
     ];
 
     for (const comp of requiredCompetencies) {
@@ -59,7 +60,7 @@ const createAppraisal = async (req, res) => {
     // Create new appraisal
     const appraisal = new Appraisal({
       ...req.body,
-      reviewer: reviewer  
+      reviewer: reviewer,
     });
 
     const createdAppraisal = await appraisal.save();
@@ -91,22 +92,24 @@ const createAppraisal = async (req, res) => {
 // @access  Private/Admin
 const getAppraisals = async (req, res) => {
   try {
-    const { status, year,user, month } = req.query;
+    const { status, isMyAppraisal, year, user, month } = req.query;
+    console.log(req.query);
     let query = {};
-    console.log(req.body)
+    // console.log(req.body)
     if (status) query.status = status;
     if (year) query.year = year;
     if (month) query.month = month;
-     if(user) query.user = user;
+
+    if (isMyAppraisal) query.user = user;
 
     const appraisals = await Appraisal.find(query)
       .populate("branch", "name")
       .populate("department", "name")
       .populate("role", "name")
       .populate("user", "firstName lastName email")
-      .populate("reviewer", "firstName lastName")
+      .populate("reviewer" )
       .sort({ year: -1, month: -1, createdAt: -1 });
-
+ 
     res.json({
       success: true,
       count: appraisals.length,
@@ -174,7 +177,7 @@ const getUserAppraisals = async (req, res) => {
 
     const { status, year } = req.query;
     let query = { user: req.params.userId };
-    
+
     if (status) query.status = status;
     if (year) query.year = year;
 
@@ -203,7 +206,7 @@ const getUserAppraisals = async (req, res) => {
 // @route   PUT /api/appraisals/:id
 // @access  Private/Admin
 const updateAppraisal = async (req, res) => {
-  console.log( req.params.id)
+  console.log(req.params.id);
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
@@ -221,7 +224,7 @@ const updateAppraisal = async (req, res) => {
         "productivity",
         "teamwork",
         "communication",
-        "initiative"
+        "initiative",
       ];
 
       for (const comp in competencies) {
@@ -240,7 +243,7 @@ const updateAppraisal = async (req, res) => {
         }
       }
     }
-console.log( req.body)
+    console.log(req.body);
     const updatedAppraisal = await Appraisal.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -344,7 +347,7 @@ const submitAppraisal = async (req, res) => {
     res.json({
       success: true,
       message: "Appraisal submitted for approval",
-      data: appraisal
+      data: appraisal,
     });
   } catch (error) {
     console.error("Error submitting appraisal:", error);
@@ -400,7 +403,7 @@ const reviewAppraisal = async (req, res) => {
     res.json({
       success: true,
       message: `Appraisal ${action.toLowerCase()} successfully`,
-      data: appraisal
+      data: appraisal,
     });
   } catch (error) {
     console.error("Error reviewing appraisal:", error);
@@ -419,5 +422,5 @@ module.exports = {
   updateAppraisal,
   deleteAppraisal,
   submitAppraisal,
-  reviewAppraisal
+  reviewAppraisal,
 };

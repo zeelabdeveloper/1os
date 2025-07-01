@@ -6,7 +6,6 @@ const onboardingSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Application",
       required: true,
-       
     },
 
     InterviewSession: [
@@ -34,12 +33,7 @@ const onboardingSchema = new mongoose.Schema(
         ref: "Training",
       },
     ],
-    Letters: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "RelevantLetter",
-      },
-    ],
+    Letters: [{}],
 
     overallStatus: {
       type: String,

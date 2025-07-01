@@ -7,6 +7,8 @@ const {
   createDepartment,
   createRole,
   forgotPassword,
+  convertUserFromOnboarding,
+  checkEmployeeConversion,
 } = require("../controllers/authController");
 
 const router = express.Router();
@@ -16,6 +18,8 @@ router.post("/forgot-password", forgotPassword);
 router.get("/auth/verify", verifyToken);
 router.get("/fetchUser", fetchUser);
 router.post("/createUser", createUser);
+router.post("/employees/convert", convertUserFromOnboarding);
+router.get("/employees/check-conversion", checkEmployeeConversion);
 router.post("/createRole", createRole);
 router.post("/departments", createDepartment);
 
