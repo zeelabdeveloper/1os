@@ -17,6 +17,13 @@ app.use(morgan("tiny"));
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
+
+app.use(
+  cors({
+    origin: ["https://capable-melomakarona-858a10.netlify.app"],  
+    credentials: true,
+  })
+);
 // app.use(
 //   cors({
 //     origin: "*",
@@ -24,15 +31,15 @@ app.use(cookieParser());
 //   })
 // );
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
+// app.use(
+//   cors({
+//     origin: (origin, callback) => {
 
-      callback(null, origin || "*");
-    },
-    credentials: true,
-  })
-);
+//       callback(null, origin || "*");
+//     },
+//     credentials: true,
+//   })
+// );
 
 // Routes
 app.use("/api/v1", require("./routes/route.js"));
