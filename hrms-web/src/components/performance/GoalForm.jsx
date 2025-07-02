@@ -1,5 +1,3 @@
- 
-
 import React, { useState, useEffect } from "react";
 import {
   Modal,
@@ -16,14 +14,12 @@ import {
   Alert,
 } from "antd";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  createGoal,
-  updateGoal,
-} from "../../api/performance";
+import { createGoal, updateGoal } from "../../api/performance";
 import {
   fetchBranches,
   fetchDepartmentsByBranch,
   fetchRoleByDepartment,
+  fetchUsersByRole,
 } from "../../api/auth";
 import { toast } from "react-hot-toast";
 import dayjs from "dayjs";
@@ -51,22 +47,19 @@ const GoalForm = ({ visible, onClose, editData }) => {
   const [loading, setLoading] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [selectedDept, setSelectedDept] = useState(null);
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const mutation = useMutation({
-    mutationFn: editData
-      ? ({ id, data }) => updateGoal(id, data)
-      : createGoal,
+    mutationFn: editData ? ({ id, data }) => updateGoal(id, data) : createGoal,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["goals"] });
-      toast.success(
-        `Goal ${editData ? "updated" : "created"} successfully!`
-      );
+      toast.success(`Goal ${editData ? "updated" : "created"} successfully!`);
       handleClose();
     },
     onError: (error) => {
-        setLoading(false) 
-        toast.error(
-    
+      setLoading(false);
+      toast.error(
         error.response?.data?.message || "Error updating or creating goal"
       );
     },
@@ -76,14 +69,13 @@ const GoalForm = ({ visible, onClose, editData }) => {
     form.resetFields();
     setSelectedBranch(null);
     setSelectedDept(null);
-     setLoading(false);
+    setLoading(false);
     onClose();
-
   };
 
   const onFinish = (values) => {
     setLoading(true);
-    
+
     const payload = {
       branch: values.branch,
       department: values.department,
@@ -118,7 +110,7 @@ const GoalForm = ({ visible, onClose, editData }) => {
         endDate: editData.endDate ? dayjs(editData.endDate) : null,
         targetAchievement: editData.targetAchievement,
         currentProgress: editData.currentProgress || 0,
-        status: editData.status || 'not-started',
+        status: editData.status || "not-started",
       });
       setSelectedBranch(editData.branch?._id);
       setSelectedDept(editData.department?._id);
@@ -128,18 +120,25 @@ const GoalForm = ({ visible, onClose, editData }) => {
   const handleBranchChange = (value) => {
     setSelectedBranch(value);
     setSelectedDept(null);
+    setSelectedRole(null);
     form.setFieldsValue({ department: undefined, role: undefined });
   };
 
   const handleDepartmentChange = (value) => {
     setSelectedDept(value);
+     setSelectedRole(null);
     form.setFieldsValue({ role: undefined });
+  };
+  const handleRoleChange = (value) => {
+    setSelectedUser(null);
+     setSelectedRole(value);
+    form.setFieldsValue({ user: undefined });
   };
 
   const disabledEndDate = (current) => {
-    const startDate = form.getFieldValue('startDate');
+    const startDate = form.getFieldValue("startDate");
     if (!startDate) return false;
-    return current && current < startDate.startOf('day');
+    return current && current < startDate.startOf("day");
   };
 
   const branchesQuery = useQuery({
@@ -158,6 +157,11 @@ const GoalForm = ({ visible, onClose, editData }) => {
     queryFn: () => fetchRoleByDepartment(selectedDept),
     enabled: !!selectedDept,
   });
+  const fetchUserQuery = useQuery({
+    queryKey: ["roles", selectedDept],
+    queryFn: () => fetchUsersByRole(selectedRole),
+    enabled: false,
+  });
 
   return (
     <Modal
@@ -169,11 +173,7 @@ const GoalForm = ({ visible, onClose, editData }) => {
       width={800}
     >
       <Spin spinning={loading || mutation.isPending}>
-        <Form
-          layout="vertical"
-          form={form}
-          onFinish={onFinish}
-        >
+        <Form layout="vertical" form={form} onFinish={onFinish}>
           <Row gutter={16}>
             <Col span={24}>
               <Form.Item
@@ -233,6 +233,7 @@ const GoalForm = ({ visible, onClose, editData }) => {
                 <Select
                   placeholder="Select role"
                   loading={rolesQuery.isLoading}
+                
                   disabled={!selectedDept}
                   allowClear
                 >
@@ -273,10 +274,7 @@ const GoalForm = ({ visible, onClose, editData }) => {
             </Col>
           </Row>
 
-          <Form.Item
-            name="description"
-            label="Description"
-          >
+          <Form.Item name="description" label="Description">
             <TextArea rows={3} placeholder="Enter goal description" />
           </Form.Item>
 
@@ -286,21 +284,23 @@ const GoalForm = ({ visible, onClose, editData }) => {
                 name="startDate"
                 label="Start Date"
                 rules={[
-                  { 
-                    required: true, 
+                  {
+                    required: true,
                     message: "Please select start date",
                     validator: (_, value) => {
                       if (value && dayjs.isDayjs(value) && value.isValid()) {
                         return Promise.resolve();
                       }
-                      return Promise.reject('Please select a valid date');
-                    }
-                  }
+                      return Promise.reject("Please select a valid date");
+                    },
+                  },
                 ]}
               >
-                <DatePicker 
-                  style={{ width: '100%' }} 
-                  disabledDate={(current) => current && current < dayjs().startOf('day')}
+                <DatePicker
+                  style={{ width: "100%" }}
+                  disabledDate={(current) =>
+                    current && current < dayjs().startOf("day")
+                  }
                 />
               </Form.Item>
             </Col>
@@ -309,20 +309,20 @@ const GoalForm = ({ visible, onClose, editData }) => {
                 name="endDate"
                 label="End Date"
                 rules={[
-                  { 
-                    required: true, 
+                  {
+                    required: true,
                     message: "Please select end date",
                     validator: (_, value) => {
                       if (value && dayjs.isDayjs(value) && value.isValid()) {
                         return Promise.resolve();
                       }
-                      return Promise.reject('Please select a valid date');
-                    }
-                  }
+                      return Promise.reject("Please select a valid date");
+                    },
+                  },
                 ]}
               >
-                <DatePicker 
-                  style={{ width: '100%' }} 
+                <DatePicker
+                  style={{ width: "100%" }}
                   disabledDate={disabledEndDate}
                 />
               </Form.Item>
@@ -332,7 +332,9 @@ const GoalForm = ({ visible, onClose, editData }) => {
           <Form.Item
             name="targetAchievement"
             label="Target Achievement"
-            rules={[{ required: true, message: "Please enter target achievement" }]}
+            rules={[
+              { required: true, message: "Please enter target achievement" },
+            ]}
           >
             <Input placeholder="What needs to be achieved?" />
           </Form.Item>
@@ -340,7 +342,7 @@ const GoalForm = ({ visible, onClose, editData }) => {
           {editData && (
             <>
               <Divider orientation="left">Progress Update</Divider>
-              
+
               <Form.Item
                 name="status"
                 label="Status"
@@ -355,38 +357,37 @@ const GoalForm = ({ visible, onClose, editData }) => {
                 </Select>
               </Form.Item>
 
-              <Form.Item
-                name="currentProgress"
-                label="Current Progress (%)"
-              >
-                <Slider 
+              <Form.Item name="currentProgress" label="Current Progress (%)">
+                <Slider
                   min={0}
                   max={100}
                   step={5}
                   marks={{
-                    0: '0%',
-                    25: '25%',
-                    50: '50%',
-                    75: '75%',
-                    100: '100%'
+                    0: "0%",
+                    25: "25%",
+                    50: "50%",
+                    75: "75%",
+                    100: "100%",
                   }}
                 />
               </Form.Item>
 
-              <Form.Item
-                name="progressNotes"
-                label="Progress Notes"
-              >
-                <TextArea rows={2} placeholder="Any notes about this progress update" />
+              <Form.Item name="progressNotes" label="Progress Notes">
+                <TextArea
+                  rows={2}
+                  placeholder="Any notes about this progress update"
+                />
               </Form.Item>
 
               {editData.progressHistory?.length > 0 && (
                 <Form.Item label="Progress History">
-                  <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+                  <div style={{ maxHeight: 200, overflowY: "auto" }}>
                     {editData.progressHistory.map((item, index) => (
                       <Alert
                         key={index}
-                        message={`${item.progress}% on ${dayjs(item.date).format('DD MMM YYYY')}`}
+                        message={`${item.progress}% on ${dayjs(
+                          item.date
+                        ).format("DD MMM YYYY")}`}
                         description={item.notes}
                         type="info"
                         showIcon

@@ -11,16 +11,7 @@ function Home() {
     <Layout className="h-screen overflow-hidden">
       <LeftMenu />
       <Layout>
-        {/* <Content
-          style={{
-            height: "100vh",
-            overflow: "hidden",
-          }}
-        >
-          <TopHeader />
-
-          <Outlet />
-        </Content> */}
+      
 
         <div className="h-screen backdrop-invert-0 overflow-hidden">
           <TopHeader />

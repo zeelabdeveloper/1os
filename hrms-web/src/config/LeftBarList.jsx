@@ -126,6 +126,10 @@ const menuItems = [
         key: "/content/letter",
         label: "Letter",
       },
+      {
+        key: "/content/news",
+        label: "News",
+      },
     ],
   },
 
@@ -289,11 +293,6 @@ const menuItems = [
         key: "/profiles",
         label: "Profiles",
       },
-
-      {
-        key: "/helps",
-        label: "Helps",
-      },
       {
         key: "/developer-settings",
         label: "Developer Access",
@@ -302,6 +301,14 @@ const menuItems = [
         key: "/controllers",
 
         label: "Settings",
+      },
+      {
+        key: "/edit-profile",
+        label: "Edit Profile",
+      },
+      {
+        key: "/faq",
+        label: "Help",
       },
     ],
   },

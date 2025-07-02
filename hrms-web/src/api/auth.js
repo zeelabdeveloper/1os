@@ -143,9 +143,7 @@ export const fetchDepartmentsByBranch = async (branchId) => {
 };
 export const fetchDepartmentsByHeadId = async (Head) => {
   if (!Head) return [];
-  const response = await axios.get(
-    `/api/v1/company/Head/department/${Head}`
-  );
+  const response = await axios.get(`/api/v1/company/Head/department/${Head}`);
 
   return response.data.data;
 };

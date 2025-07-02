@@ -11,6 +11,7 @@ import { FullLogo } from "../../locale/local";
 import useAuthStore from "../../stores/authStore";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import Notification from "../../Tab/Notification";
 
 const { Header } = Layout;
 
@@ -76,11 +77,12 @@ const TopHeader = () => {
 
         {/* Right side - Actions */}
         <div className="flex items-center space-x-4">
+          <Notification />
           <Button
             type="text"
             onClick={() => navigate("/faq")}
             icon={<QuestionCircleOutlined className="text-gray-500" />}
-            className="hidden sm:flex"
+            className="mx-5 hidden sm:flex"
           />
 
           {/* <Dropdown

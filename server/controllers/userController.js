@@ -9,6 +9,7 @@ const Organization = require("../models/Organization");
 const Experience = require("../models/Experience");
 const Asset = require("../models/Assets");
 const Document = require("../models/Document");
+const { buildSearchQuery, buildSortCriteria } = require("../helper/l1");
 
 module.exports = {
   createStaff: async (req, res) => {
@@ -482,47 +483,37 @@ module.exports = {
       //   }
       // }
 
+      if (req.body?.document?.length > 0) {
+        const docsToUpdate = req.body.document.filter((doc) => doc._id);
+        const docsToCreate = req.body.document.filter((doc) => !doc._id);
 
+        // ✅ Update existing documents
+        if (docsToUpdate.length > 0) {
+          await Promise.all(
+            docsToUpdate.map((doc) =>
+              Document.findByIdAndUpdate(doc._id, doc, { new: true })
+            )
+          );
+        }
 
+        // ✅ Create new documents and add to user
+        if (docsToCreate.length > 0) {
+          const newDocs = docsToCreate.map((doc) => ({
+            ...doc,
+            user: empId, // associate new document with user
+          }));
 
-if (req.body?.document?.length > 0) {
-  const docsToUpdate = req.body.document.filter((doc) => doc._id);
-  const docsToCreate = req.body.document.filter((doc) => !doc._id);
+          const createdDocs = await Document.insertMany(newDocs);
 
-  // ✅ Update existing documents
-  if (docsToUpdate.length > 0) {
-    await Promise.all(
-      docsToUpdate.map((doc) =>
-        Document.findByIdAndUpdate(doc._id, doc, { new: true })
-      )
-    );
-  }
+          // Ensure user.Document is initialized (Array)
+          if (!Array.isArray(user.Document)) {
+            user.Document = [];
+          }
 
-  // ✅ Create new documents and add to user
-  if (docsToCreate.length > 0) {
-    const newDocs = docsToCreate.map((doc) => ({
-      ...doc,
-      user: empId, // associate new document with user
-    }));
-
-    const createdDocs = await Document.insertMany(newDocs);
-
-    // Ensure user.Document is initialized (Array)
-    if (!Array.isArray(user.Document)) {
-      user.Document = [];
-    }
-
-    user.Document.push(...createdDocs.map((doc) => doc._id));
-    await user.save();
-  }
-}
-
-
-
-
-
-
-
+          user.Document.push(...createdDocs.map((doc) => doc._id));
+          await user.save();
+        }
+      }
 
       return res.status(200).json({ message: "Data Updated!" });
     } catch (error) {
@@ -534,62 +525,148 @@ if (req.body?.document?.length > 0) {
       });
     }
   },
+  editStaffByStaff: async (req, res) => {
+    try {
+      const { empId } = req.params;
+
+      if (!mongoose.Types.ObjectId.isValid(empId)) {
+        return res.status(400).json({ message: "Invalid employee ID" });
+      }
+
+      const user = await User.findById(empId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+      console.log(req.body);
+
+      await User.findByIdAndUpdate(empId, req.body);
+
+      if (req.body.photo && user.Profile) {
+        await Profile.findByIdAndUpdate(user.Profile, {
+          photo: req.body.photo,
+        });
+      }
+
+      return res.json({ message: "Profile updated successfully" });
+    } catch (error) {
+      console.error("Edit staff error:", error);
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+  },
 
   getStaff: async (req, res) => {
+    const session = await mongoose.startSession();
     try {
-      const { page = 1, limit = 10, search = "" } = req.query;
+      session.startTransaction();
 
-      // Build search query
-      const query = {};
-      if (search) {
-        const searchRegex = { $regex: search, $options: "i" };
+      const {
+        page = 1,
+        limit = 10,
+        search = "",
+        sortBy = "createdAt",
+        sortOrder = -1,
+        isCocoEmployee,
+      } = req.query;
 
-        query.$or = [
-          { email: searchRegex },
-          { _id: { $in: profileIds } },
-          { _id: { $in: bankIds } },
-        ];
-      }
+      // Validate inputs
+      const pageInt = parseInt(page);
+      const limitInt = parseInt(limit);
+      const sortOrderInt = parseInt(sortOrder);
+
+      if (isNaN(pageInt)) throw new Error("Invalid page number");
+      if (isNaN(limitInt)) throw new Error("Invalid limit value");
+      if (![-1, 1].includes(sortOrderInt))
+        throw new Error("Invalid sort order");
+
+      // Build query
+      const query = {
+        ...buildSearchQuery(search),
+        ...(isCocoEmployee ? { isCocoEmployee } : {}),
+      };
+
+      // Build sort
+      const sort = buildSortCriteria(sortBy, sortOrderInt);
 
       // Get data with pagination
       const [totalCount, users] = await Promise.all([
-        User.countDocuments(query),
+        User.countDocuments(query).session(session),
         User.find(query)
-          .populate("Profile Bank")
-          .limit(parseInt(limit))
-          .skip((parseInt(page) - 1) * parseInt(limit))
-          .lean(),
+          .populate({
+            path: "Profile",
+          })
+          .sort(sort)
+          .limit(limitInt)
+          .skip((pageInt - 1) * limitInt)
+          .lean()
+          .session(session),
       ]);
+
+      await session.commitTransaction();
 
       res.status(200).json({
         success: true,
         data: users,
         totalCount,
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        currentPage: pageInt,
+        totalPages: Math.ceil(totalCount / limitInt),
       });
     } catch (error) {
+      await session.abortTransaction();
+
+      console.error("Error fetching staff:", error);
       res.status(500).json({
         success: false,
         message: "Server error while fetching staff",
         error: error.message,
       });
+    } finally {
+      session.endSession();
     }
   },
 
   deleteStaff: async (req, res) => {
+    const session = await mongoose.startSession();
     try {
-      await User.findByIdAndDelete(req.params.id);
+      session.startTransaction();
+
+      const { id } = req.params;
+
+      // Validate ID
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new Error("Invalid staff ID");
+      }
+
+      // Find and delete staff
+      const staff = await User.findOneAndDelete({
+        _id: id,
+        isCocoEmployee: true,
+      }).session(session);
+
+      if (!staff) {
+        throw new Error("Staff member not found");
+      }
+
+      // Delete associated profile if exists
+      if (staff.Profile) {
+        await Profile.findByIdAndDelete(staff.Profile).session(session);
+      }
+
+      await session.commitTransaction();
+
       res.status(200).json({
         success: true,
-        message: "Staff deleted successfully",
+        message: "Staff member deleted successfully",
       });
     } catch (error) {
-      res.status(500).json({
+      await session.abortTransaction();
+
+      console.error("Error deleting staff:", error);
+
+      const statusCode = error.message.includes("not found") ? 404 : 500;
+      res.status(statusCode).json({
         success: false,
-        message: "Error deleting staff",
-        error: error.message,
+        message: error.message || "Failed to delete staff",
       });
+    } finally {
+      session.endSession();
     }
   },
 };

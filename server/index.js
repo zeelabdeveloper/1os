@@ -14,13 +14,18 @@ connectDB();
 
 app.use("/uploads", express.static("uploads"));
 app.use(morgan("tiny"));
+
 // Middleware
+
 app.use(express.json());
 app.use(cookieParser());
 
 app.use(
   cors({
-    origin: ["https://capable-melomakarona-858a10.netlify.app"],  
+    origin: [
+      "https://capable-melomakarona-858a10.netlify.app",
+      "http://localhost:5173",
+    ],
     credentials: true,
   })
 );
@@ -57,6 +62,7 @@ app.use(
 app.use("/api/v1/store/roles", require("./routes/store/storeRoles.js"));
 app.use("/api/v1/stores", require("./routes/store/store.js"));
 app.use("/api/v1/jobs", require("./routes/jobsRoute.js"));
+app.use("/api/v1/news", require("./routes/newsRoutes.js"));
 app.use("/api/v1/recruitment", require("./routes/recruitment.js"));
 
 app.use(

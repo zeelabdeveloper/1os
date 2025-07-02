@@ -23,6 +23,7 @@ const emailSettingSchema = new mongoose.Schema(
     // Other Notifications
     newComplaint: { type: Boolean, default: true },
     newWarning: { type: Boolean, default: true },
+    newNews: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

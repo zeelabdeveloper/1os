@@ -8,15 +8,15 @@ import {
   Tag,
   Avatar,
   Space,
-   
   Card,
   Divider,
   Descriptions,
   Row,
   Col,
-  Switch,
   Tooltip,
   Pagination,
+  Skeleton,
+  message,
 } from "antd";
 import {
   FiSearch,
@@ -24,36 +24,40 @@ import {
   FiUser,
   FiPhone,
   FiMail,
-  
   FiCalendar,
   FiMapPin,
   FiGrid,
   FiList,
+  FiDownload,
 } from "react-icons/fi";
 import { FaExclamationCircle } from "react-icons/fa";
 import { fetchStaff, deleteStaff } from "../../api/auth";
+import { debounce } from "lodash";
+import { exportToExcel } from "../../utils/exportUtils";
 
-// Custom debounce hook
-function useDebounce(value, delay) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-  const timerRef = useRef();
+// Custom skeleton components
+const TableSkeleton = () => (
+  <>
+    {[...Array(5)].map((_, i) => (
+      <Skeleton active paragraph={{ rows: 1 }} key={i} className="my-2" />
+    ))}
+  </>
+);
 
-  useEffect(() => {
-    timerRef.current = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(timerRef.current);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
+const CardSkeleton = () => (
+  <Row gutter={[16, 16]}>
+    {[...Array(8)].map((_, i) => (
+      <Col xs={24} sm={12} md={8} lg={6} key={i}>
+        <Card>
+          <Skeleton active avatar paragraph={{ rows: 3 }} />
+        </Card>
+      </Col>
+    ))}
+  </Row>
+);
 
 export default function StaffListPage() {
   const [searchInput, setSearchInput] = useState("");
-  const debouncedSearchText = useDebounce(searchInput, 500);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [pagination, setPagination] = useState({
@@ -61,35 +65,39 @@ export default function StaffListPage() {
     pageSize: 10,
     total: 0,
   });
-  const [viewMode, setViewMode] = useState("table"); // 'table' or 'grid'
+  const [viewMode, setViewMode] = useState("table");
+  const [isSearching, setIsSearching] = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
 
   const queryClient = useQueryClient();
 
   // Fetch staff data
-  const { data, isLoading } = useQuery({
-    queryKey: [
-      "staff",
-      pagination.current,
-      pagination.pageSize,
-      debouncedSearchText,
-    ],
+  const { data, isLoading, isError, error, isFetching } = useQuery({
+    queryKey: ["staff", pagination.current, pagination.pageSize, searchInput],
     queryFn: () =>
       fetchStaff({
         page: pagination.current,
         limit: pagination.pageSize,
-        search: debouncedSearchText,
+        search: searchInput,
       }),
+    keepPreviousData: true,
   });
-
+  console.log(data);
   // Delete staff mutation
   const deleteMutation = useMutation({
     mutationFn: deleteStaff,
     onSuccess: () => {
       queryClient.invalidateQueries(["staff"]);
+      messageApi.success("Staff member deleted successfully");
+    },
+    onError: (error) => {
+      messageApi.error(
+        error.response?.data?.message || "Failed to delete staff"
+      );
     },
   });
 
-  // Update pagination
+  // Update pagination when data changes
   useEffect(() => {
     if (data) {
       setPagination((prev) => ({
@@ -99,9 +107,27 @@ export default function StaffListPage() {
     }
   }, [data]);
 
+  // Debounced search function
+  const debouncedSearch = useRef(
+    debounce((value) => {
+      setSearchInput(value);
+      setPagination((prev) => ({ ...prev, current: 1 }));
+      setIsSearching(false);
+    }, 500)
+  ).current;
+
+  // Clean up debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
+
   // Handle search input change
   const handleSearchChange = (e) => {
-    setSearchInput(e.target.value);
+    const value = e.target.value;
+    setIsSearching(true);
+    debouncedSearch(value);
   };
 
   // Handle pagination change
@@ -127,7 +153,7 @@ export default function StaffListPage() {
           <span>Delete Staff Member</span>
         </div>
       ),
-      icon: null, // Remove the default icon since we're using our own
+      icon: null,
       content: (
         <div className="flex items-start">
           <FiTrash2 className="text-red-500 mr-2 mt-1" />
@@ -141,12 +167,33 @@ export default function StaffListPage() {
       okType: "danger",
       okButtonProps: {
         icon: <FiTrash2 />,
+        loading: deleteMutation.isLoading,
       },
       cancelText: "Cancel",
       width: 500,
       centered: true,
       onOk: () => deleteMutation.mutate(id),
     });
+  };
+
+  // Handle export to Excel
+  const handleExport = () => {
+    if (data?.data?.length) {
+      const exportData = data.data.map((staff) => ({
+        Name: `${staff.Profile?.firstName || ""} ${
+          staff.Profile?.lastName || ""
+        }`,
+        Email: staff.email,
+        Contact: staff.Profile?.contactNumber || "N/A",
+        Status: staff.status,
+        "Date of Joining": new Date(staff.dateOfJoining).toLocaleDateString(),
+      }));
+
+      exportToExcel(exportData, "staff_members");
+      messageApi.success("Export started successfully");
+    } else {
+      messageApi.warning("No data to export");
+    }
   };
 
   // Table columns
@@ -156,16 +203,22 @@ export default function StaffListPage() {
       dataIndex: "Profile",
       key: "name",
       render: (profile, record) => (
-        <div className="flex items-center">
+        <div
+          onClick={() =>
+            (window.location.href = `/staff/employee?emp=${record._id}`)
+          }
+          className="flex gap-1 cursor-pointer items-center"
+        >
+          {console.log(record)}
           <Avatar src={profile?.photo} className="mr-3">
-            {profile?.firstName?.charAt(0)}
-            {profile?.lastName?.charAt(0)}
+            {record?.firstName?.charAt(0)}
+            {record?.lastName?.charAt(0)}
           </Avatar>
           <div>
             <div className="font-medium">
-              {profile?.firstName} {profile?.lastName}
+              {record?.firstName} {record?.lastName}
             </div>
-            <div className="text-gray-500 text-sm">{record.email}</div>
+            <div className="text-gray-500 text-sm">{record?.email}</div>
           </div>
         </div>
       ),
@@ -174,26 +227,35 @@ export default function StaffListPage() {
       title: "Contact",
       dataIndex: "Profile",
       key: "contact",
-      render: (profile) => (
+      render: (profile, record) => (
         <div className="flex items-center">
           <FiPhone className="mr-2 text-gray-500" />
-          {profile?.contactNumber || "-"}
+          {record?.contactNumber || "-"}
         </div>
       ),
     },
     {
       title: "Status",
-      dataIndex: "status",
+      dataIndex: "isActive",
       key: "status",
       render: (status) => (
-        <Tag color={status === "active" ? "green" : "red"}>
-          {status?.toUpperCase()}
+        <Tag color={status ? "green" : "red"}>
+          {status ? "Active" : "Inactive"}
         </Tag>
+      ),
+    },
+    {
+      title: "Coco",
+      dataIndex: "isCocoEmployee",
+      key: "isCocoEmployee",
+      render: (status) => (
+        <Tag color={status ? "blue" : "green"}>{status ? "Coco" : "Staff"}</Tag>
       ),
     },
     {
       title: "Actions",
       key: "actions",
+      width: 120,
       render: (_, record) => (
         <Space size="middle">
           <Tooltip title="View Details">
@@ -209,6 +271,10 @@ export default function StaffListPage() {
               danger
               icon={<FiTrash2 />}
               onClick={() => handleDelete(record._id)}
+              loading={
+                deleteMutation.isLoading &&
+                deleteMutation.variables === record._id
+              }
             />
           </Tooltip>
         </Space>
@@ -218,150 +284,197 @@ export default function StaffListPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
+      {contextHolder}
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold flex items-center">
           <FiUser className="mr-2" /> Staff Management
         </h1>
-        <div className="flex items-center">
-          <Button.Group>
+
+        <div className="flex flex-col md:flex-row items-start md:items-center w-full md:w-auto gap-3">
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <Button.Group>
+              <Button
+                icon={<FiGrid />}
+                type={viewMode === "grid" ? "primary" : "default"}
+                onClick={() => setViewMode("grid")}
+              />
+              <Button
+                icon={<FiList />}
+                type={viewMode === "table" ? "primary" : "default"}
+                onClick={() => setViewMode("table")}
+              />
+            </Button.Group>
+
             <Button
-              icon={<FiGrid />}
-              type={viewMode === "grid" ? "primary" : "default"}
-              onClick={() => setViewMode("grid")}
-            />
-            <Button
-              icon={<FiList />}
-              type={viewMode === "table" ? "primary" : "default"}
-              onClick={() => setViewMode("table")}
-            />
-          </Button.Group>
+              icon={<FiDownload />}
+              onClick={handleExport}
+              disabled={!data?.data?.length}
+            >
+              Export
+            </Button>
+          </div>
 
           <Input
             placeholder="Search staff..."
             prefix={<FiSearch className="text-gray-400" />}
-            value={searchInput}
             onChange={handleSearchChange}
             allowClear
             className="w-full md:w-64"
+            loading={isSearching}
           />
         </div>
       </div>
 
+      {isError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+          Failed to load staff: {error.message}
+        </div>
+      )}
+
       {viewMode === "table" ? (
-        <Table
-          columns={columns}
-          dataSource={data?.data || []}
-          rowKey="_id"
-          loading={isLoading}
-          pagination={{
-            ...pagination,
-            showSizeChanger: true,
-            pageSizeOptions: ["10", "20", "50"],
-            showTotal: (total) => `Total ${total} staff members`,
-          }}
-          onChange={({ current, pageSize }) =>
-            handlePaginationChange(current, pageSize)
-          }
-        />
+        <div className="overflow-x-auto">
+          <Table
+            columns={columns}
+            dataSource={data?.data || []}
+            rowKey="_id"
+            loading={isLoading || isFetching}
+            pagination={{
+              ...pagination,
+              showSizeChanger: true,
+              pageSizeOptions: ["10", "20", "50"],
+              showTotal: (total) => `Total ${total} staff members`,
+            }}
+            onChange={({ current, pageSize }) =>
+              handlePaginationChange(current, pageSize)
+            }
+            locale={{
+              emptyText:
+                isLoading || isFetching ? (
+                  <TableSkeleton />
+                ) : (
+                  "No staff members found"
+                ),
+            }}
+          />
+        </div>
       ) : (
         <>
-          <Row gutter={[16, 16]} className="mb-4">
-            {data?.data?.map((staff) => (
-              <Col xs={24} sm={12} md={8} lg={6} key={staff._id}>
-                <Card
-                  hoverable
-                  actions={[
-                    <Tooltip title="View Details">
-                      <FiUser onClick={() => handleViewDetails(staff)} />
-                    </Tooltip>,
-                    <Tooltip title="Delete">
-                      <FiTrash2
-                        onClick={() => handleDelete(staff._id)}
-                        className="text-red-500"
-                      />
-                    </Tooltip>,
-                  ]}
-                >
-                  <div className="flex flex-col items-center text-center">
-                    <Avatar
-                      size={64}
-                      src={staff.Profile?.photo}
-                      className="mb-3"
-                    >
-                      {staff.Profile?.firstName?.charAt(0)}
-                      {staff.Profile?.lastName?.charAt(0)}
-                    </Avatar>
-                    <h3 className="font-semibold text-lg">
-                      {staff.Profile?.firstName} {staff.Profile?.lastName}
-                    </h3>
-                    <div className="flex items-center text-gray-500 mt-1">
-                      <FiMail className="mr-1" />
-                      <span className="text-sm">{staff.email}</span>
-                    </div>
-                    <div className="flex items-center text-gray-500 mt-1">
-                      <FiPhone className="mr-1" />
-                      <span className="text-sm">
-                        {staff.Profile?.contactNumber || "N/A"}
-                      </span>
-                    </div>
-                    <Tag
-                      color={staff.status === "active" ? "green" : "red"}
-                      className="mt-2"
-                    >
-                      {staff?.status?.toUpperCase()}
-                    </Tag>
-                  </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-          <div className="flex justify-end mt-4">
-            <Pagination
-              current={pagination.current}
-              pageSize={pagination.pageSize}
-              total={pagination.total}
-              showSizeChanger
-              pageSizeOptions={["10", "20", "50"]}
-              onChange={handlePaginationChange}
-              onShowSizeChange={handlePaginationChange}
-              showTotal={(total) => `Total ${total} staff members`}
-            />
-          </div>
+          {isLoading || isFetching ? (
+            <CardSkeleton />
+          ) : (
+            <>
+              <Row gutter={[16, 16]} className="mb-4">
+                {Array.isArray(data?.data) &&
+                  data?.data?.map((staff) => (
+                    <Col xs={24} sm={12} md={8} lg={6} key={staff._id}>
+                      <Card
+                        hoverable
+                        actions={[
+                          <Tooltip title="View Details">
+                            <FiUser
+                              onClick={() => handleViewDetails(staff)}
+                              className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                            />
+                          </Tooltip>,
+                          <Tooltip title="Delete">
+                            <FiTrash2
+                              onClick={() => handleDelete(staff._id)}
+                              className="text-red-500 hover:text-red-700 cursor-pointer"
+                            />
+                          </Tooltip>,
+                        ]}
+                      >
+                        <div className="flex flex-col items-center text-center">
+                          <Avatar
+                            size={64}
+                            src={staff.Profile?.photo}
+                            className="mb-3"
+                          >
+                            {staff?.firstName}
+                            {staff?.lastName}
+                          </Avatar>
+                          <h3 className="font-semibold text-lg">
+                            {staff?.firstName} {staff?.lastName}
+                          </h3>
+                          <div className="flex items-center text-gray-500 mt-1">
+                            <FiMail className="mr-1" />
+                            <span className="text-sm truncate w-full">
+                              {staff.email}
+                            </span>
+                          </div>
+                          <div className="flex items-center text-gray-500 mt-1">
+                            <FiPhone className="mr-1" />
+                            <span className="text-sm">
+                              {staff?.contactNumber || "N/A"}
+                            </span>
+                          </div>
+                          <Tag
+                            color={staff.status ? "green" : "red"}
+                            className="mt-2"
+                          >
+                            {staff?.status ? "Active" : "Inactive"}
+                          </Tag>
+                          <Tag
+                            color={staff.isCocoEmployee ? "green" : "blue"}
+                            className="!mt-2"
+                          >
+                            {staff?.isCocoEmployee ? "Coco" : "Staff"}
+                          </Tag>
+                        </div>
+                      </Card>
+                    </Col>
+                  ))}
+              </Row>
+              <div className="flex justify-end mt-4">
+                <Pagination
+                  current={pagination.current}
+                  pageSize={pagination.pageSize}
+                  total={pagination.total}
+                  showSizeChanger
+                  pageSizeOptions={["10", "50", "100"]}
+                  onChange={handlePaginationChange}
+                  onShowSizeChange={handlePaginationChange}
+                  showTotal={(total) => `Total ${total} staff members`}
+                  disabled={isLoading || isFetching}
+                />
+              </div>
+            </>
+          )}
         </>
       )}
 
       {/* Detailed View Modal */}
       <Modal
         title={
-          <>
-            <FiUser className="mr-2" /> Staff Details
-          </>
+          <div className="flex items-center">
+            <FiUser className="mr-2" />
+            <span>Staff Details</span>
+          </div>
         }
         open={isViewModalOpen}
         onCancel={() => setIsViewModalOpen(false)}
         footer={null}
         width={800}
+        centered
       >
-        {selectedStaff && (
+        {selectedStaff ? (
           <div className="mt-6">
-            <div className="flex items-center mb-6">
+            <div className="flex gap-2 items-center mb-6">
               <Avatar
                 size={64}
                 src={selectedStaff.Profile?.photo}
                 className="mr-4"
               >
-                {selectedStaff.Profile?.firstName?.charAt(0)}
-                {selectedStaff.Profile?.lastName?.charAt(0)}
+                {selectedStaff?.firstName}
+                {selectedStaff?.lastName}
               </Avatar>
               <div>
-                <h2 className="text-xl font-bold">
-                  {selectedStaff.Profile?.firstName}{" "}
-                  {selectedStaff.Profile?.lastName}
+                <h2 className="text-xl my-3 font-bold">
+                  {selectedStaff?.firstName} {selectedStaff?.lastName}
                 </h2>
-                <Tag
-                  color={selectedStaff.status === "active" ? "green" : "red"}
-                >
-                  {selectedStaff?.status?.toUpperCase()}
+                <Tag color={selectedStaff.status ? "green" : "red"}>
+                  {selectedStaff?.status ? "Active" : "Inactive"}
                 </Tag>
               </div>
             </div>
@@ -372,39 +485,43 @@ export default function StaffListPage() {
             <Descriptions column={2} bordered>
               <Descriptions.Item
                 label={
-                  <>
+                  <span className="flex items-center">
                     <FiMail className="mr-1" /> Email
-                  </>
+                  </span>
                 }
               >
-                {selectedStaff.email}
+                {selectedStaff.email || "-"}
               </Descriptions.Item>
               <Descriptions.Item
                 label={
-                  <>
+                  <span className="flex items-center">
                     <FiPhone className="mr-1" /> Contact
-                  </>
+                  </span>
                 }
               >
-                {selectedStaff.Profile?.contactNumber || "-"}
+                {selectedStaff?.contactNumber || "-"}
               </Descriptions.Item>
               <Descriptions.Item
                 label={
-                  <>
+                  <span className="flex items-center">
                     <FiCalendar className="mr-1" /> Date of Birth
-                  </>
+                  </span>
                 }
               >
-                {selectedStaff.Profile?.dateOfBirth || "-"}
+                {selectedStaff?.Profile?.dateOfBirth
+                  ? new Date(
+                      selectedStaff.Profile.dateOfBirth
+                    ).toLocaleDateString()
+                  : "-"}
               </Descriptions.Item>
               <Descriptions.Item
                 label={
-                  <>
+                  <span className="flex items-center">
                     <FiUser className="mr-1" /> Gender
-                  </>
+                  </span>
                 }
               >
-                {selectedStaff.Profile?.gender || "-"}
+                {selectedStaff?.Profile?.gender || "-"}
               </Descriptions.Item>
             </Descriptions>
 
@@ -413,14 +530,14 @@ export default function StaffListPage() {
             </Divider>
             <Descriptions column={1} bordered>
               <Descriptions.Item label="Address">
-                {selectedStaff.Profile?.address?.street || "-"},{" "}
-                {selectedStaff.Profile?.address?.city || "-"},{" "}
-                {selectedStaff.Profile?.address?.state || "-"},{" "}
-                {selectedStaff.Profile?.address?.country || "-"},{" "}
-                {selectedStaff.Profile?.address?.postalCode || "-"}
+                {selectedStaff.Profile?.address || "-"},{" "}
+                {selectedStaff.Profile?.district || "-"},{" "}
+                {selectedStaff.Profile?.state || "-"},{" "}
               </Descriptions.Item>
             </Descriptions>
           </div>
+        ) : (
+          <Skeleton active paragraph={{ rows: 6 }} />
         )}
       </Modal>
     </div>

@@ -128,10 +128,42 @@ UserSchema.pre("save", async function (next) {
     } catch (err) {
       return next(err);
     }
+      next();
   }
 
+
+
+
+
+
+
+
+
+
+});
+
+
+
+ 
+UserSchema.pre("findOneAndUpdate", async function(next) {
+  const update = this.getUpdate();
+  if (update.password) {
+    try {
+      const salt = await bcrypt.genSalt(12);
+      update.password = await bcrypt.hash(update.password, salt);
+      this.setUpdate(update);
+    } catch (err) {
+      return next(err);
+    }
+  }
   next();
 });
+
+
+
+
+
+
 
 UserSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);

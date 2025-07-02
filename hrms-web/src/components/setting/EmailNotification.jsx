@@ -15,6 +15,7 @@ import {
   FileTextOutlined,
   FormOutlined,
   BellOutlined,
+  VideoCameraOutlined,
 } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -175,8 +176,18 @@ const EmailNotificationSettings = () => {
           icon: <WarningOutlined />,
           color: "#9e1068",
         },
+        {
+          name: "newNews",
+          label: "New News",
+          icon: <VideoCameraOutlined />,
+          color: "green",
+        },
       ],
     },
+
+
+
+
   ];
 
   if (isLoading)

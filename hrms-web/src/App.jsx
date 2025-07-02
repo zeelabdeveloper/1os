@@ -308,6 +308,9 @@ import StartOnboarding from "./pages/recruitment/startonboarding";
 import Interview from "./pages/recruitment/interview";
 import Settings from "./pages/settings";
 import DeveloperSetting from "./pages/DeveloperSetting";
+import EditProfile from "./pages/EditProfile";
+import NewsPage from "./pages/Content/News";
+import Faq from "./pages/Faq";
 
 const queryClient = new QueryClient();
 
@@ -326,7 +329,7 @@ const App = () => {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="/" />} />
+              
               <Route path="/" element={<Dashboard />} />
               <Route path="categories" element={<Categories />} />
               <Route path="profiles" element={<Profile />} />
@@ -359,6 +362,7 @@ const App = () => {
 
               {/* Content Routes */}
               <Route path="content/letter" element={<Letter />} />
+              <Route path="content/news" element={<NewsPage />} />
 
               {/* Store Routes */}
               <Route path="store/storegroup" element={<StoreGroup />} />
@@ -413,7 +417,9 @@ const App = () => {
 
               {/* Settings Routes */}
               <Route path="controllers" element={<Settings />} />
+              <Route path="faq" element={<Faq />} />
               <Route path="developer-settings" element={<DeveloperSetting />} />
+              <Route path="edit-profile" element={<EditProfile />} />
             </Route>
 
             {/* Public Routes */}
