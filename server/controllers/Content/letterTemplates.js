@@ -5,6 +5,7 @@ const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
 const job = require("../../models/jobs/jobsSchema");
+const { EmailConfig } = require("../../helper/emailConfig");
 const letterTemplateController = {
   // Get all templates for the authenticated user
   getAllTemplates: async (req, res) => {
@@ -532,7 +533,7 @@ viewLetter: async (req, res) => {
 
         // Send email
         const mailOptions = {
-          from: `"Zeelab Pharmacy HR" <${process.env.MAIL_USER}>`,
+          from: `"Zeelab Pharmacy HR" <${EmailConfig.mailFromAddress}>`,
           to: user.email,
           subject: `Offer Letter for ${jobDetails.title} Position`,
           html: `

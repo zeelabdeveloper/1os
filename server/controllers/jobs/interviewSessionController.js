@@ -4,6 +4,7 @@ const InterviewSession = require("../../models/jobs/InterviewSession");
 const Onboarding = require("../../models/jobs/Onboarding");
 const mongoose = require("mongoose");
 const sendEmail = require("../../services/forgetpassmail");
+const { EmailConfig } = require("../../helper/emailConfig");
 // @desc    Get single interview session
 // @route   GET /api/v1/interview/interviewSessions/:id
 // @access  Private
@@ -207,7 +208,7 @@ exports.createInterviewSession = async (req, res, next) => {
     ].filter(Boolean); // Ensures no `undefined` values
 
     const mailOptions = {
-      from: `"Zeelab Pharmacy" <${process.env.MAIL_USER}>`,
+      from: `"Zeelab Pharmacy" <${EmailConfig.mailFromAddress}>`,
       to: recipients,
       subject: "Zeelab - Interview Schedule Confirmation",
       html: `

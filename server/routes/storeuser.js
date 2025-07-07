@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require("../models/User");
 const Employee = require("../models/EmployeeId");
 const sendEmail = require("../services/sendInterviewScheduledEmail");
+const { EmailConfig } = require("../helper/emailConfig");
 
 // ✅ Create User
 router.post("/", async (req, res) => {
@@ -39,7 +40,7 @@ router.post("/", async (req, res) => {
     }
 
     const mailOptions = {
-      from: `"Zeelab Pharmacy" <${process.env.MAIL_USER}>`,
+      from: `"Zeelab Pharmacy" <${EmailConfig.mailFromAddress}>`,
       to: user.email,
       subject: "Zeelab - New Panel Introduced",
       html: `

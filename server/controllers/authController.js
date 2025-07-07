@@ -9,6 +9,7 @@ const Permission = require("../models/developer/Permission");
 const Onboarding = require("../models/jobs/Onboarding");
 const EmployeeId = require("../models/EmployeeId");
 const Application = require("../models/jobs/applicationSchema");
+const { EmailConfig } = require("../helper/emailConfig");
 
 const createToken = (userId) => {
   return jwt.sign(userId, process.env.JWT_SECRET, {
@@ -105,7 +106,7 @@ exports.forgotPassword = async (req, res) => {
     await user.save();
 
     const mailOptions = {
-      from: `"Zeelab Pharmacy" <${process.env.MAIL_USER}>`,
+      from: `"Zeelab Pharmacy" <${EmailConfig.mailFromAddress}>`,
       to: user.email,
       subject: "Zeelab - Your Temporary Password",
       html: `
@@ -300,7 +301,7 @@ exports.convertUserFromOnboarding = async (req, res) => {
 async function sendConfirmationEmail(user, tempPassword) {
   try {
     const mailOptions = {
-      from: process.env.MAIL_USER,
+      from: EmailConfig.mailFromAddress,
       to: user.email,
       subject: "Welcome to Our Company!",
       html: `

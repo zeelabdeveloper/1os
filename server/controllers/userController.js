@@ -13,6 +13,7 @@ const { buildSearchQuery, buildSortCriteria } = require("../helper/l1");
 const Attendance = require("../models/Attendance");
 const sendEmail = require("../services/sendInterviewScheduledEmail");
 const EmailNotification = require("../models/setting/emailNotification");
+const { EmailConfig } = require("../helper/emailConfig");
 
 module.exports = {
   createStaff: async (req, res) => {
@@ -143,7 +144,7 @@ module.exports = {
       const allNotification = await EmailNotification.findOne();
       if (allNotification.newEmployee) {
         const mailOptions = {
-          from: `"Zeelab Pharmacy" <${process.env.MAIL_USER}>`,
+          from: `"Zeelab Pharmacy" <${EmailConfig.mailFromAddress}>`,
           to: req?.body?.user?.email,
           subject: "Zeelab - Profile Created",
           html: `

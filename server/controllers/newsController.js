@@ -5,6 +5,7 @@ const EmailNotification = require("../models/setting/emailNotification");
 const sendEmail = require("../services/sendInterviewScheduledEmail");
 const User = require("../models/User");
 const Organization = require("../models/Organization");
+const { EmailConfig } = require("../helper/emailConfig");
 // @desc    Get all news
 // @route   GET /api/v1/news
 // @access  Public/Admin or Role-based
@@ -141,7 +142,7 @@ exports.createNews = async (req, res) => {
         `;
 
         await sendEmail({
-          from: `"Zee Pharmacy" <${process.env.MAIL_USER}>`,
+          from: `"Zee Pharmacy" <${EmailConfig.mailFromAddress}>`,
           to: users.map((u) => u.email),
           subject: `📰 Zee News: ${news.title}`,
           html: emailHTML,
