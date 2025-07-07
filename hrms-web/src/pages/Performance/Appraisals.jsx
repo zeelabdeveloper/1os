@@ -36,7 +36,7 @@ import {
 
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
-import UserAppraisalModal from "../../Tab/UserAppraisalModal.JSX";
+import UserAppraisalModal from "../../Tab/UserAppraisalModal";
 import AppraisalForm from "../../components/performance/AppraisalForm";
 
 const { Title, Text } = Typography;
