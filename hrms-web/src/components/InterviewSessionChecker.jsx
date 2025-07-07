@@ -320,10 +320,7 @@ const InterviewSessionNotifications = () => {
 
   if (!Array.isArray(sessions) || sessions.length === 0) {
     return (
-      <Empty
-        description="No interview sessions assigned"
-        className="m-8"
-      />
+      null
     );
   }
 

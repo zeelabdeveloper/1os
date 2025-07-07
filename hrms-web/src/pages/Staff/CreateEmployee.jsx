@@ -31,7 +31,7 @@ import DocumentVerification from "./ProfileCreating/DocumentInfo";
 
 const { Step } = Steps;
 
-const UserCreationWizard = () => {
+const CreateEmployeeMain = () => {
   const [current, setCurrent] = useState(0);
   const [isCocoStaff, setIsCocoStaff] = useState(false);
   const [form] = Form.useForm();
@@ -239,4 +239,4 @@ const UserCreationWizard = () => {
   );
 };
 
-export default memo(UserCreationWizard);
+export default CreateEmployeeMain

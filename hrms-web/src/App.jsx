@@ -5,7 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import Loading from "./components/Loading";
+
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -18,14 +18,13 @@ import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./components/NotFound";
 import Dashboard from "./pages/Dashboard";
 import Categories from "./pages/Categories";
-import Profile from "./pages/Profile";
-import UserList from "./pages/Coco/UserList";
+
+import UserManagementCoco from "./pages/Coco/UserList";
 import CreateUser from "./pages/Coco/CreateUser";
 import Attendance from "./pages/Coco/Attendance";
-import RequestList from "./pages/Coco/RequestList";
+import AdminRegularizationList from "./pages/Coco/RequestList";
 import Store from "./pages/Coco/Store";
-import AccountList from "./pages/Account/AccountList";
-import Members from "./pages/Team/Members";
+
 import Departments from "./pages/Permission/Departments";
 import Roles from "./pages/Permission/Roles";
 import Branch from "./pages/Permission/Branch";
@@ -33,33 +32,33 @@ import PermissionList from "./pages/Permission/PermissionList";
 
 import SetSalary from "./pages/PAYROLL/SetSalary";
 import PaySlip from "./pages/PAYROLL/PaySlip";
-import Letter from "./pages/content/letter";
+import Letter from "./pages/content/Letter";
 import StoreGroup from "./pages/store/StoreGroup";
 import Staff from "./pages/store/Staff";
 
-import Indicators from "./pages/performance/indicators";
+import Indicators from "./pages/performance/Indicators";
 
-import Appraisals from "./pages/performance/appraisals";
+import Appraisals from "./pages/performance/Appraisals";
 
 import ManageMyAppraisals from "./pages/performance/ManageMyAppraisals";
 import Feedback from "./pages/performance/Feedback";
-import Reviews from "./pages/performance/reviews";
-import Employee from "./pages/staff/employee";
-import CreateEmployee from "./pages/staff/createemployee";
+import Reviews from "./pages/performance/Reviews";
+import StaffListPage from "./pages/staff/Employee";
+ 
 import ViewStaff from "./pages/staff/ViewStaff";
-import DailyAttendance from "./pages/attendance/daily";
-import MonthlyAttendance from "./pages/attendance/monthly";
-import AttendanceReport from "./pages/attendance/report";
-import Setup from "./pages/1os/setup";
-import Jobs from "./pages/recruitment/jobs";
-import CreateJob from "./pages/recruitment/create";
-import Applications from "./pages/recruitment/applications";
-import Application from "./pages/recruitment/application";
-import Candidates from "./pages/recruitment/candidates";
-import Onboarding from "./pages/recruitment/onboarding";
-import StartOnboarding from "./pages/recruitment/startonboarding";
-import Interview from "./pages/recruitment/interview";
-import Settings from "./pages/settings";
+import DailyAttendance from "./pages/attendance/Daily";
+import MonthlyAttendance from "./pages/attendance/Monthly";
+import AttendanceReport from "./pages/attendance/Report";
+import Setup from "./pages/1os/Setup";
+import Jobs from "./pages/recruitment/Jobs";
+import CreateJob from "./pages/recruitment/Create";
+import Applications from "./pages/recruitment/Applications";
+import Application from "./pages/recruitment/Application";
+import Candidates from "./pages/recruitment/Candidates";
+import Onboarding from "./pages/recruitment/Onboarding";
+import StartOnboarding from "./pages/recruitment/Startonboarding";
+import Interview from "./pages/recruitment/Interview";
+import Settings from "./pages/Settings";
 import DeveloperSetting from "./pages/DeveloperSetting";
 import EditProfile from "./pages/EditProfile";
 import NewsPage from "./pages/Content/News";
@@ -68,6 +67,10 @@ import GoalList from "./pages/Performance/Goals";
 import ManageTeamAppraisals from "./pages/Performance/ManageTeamAppraisals";
 import MyTaskManagement from "./pages/Performance/MyTaskManagement";
 import TeamTaskManagement from "./pages/Performance/TeamTaskManagement";
+import ViewProfile from "./pages/Profile";
+import BankAccountListPage from "./pages/Account/AccountList";
+import TeamMembers from "./pages/Team/Members";
+import CreateEmployeeMain from "./pages/staff/Createemployee";
 
 const queryClient = new QueryClient();
 
@@ -88,20 +91,23 @@ const App = () => {
             >
               <Route path="/" element={<Dashboard />} />
               <Route path="categories" element={<Categories />} />
-              <Route path="profiles" element={<Profile />} />
+              <Route path="profiles" element={<ViewProfile />} />
 
               {/* Coco Routes */}
-              <Route path="coco/userlist" element={<UserList />} />
+              <Route path="coco/userlist" element={<UserManagementCoco />} />
               <Route path="coco/createuser" element={<CreateUser />} />
               <Route path="coco/attendance" element={<Attendance />} />
-              <Route path="coco/request-list" element={<RequestList />} />
+              <Route
+                path="coco/request-list"
+                element={<AdminRegularizationList />}
+              />
               <Route path="coco/store" element={<Store />} />
 
               {/* Account Routes */}
-              <Route path="Account/list" element={<AccountList />} />
+              <Route path="Account/list" element={<BankAccountListPage />} />
 
               {/* Team Routes */}
-              <Route path="team/logs" element={<Members />} />
+              <Route path="team/logs" element={<TeamMembers />} />
 
               {/* Permission Routes */}
               <Route path="permission/departments" element={<Departments />} />
@@ -132,18 +138,26 @@ const App = () => {
                 path="performance/appraisals/team"
                 element={<ManageTeamAppraisals />}
               />
+
               <Route
                 path="performance/appraisal"
                 element={<ManageMyAppraisals />}
               />
+
               <Route path="performance/feedback" element={<Feedback />} />
               <Route path="performance/reviews" element={<Reviews />} />
-              <Route path="performance/my-task" element={<MyTaskManagement />} />
-              <Route path="performance/team-task" element={<TeamTaskManagement />} />
+              <Route
+                path="performance/my-task"
+                element={<MyTaskManagement />}
+              />
+              <Route
+                path="performance/team-task"
+                element={<TeamTaskManagement />}
+              />
 
               {/* Staff Routes */}
-              <Route path="staff/employees" element={<Employee />} />
-              <Route path="staff/create" element={<CreateEmployee />} />
+              <Route path="staff/employees" element={<StaffListPage />} />
+              <Route path="staff/create" element={<CreateEmployeeMain />} />
               <Route path="staff/employee" element={<ViewStaff />} />
 
               {/* Attendance Routes */}

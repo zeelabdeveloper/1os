@@ -35,7 +35,7 @@ import { format } from "date-fns";
 import useAuthStore from "../stores/authStore";
 import toast from "react-hot-toast";
 
-const ViewStaff = () => {
+const ViewProfile = () => {
   const { user } = useAuthStore();
 
   const [loading, setLoading] = useState(true);
@@ -859,4 +859,4 @@ const DocumentCard = ({ data, loading }) => {
   );
 };
 
-export default ViewStaff;
+export default ViewProfile;

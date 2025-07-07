@@ -53,6 +53,7 @@ function Notification() {
     data: notifications,
     isLoading,
     isError,
+    error,
     refetch,
   } = useQuery({
     queryKey: ["notifications", roleId],
@@ -60,7 +61,7 @@ function Notification() {
     enabled: !!roleId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
-
+ 
   // Update localStorage when localReadNotifications changes
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -110,7 +111,7 @@ function Notification() {
       console.error("Error marking all as read:", error);
     }
   };
-  console.log(notifications);
+ 
   // Combine server-side read status with local read status
   const getReadStatus = (notification) => {
     return (
@@ -124,7 +125,7 @@ function Notification() {
     0;
 
   const content = (
-    <div style={{ width: 350 }}>
+    <div style={{ width: 350 }}   >
       <div
         style={{
           display: "flex",
@@ -154,6 +155,7 @@ function Notification() {
         </div>
       ) : (
         <List
+        className="h-[30vh] overflow-y-auto " 
           itemLayout="horizontal"
           dataSource={
             (Array.isArray(notifications?.data) && notifications?.data) || []

@@ -78,7 +78,7 @@ const deleteUser = async (userId) => {
   }
 };
 
-const UserManagement = () => {
+const TeamMembers = () => {
   const { user } = useAuthStore();
   const [form] = Form.useForm();
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -577,4 +577,4 @@ const UserManagement = () => {
   );
 };
 
-export default UserManagement;
+export default TeamMembers;

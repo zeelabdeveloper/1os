@@ -5,7 +5,7 @@ import axios from "axios";
 
 const axiosInstance = axios.create({
   // baseURL: "https://oneos-3.onrender.com",
-  baseURL: "http://localhost:5000",
+  baseURL: import.meta.env.VITE_BACKEND_URL,
   withCredentials: true, 
 });
 

@@ -54,7 +54,7 @@ const statusOptions = [
   { value: "Rejected", label: "Rejected", color: "error" },
 ];
 
-const AppraisalList = () => {
+const ManageMyAppraisals = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
@@ -468,4 +468,4 @@ const AppraisalList = () => {
   );
 };
 
-export default AppraisalList;
+export default ManageMyAppraisals;

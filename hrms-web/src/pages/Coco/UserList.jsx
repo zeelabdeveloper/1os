@@ -87,7 +87,7 @@ const deleteUser = async (userId) => {
   }
 };
 
-const UserManagement = () => {
+const UserManagementCoco = () => {
   const [form] = Form.useForm();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
@@ -657,4 +657,4 @@ const UserManagement = () => {
   );
 };
 
-export default UserManagement;
+export default UserManagementCoco;

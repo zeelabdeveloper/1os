@@ -11,6 +11,8 @@ const Asset = require("../models/Assets");
 const Document = require("../models/Document");
 const { buildSearchQuery, buildSortCriteria } = require("../helper/l1");
 const Attendance = require("../models/Attendance");
+const sendEmail = require("../services/sendInterviewScheduledEmail");
+const EmailNotification = require("../models/setting/emailNotification");
 
 module.exports = {
   createStaff: async (req, res) => {
@@ -137,6 +139,33 @@ module.exports = {
       // Commit transaction
       await session.commitTransaction();
       session.endSession();
+
+      const allNotification = await EmailNotification.findOne();
+      if (allNotification.newEmployee) {
+        const mailOptions = {
+          from: `"Zeelab Pharmacy" <${process.env.MAIL_USER}>`,
+          to: req?.body?.user?.email,
+          subject: "Zeelab - Profile Created",
+          html: `
+  <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; padding: 20px;">
+    <div style=" margin: auto; background-color: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
+     
+      
+    </div>
+  </div>
+  `,
+        };
+        const emailResult = await sendEmail(mailOptions);
+
+        if (!emailResult.success) {
+          return res.status(500).json({
+            success: false,
+            message:
+              emailResult.error?.message ||
+              "Employee Created But Failed to send email. Please try again.",
+          });
+        }
+      }
 
       // Return success response
       return res.status(201).json({
@@ -708,8 +737,8 @@ module.exports = {
       await Experience.deleteMany({ user: id }).session(session);
       await Asset.deleteMany({ user: id }).session(session);
       await Document.deleteMany({ user: id }).session(session);
-      await Attendance.deleteMany({ userId  : id }).session(session);
-   
+      await Attendance.deleteMany({ userId: id }).session(session);
+
       if (!staff) {
         throw new Error("Staff member not found");
       }
