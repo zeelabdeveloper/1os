@@ -1,8 +1,10 @@
 import React from 'react'
 
 function Feedback() {
+  const s: String ="dgfdg"
+   
   return (
-    <div>Feedback</div>
+    <div  className=''>Feedback</div>
   )
 }
 

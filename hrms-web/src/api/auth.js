@@ -193,6 +193,7 @@ export const fetchStaff = async (params = {}) => {
 };
 
 export const deleteStaff = async (id) => {
+  
   const response = await axios.delete(`/api/v1/user/staff/${id}`);
   return response.data;
 };

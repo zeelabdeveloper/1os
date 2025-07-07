@@ -25,8 +25,42 @@
 
 
 
+.interview-sessions-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
 
+.session-card {
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
 
+.session-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.cancelled-session {
+  background-color: #fff1f0;
+  border-color: #ffa39e;
+}
+
+.past-session {
+  opacity: 0.9;
+  background-color: #fafafa;
+}
+
+.session-group {
+  margin-bottom: 32px;
+}
+
+@media (max-width: 768px) {
+  .interview-sessions-container {
+    padding: 8px;
+  }
+}
 
 
 

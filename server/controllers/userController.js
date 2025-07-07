@@ -10,6 +10,7 @@ const Experience = require("../models/Experience");
 const Asset = require("../models/Assets");
 const Document = require("../models/Document");
 const { buildSearchQuery, buildSortCriteria } = require("../helper/l1");
+const Attendance = require("../models/Attendance");
 
 module.exports = {
   createStaff: async (req, res) => {
@@ -515,6 +516,69 @@ module.exports = {
         }
       }
 
+      if (req.body?.asset?.length > 0) {
+        const docsToUpdate = req.body.asset.filter((doc) => doc._id);
+        const docsToCreate = req.body.asset.filter((doc) => !doc._id);
+
+        // ✅ Update existing documents
+        if (docsToUpdate.length > 0) {
+          await Promise.all(
+            docsToUpdate.map((doc) =>
+              Asset.findByIdAndUpdate(doc._id, doc, { new: true })
+            )
+          );
+        }
+
+        // ✅ Create new documents and add to user
+        if (docsToCreate.length > 0) {
+          const newDocs = docsToCreate.map((doc) => ({
+            ...doc,
+            user: empId, // associate new document with user
+          }));
+
+          const createdDocs = await Asset.insertMany(newDocs);
+
+          // Ensure user.Document is initialized (Array)
+          if (!Array.isArray(user.Asset)) {
+            user.Asset = [];
+          }
+
+          user.Asset.push(...createdDocs.map((doc) => doc._id));
+          await user.save();
+        }
+      }
+      if (req.body?.experience?.length > 0) {
+        const docsToUpdate = req.body.experience.filter((doc) => doc._id);
+        const docsToCreate = req.body.experience.filter((doc) => !doc._id);
+
+        // ✅ Update existing documents
+        if (docsToUpdate.length > 0) {
+          await Promise.all(
+            docsToUpdate.map((doc) =>
+              Experience.findByIdAndUpdate(doc._id, doc, { new: true })
+            )
+          );
+        }
+
+        // ✅ Create new documents and add to user
+        if (docsToCreate.length > 0) {
+          const newDocs = docsToCreate.map((doc) => ({
+            ...doc,
+            user: empId, // associate new document with user
+          }));
+
+          const createdDocs = await Experience.insertMany(newDocs);
+
+          // Ensure user.Document is initialized (Array)
+          if (!Array.isArray(user.Experience)) {
+            user.Experience = [];
+          }
+
+          user.Experience.push(...createdDocs.map((doc) => doc._id));
+          await user.save();
+        }
+      }
+
       return res.status(200).json({ message: "Data Updated!" });
     } catch (error) {
       console.log(error);
@@ -635,19 +699,22 @@ module.exports = {
       }
 
       // Find and delete staff
-      const staff = await User.findOneAndDelete({
-        _id: id,
-        isCocoEmployee: true,
-      }).session(session);
-
+      const staff = await User.findByIdAndDelete(id).session(session);
+      await Profile.findOneAndDelete({ user: id }).session(session);
+      await EmployeeId.findOneAndDelete({ user: id }).session(session);
+      await Bank.deleteMany({ user: id }).session(session);
+      await Organization.findOneAndDelete({ user: id }).session(session);
+      await Salary.deleteMany({ user: id }).session(session);
+      await Experience.deleteMany({ user: id }).session(session);
+      await Asset.deleteMany({ user: id }).session(session);
+      await Document.deleteMany({ user: id }).session(session);
+      await Attendance.deleteMany({ userId  : id }).session(session);
+   
       if (!staff) {
         throw new Error("Staff member not found");
       }
 
       // Delete associated profile if exists
-      if (staff.Profile) {
-        await Profile.findByIdAndDelete(staff.Profile).session(session);
-      }
 
       await session.commitTransaction();
 

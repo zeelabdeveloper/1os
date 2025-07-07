@@ -188,6 +188,14 @@ const menuItems = [
         key: "/performance/appraisal",
         label: "My Appraisals",
       },
+      {
+        key: "/performance/my-task",
+        label: "My Task",
+      },
+      {
+        key: "/performance/team-task",
+        label: "Team Task",
+      },
     ],
   },
 

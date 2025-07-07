@@ -146,12 +146,14 @@ const GoalForm = ({ visible, onClose, editData }) => {
     queryFn: fetchBranches,
   });
 
+
   const departmentsQuery = useQuery({
     queryKey: ["departments", selectedBranch],
     queryFn: () => fetchDepartmentsByBranch(selectedBranch),
     enabled: !!selectedBranch,
   });
 
+  
   const rolesQuery = useQuery({
     queryKey: ["roles", selectedDept],
     queryFn: () => fetchRoleByDepartment(selectedDept),

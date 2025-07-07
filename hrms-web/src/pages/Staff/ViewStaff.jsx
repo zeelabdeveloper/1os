@@ -484,11 +484,7 @@ const ProfileCard = ({
     }
   };
 
-  const handleFileUpload = (info) => {
-    if (info.file.status === "done") {
-      handleChange("photo", info.file.response.url);
-    }
-  };
+ 
 
   return (
     <Card
@@ -1102,6 +1098,181 @@ const OrganizationCard = ({
 };
 
 // Bank Details Card Component
+// const BankDetailsCard = ({
+//   data,
+//   loading,
+//   isEditing,
+//   onEdit,
+//   onCancel,
+//   onSave,
+// }) => {
+//   const [formData, setFormData] = useState({
+//     accountNumber: data?.accountNumber || "",
+//     bankName: data?.bankName || "",
+//     accountType: data?.accountType || "savings",
+//     accountHolderName: data?.accountHolderName || "",
+//     ifscCode: data?.ifscCode || "",
+//     branch: data?.branch || "",
+//     verified: data?.verified || false,
+//   });
+
+//   useEffect(() => {
+//     if (data) {
+//       setFormData({
+//         accountNumber: data.accountNumber || "",
+//         bankName: data.bankName || "",
+//         accountType: data.accountType || "savings",
+//         accountHolderName: data.accountHolderName || "",
+//         ifscCode: data.ifscCode || "",
+//         branch: data.branch || "",
+//         verified: data?.verified || false,
+//       });
+//     }
+//   }, [data]);
+
+//   const handleChange = (field, value) => {
+//     setFormData((prev) => ({ ...prev, [field]: value }));
+//   };
+
+//   if (loading) {
+//     return (
+//       <Card>
+//         <Skeleton active paragraph={{ rows: 4 }} />
+//       </Card>
+//     );
+//   }
+
+//   if (!data) {
+//     return (
+//       <Card
+//         title={
+//           <div className="flex justify-between items-center">
+//             <span className="flex items-center">
+//               <BankOutlined className="mr-2" />
+//               Bank Details
+//             </span>
+//             <Button icon={<EditOutlined />} onClick={onEdit}>
+//               Add Bank Details
+//             </Button>
+//           </div>
+//         }
+//       >
+//         <Empty description="No bank details available" />
+//       </Card>
+//     );
+//   }
+
+//   return (
+//     <Card
+//       title={
+//         <div className="flex justify-between items-center">
+//           <span className="flex items-center">
+//             <BankOutlined className="mr-2" />
+//             Bank Details
+//           </span>
+//           {!isEditing ? (
+//             <Button icon={<EditOutlined />} onClick={onEdit} disabled={loading}>
+//               Edit
+//             </Button>
+//           ) : (
+//             <Space>
+//               <Button onClick={onCancel}>Cancel</Button>
+//               <Button type="primary" onClick={() => onSave(formData)}>
+//                 Save
+//               </Button>
+//             </Space>
+//           )}
+//         </div>
+//       }
+//     >
+//       {isEditing ? (
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//           <EditableField
+//             label="Bank Name"
+//             value={formData.bankName}
+//             onChange={(value) => handleChange("bankName", value)}
+//           />
+//           <EditableField
+//             label="Account Number"
+//             value={formData.accountNumber}
+//             onChange={(value) => handleChange("accountNumber", value)}
+//           />
+//           <EditableField
+//             label="Account Holder Name"
+//             value={formData.accountHolderName}
+//             onChange={(value) => handleChange("accountHolderName", value)}
+//           />
+//           <EditableField
+//             label="Account Type"
+//             value={formData.accountType}
+//             type="select"
+//             options={[
+//               { value: "savings", label: "Savings" },
+//               { value: "current", label: "Current" },
+//               { value: "salary", label: "Salary" },
+//             ]}
+//             onChange={(value) => handleChange("accountType", value)}
+//           />
+//           <EditableField
+//             label="IFSC Code"
+//             value={formData.ifscCode}
+//             onChange={(value) => handleChange("ifscCode", value)}
+//           />
+//           <EditableField
+//             label="Branch"
+//             value={formData.branch}
+//             onChange={(value) => handleChange("branch", value)}
+//           />
+
+//           <Switch
+//             checked={formData.verified}
+//             onChange={(checked) => handleChange("verified", checked)}
+//             checkedChildren="Varified"
+//             unCheckedChildren="Not Varified"
+//           />
+//         </div>
+//       ) : (
+//         <Descriptions column={2}>
+//           <Descriptions.Item label="Bank Name">
+//             {data.bankName || "N/A"}
+//           </Descriptions.Item>
+//           <Descriptions.Item label="Account Number">
+//             {data.accountNumber || "N/A"}
+//           </Descriptions.Item>
+//           <Descriptions.Item label="Account Holder">
+//             {data.accountHolderName || "N/A"}
+//           </Descriptions.Item>
+//           <Descriptions.Item label="Account Type">
+//             {data.accountType
+//               ? data.accountType.charAt(0).toUpperCase() +
+//                 data.accountType.slice(1)
+//               : "N/A"}
+//           </Descriptions.Item>
+//           <Descriptions.Item label="IFSC Code">
+//             {data.ifscCode || "N/A"}
+//           </Descriptions.Item>
+//           <Descriptions.Item label="Branch">
+//             {data.branch || "N/A"}
+//           </Descriptions.Item>
+//           <Descriptions.Item label="Verification Status">
+//             <Badge
+//               status={data.verified ? "success" : "error"}
+//               text={data.verified ? "Verified" : "Not Verified"}
+//             />
+//           </Descriptions.Item>
+//         </Descriptions>
+//       )}
+//     </Card>
+//   );
+// };
+
+
+
+
+
+
+
+
 const BankDetailsCard = ({
   data,
   loading,
@@ -1111,13 +1282,13 @@ const BankDetailsCard = ({
   onSave,
 }) => {
   const [formData, setFormData] = useState({
-    accountNumber: data?.accountNumber || "",
-    bankName: data?.bankName || "",
-    accountType: data?.accountType || "savings",
-    accountHolderName: data?.accountHolderName || "",
-    ifscCode: data?.ifscCode || "",
-    branch: data?.branch || "",
-    verified: data?.verified || false,
+    accountNumber: "",
+    bankName: "",
+    accountType: "savings",
+    accountHolderName: "",
+    ifscCode: "",
+    branch: "",
+    verified: false,
   });
 
   useEffect(() => {
@@ -1129,7 +1300,7 @@ const BankDetailsCard = ({
         accountHolderName: data.accountHolderName || "",
         ifscCode: data.ifscCode || "",
         branch: data.branch || "",
-        verified: data?.verified || false,
+        verified: data.verified || false,
       });
     }
   }, [data]);
@@ -1137,34 +1308,6 @@ const BankDetailsCard = ({
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-
-  if (loading) {
-    return (
-      <Card>
-        <Skeleton active paragraph={{ rows: 4 }} />
-      </Card>
-    );
-  }
-
-  if (!data) {
-    return (
-      <Card
-        title={
-          <div className="flex justify-between items-center">
-            <span className="flex items-center">
-              <BankOutlined className="mr-2" />
-              Bank Details
-            </span>
-            <Button icon={<EditOutlined />} onClick={onEdit}>
-              Add Bank Details
-            </Button>
-          </div>
-        }
-      >
-        <Empty description="No bank details available" />
-      </Card>
-    );
-  }
 
   return (
     <Card
@@ -1175,8 +1318,12 @@ const BankDetailsCard = ({
             Bank Details
           </span>
           {!isEditing ? (
-            <Button icon={<EditOutlined />} onClick={onEdit} disabled={loading}>
-              Edit
+            <Button 
+              icon={data ? <EditOutlined /> : <PlusOutlined />} 
+              onClick={onEdit} 
+              disabled={loading}
+            >
+              {data ? "Edit" : "Add Bank Details"}
             </Button>
           ) : (
             <Space>
@@ -1189,75 +1336,129 @@ const BankDetailsCard = ({
         </div>
       }
     >
-      {isEditing ? (
+      {loading ? (
+        <Skeleton active paragraph={{ rows: 4 }} />
+      ) : isEditing ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <EditableField
-            label="Bank Name"
-            value={formData.bankName}
-            onChange={(value) => handleChange("bankName", value)}
-          />
-          <EditableField
-            label="Account Number"
-            value={formData.accountNumber}
-            onChange={(value) => handleChange("accountNumber", value)}
-          />
-          <EditableField
-            label="Account Holder Name"
-            value={formData.accountHolderName}
-            onChange={(value) => handleChange("accountHolderName", value)}
-          />
-          <EditableField
-            label="Account Type"
-            value={formData.accountType}
-            type="select"
-            options={[
-              { value: "savings", label: "Savings" },
-              { value: "current", label: "Current" },
-              { value: "salary", label: "Salary" },
-            ]}
-            onChange={(value) => handleChange("accountType", value)}
-          />
-          <EditableField
-            label="IFSC Code"
-            value={formData.ifscCode}
-            onChange={(value) => handleChange("ifscCode", value)}
-          />
-          <EditableField
-            label="Branch"
-            value={formData.branch}
-            onChange={(value) => handleChange("branch", value)}
-          />
+          <div>
+            <label className="block text-gray-600 text-sm font-medium mb-1">
+              Bank Name
+            </label>
+            <Input
+              value={formData.bankName}
+              onChange={(e) => handleChange("bankName", e.target.value)}
+            />
+          </div>
 
-          <Switch
-            checked={formData.verified}
-            onChange={(checked) => handleChange("verified", checked)}
-            checkedChildren="Varified"
-            unCheckedChildren="Not Varified"
-          />
+          <div>
+            <label className="block text-gray-600 text-sm font-medium mb-1">
+              Account Number
+            </label>
+            <Input
+              value={formData.accountNumber}
+              onChange={(e) => handleChange("accountNumber", e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-600 text-sm font-medium mb-1">
+              Account Holder Name
+            </label>
+            <Input
+              value={formData.accountHolderName}
+              onChange={(e) => handleChange("accountHolderName", e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-600 text-sm font-medium mb-1">
+              Account Type
+            </label>
+            <Select
+              className="w-full"
+              value={formData.accountType}
+              onChange={(value) => handleChange("accountType", value)}
+              options={[
+                { value: "savings", label: "Savings" },
+                { value: "current", label: "Current" },
+                { value: "salary", label: "Salary" },
+              ]}
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-600 text-sm font-medium mb-1">
+              IFSC Code
+            </label>
+            <Input
+              value={formData.ifscCode}
+              onChange={(e) => handleChange("ifscCode", e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-600 text-sm font-medium mb-1">
+              Branch
+            </label>
+            <Input
+              value={formData.branch}
+              onChange={(e) => handleChange("branch", e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-600 text-sm font-medium mb-1">
+              Verification Status
+            </label>
+            <Switch
+              checked={formData.verified}
+              onChange={(checked) => handleChange("verified", checked)}
+              checkedChildren="Verified"
+              unCheckedChildren="Not Verified"
+            />
+          </div>
         </div>
+      ) : !data ? (
+        <Empty description="No bank details available" />
       ) : (
         <Descriptions column={2}>
-          <Descriptions.Item label="Bank Name">
-            {data.bankName || "N/A"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Account Number">
-            {data.accountNumber || "N/A"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Account Holder">
-            {data.accountHolderName || "N/A"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Account Type">
-            {data.accountType
-              ? data.accountType.charAt(0).toUpperCase() +
-                data.accountType.slice(1)
-              : "N/A"}
-          </Descriptions.Item>
-          <Descriptions.Item label="IFSC Code">
-            {data.ifscCode || "N/A"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Branch">
-            {data.branch || "N/A"}
-          </Descriptions.Item>
+          {data.bankName && (
+            <Descriptions.Item label="Bank Name">
+              {data.bankName}
+            </Descriptions.Item>
+          )}
+
+          {data.accountNumber && (
+            <Descriptions.Item label="Account Number">
+              {data.accountNumber}
+            </Descriptions.Item>
+          )}
+
+          {data.accountHolderName && (
+            <Descriptions.Item label="Account Holder">
+              {data.accountHolderName}
+            </Descriptions.Item>
+          )}
+
+          {data.accountType && (
+            <Descriptions.Item label="Account Type">
+              {data.accountType.charAt(0).toUpperCase() +
+                data.accountType.slice(1)}
+            </Descriptions.Item>
+          )}
+
+          {data.ifscCode && (
+            <Descriptions.Item label="IFSC Code">
+              {data.ifscCode}
+            </Descriptions.Item>
+          )}
+
+          {data.branch && (
+            <Descriptions.Item label="Branch">
+              {data.branch}
+            </Descriptions.Item>
+          )}
+
           <Descriptions.Item label="Verification Status">
             <Badge
               status={data.verified ? "success" : "error"}
@@ -1270,7 +1471,248 @@ const BankDetailsCard = ({
   );
 };
 
+
+
+
+
+
+
+
+
 // Salary Details Card Component
+// const SalaryDetailsCard = ({
+//   data,
+//   loading,
+//   isEditing,
+//   onEdit,
+//   onCancel,
+//   onSave,
+// }) => {
+//   const [formData, setFormData] = useState({
+//     basicSalary: data?.basicSalary || 0,
+//     hra: data?.hra || 0,
+//     da: data?.da || 0,
+//     conveyance: data?.conveyance || 0,
+//     medical: data?.medical || 0,
+//     otherAllow: data?.otherAllow || 0,
+//     pf: data?.pf || 0,
+//     tds: data?.tds || 0,
+//     esi: data?.esi || 0,
+//     paymentFrequency: data?.paymentFrequency || "monthly",
+//   });
+
+//   useEffect(() => {
+//     if (data) {
+//       setFormData({
+//         basicSalary: data.basicSalary || 0,
+//         hra: data.hra || 0,
+//         da: data.da || 0,
+//         conveyance: data.conveyance || 0,
+//         medical: data.medical || 0,
+//         otherAllow: data.otherAllow || 0,
+//         pf: data.pf || 0,
+//         tds: data.tds || 0,
+//         esi: data.esi || 0,
+//         paymentFrequency: data.paymentFrequency || "monthly",
+//       });
+//     }
+//   }, [data]);
+
+//   const handleChange = (field, value) => {
+//     setFormData((prev) => ({ ...prev, [field]: value }));
+//   };
+
+//   const formatCurrency = (value) => {
+//     return value ? `₹${value.toLocaleString("en-IN")}` : "₹0";
+//   };
+
+//   if (loading) {
+//     return (
+//       <Card>
+//         <Skeleton active paragraph={{ rows: 4 }} />
+//       </Card>
+//     );
+//   }
+
+//   if (!data) {
+//     return (
+//       <Card
+//         title={
+//           <div className="flex justify-between items-center">
+//             <span className="flex items-center">
+//               <DollarOutlined className="mr-2" />
+//               Salary Details
+//             </span>
+//             <Button icon={<EditOutlined />} onClick={onEdit}>
+//               Add Salary Details
+//             </Button>
+//           </div>
+//         }
+//       >
+//         <Empty description="No salary details available" />
+//       </Card>
+//     );
+//   }
+
+//   return (
+//     <Card
+//       title={
+//         <div className="flex justify-between items-center">
+//           <span className="flex items-center">
+//             <DollarOutlined className="mr-2" />
+//             Salary Details
+//           </span>
+//           {!isEditing ? (
+//             <Button icon={<EditOutlined />} onClick={onEdit} disabled={loading}>
+//               Edit
+//             </Button>
+//           ) : (
+//             <Space>
+//               <Button onClick={onCancel}>Cancel</Button>
+//               <Button type="primary" onClick={() => onSave(formData)}>
+//                 Save
+//               </Button>
+//             </Space>
+//           )}
+//         </div>
+//       }
+//     >
+//       {isEditing ? (
+//         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//           <EditableField
+//             label="Basic Salary"
+//             value={formData.basicSalary}
+//             type="number"
+//             onChange={(value) => handleChange("basicSalary", value)}
+//           />
+//           <EditableField
+//             label="HRA"
+//             value={formData.hra}
+//             type="number"
+//             onChange={(value) => handleChange("hra", value)}
+//           />
+//           <EditableField
+//             label="DA"
+//             value={formData.da}
+//             type="number"
+//             onChange={(value) => handleChange("da", value)}
+//           />
+//           <EditableField
+//             label="Conveyance"
+//             value={formData.conveyance}
+//             type="number"
+//             onChange={(value) => handleChange("conveyance", value)}
+//           />
+//           <EditableField
+//             label="Medical"
+//             value={formData.medical}
+//             type="number"
+//             onChange={(value) => handleChange("medical", value)}
+//           />
+//           <EditableField
+//             label="Other Allowances"
+//             value={formData.otherAllow}
+//             type="number"
+//             onChange={(value) => handleChange("otherAllow", value)}
+//           />
+//           <EditableField
+//             label="PF"
+//             value={formData.pf}
+//             type="number"
+//             onChange={(value) => handleChange("pf", value)}
+//           />
+//           <EditableField
+//             label="TDS"
+//             value={formData.tds}
+//             type="number"
+//             onChange={(value) => handleChange("tds", value)}
+//           />
+//           <EditableField
+//             label="ESI"
+//             value={formData.esi}
+//             type="number"
+//             onChange={(value) => handleChange("esi", value)}
+//           />
+//           <EditableField
+//             label="Payment Frequency"
+//             value={formData.paymentFrequency}
+//             type="select"
+//             options={[
+//               { value: "monthly", label: "Monthly" },
+//               { value: "weekly", label: "Weekly" },
+//               { value: "bi-weekly", label: "Bi-Weekly" },
+//             ]}
+//             onChange={(value) => handleChange("paymentFrequency", value)}
+//           />
+//         </div>
+//       ) : (
+//         <div>
+//           <Descriptions column={2}>
+//             <Descriptions.Item label="Basic Salary">
+//               {formatCurrency(data.basicSalary)}
+//             </Descriptions.Item>
+//             <Descriptions.Item label="HRA">
+//               {formatCurrency(data.hra)}
+//             </Descriptions.Item>
+//             <Descriptions.Item label="DA">
+//               {formatCurrency(data.da)}
+//             </Descriptions.Item>
+//             <Descriptions.Item label="Conveyance">
+//               {formatCurrency(data.conveyance)}
+//             </Descriptions.Item>
+//             <Descriptions.Item label="Medical">
+//               {formatCurrency(data.medical)}
+//             </Descriptions.Item>
+//             <Descriptions.Item label="Other Allowances">
+//               {formatCurrency(data.otherAllow)}
+//             </Descriptions.Item>
+//             <Descriptions.Item label="PF">
+//               {formatCurrency(data.pf)}
+//             </Descriptions.Item>
+//             <Descriptions.Item label="TDS">
+//               {formatCurrency(data.tds)}
+//             </Descriptions.Item>
+//             <Descriptions.Item label="ESI">
+//               {formatCurrency(data.esi)}
+//             </Descriptions.Item>
+//             <Descriptions.Item label="Payment Frequency">
+//               {data.paymentFrequency
+//                 ? data.paymentFrequency.charAt(0).toUpperCase() +
+//                   data.paymentFrequency.slice(1)
+//                 : "N/A"}
+//             </Descriptions.Item>
+//           </Descriptions>
+
+//           <Divider />
+
+//           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+//             <div className="bg-blue-50 p-4 rounded-lg">
+//               <h4 className="font-semibold text-blue-700">Gross Salary</h4>
+//               <p className="text-xl font-bold">
+//                 {formatCurrency(data.grossSalary)}
+//               </p>
+//             </div>
+//             <div className="bg-red-50 p-4 rounded-lg">
+//               <h4 className="font-semibold text-red-700">Total Deductions</h4>
+//               <p className="text-xl font-bold">
+//                 {formatCurrency(data.totalDeductions)}
+//               </p>
+//             </div>
+//             <div className="bg-green-50 p-4 rounded-lg">
+//               <h4 className="font-semibold text-green-700">Net Salary</h4>
+//               <p className="text-xl font-bold">
+//                 {formatCurrency(data.netSalary)}
+//               </p>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </Card>
+//   );
+// };
+
+
+
 const SalaryDetailsCard = ({
   data,
   loading,
@@ -1280,16 +1722,16 @@ const SalaryDetailsCard = ({
   onSave,
 }) => {
   const [formData, setFormData] = useState({
-    basicSalary: data?.basicSalary || 0,
-    hra: data?.hra || 0,
-    da: data?.da || 0,
-    conveyance: data?.conveyance || 0,
-    medical: data?.medical || 0,
-    otherAllow: data?.otherAllow || 0,
-    pf: data?.pf || 0,
-    tds: data?.tds || 0,
-    esi: data?.esi || 0,
-    paymentFrequency: data?.paymentFrequency || "monthly",
+    basicSalary: 0,
+    hra: 0,
+    da: 0,
+    conveyance: 0,
+    medical: 0,
+    otherAllow: 0,
+    pf: 0,
+    tds: 0,
+    esi: 0,
+    paymentFrequency: "monthly",
   });
 
   useEffect(() => {
@@ -1317,33 +1759,24 @@ const SalaryDetailsCard = ({
     return value ? `₹${value.toLocaleString("en-IN")}` : "₹0";
   };
 
-  if (loading) {
+  const calculateGrossSalary = () => {
     return (
-      <Card>
-        <Skeleton active paragraph={{ rows: 4 }} />
-      </Card>
+      (formData.basicSalary || 0) +
+      (formData.hra || 0) +
+      (formData.da || 0) +
+      (formData.conveyance || 0) +
+      (formData.medical || 0) +
+      (formData.otherAllow || 0)
     );
-  }
+  };
 
-  if (!data) {
-    return (
-      <Card
-        title={
-          <div className="flex justify-between items-center">
-            <span className="flex items-center">
-              <DollarOutlined className="mr-2" />
-              Salary Details
-            </span>
-            <Button icon={<EditOutlined />} onClick={onEdit}>
-              Add Salary Details
-            </Button>
-          </div>
-        }
-      >
-        <Empty description="No salary details available" />
-      </Card>
-    );
-  }
+  const calculateTotalDeductions = () => {
+    return (formData.pf || 0) + (formData.tds || 0) + (formData.esi || 0);
+  };
+
+  const calculateNetSalary = () => {
+    return calculateGrossSalary() - calculateTotalDeductions();
+  };
 
   return (
     <Card
@@ -1354,8 +1787,12 @@ const SalaryDetailsCard = ({
             Salary Details
           </span>
           {!isEditing ? (
-            <Button icon={<EditOutlined />} onClick={onEdit} disabled={loading}>
-              Edit
+            <Button 
+              icon={data ? <EditOutlined /> : <PlusOutlined />} 
+              onClick={onEdit} 
+              disabled={loading}
+            >
+              {data ? "Edit" : "Add Salary Details"}
             </Button>
           ) : (
             <Space>
@@ -1368,131 +1805,269 @@ const SalaryDetailsCard = ({
         </div>
       }
     >
-      {isEditing ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <EditableField
-            label="Basic Salary"
-            value={formData.basicSalary}
-            type="number"
-            onChange={(value) => handleChange("basicSalary", value)}
-          />
-          <EditableField
-            label="HRA"
-            value={formData.hra}
-            type="number"
-            onChange={(value) => handleChange("hra", value)}
-          />
-          <EditableField
-            label="DA"
-            value={formData.da}
-            type="number"
-            onChange={(value) => handleChange("da", value)}
-          />
-          <EditableField
-            label="Conveyance"
-            value={formData.conveyance}
-            type="number"
-            onChange={(value) => handleChange("conveyance", value)}
-          />
-          <EditableField
-            label="Medical"
-            value={formData.medical}
-            type="number"
-            onChange={(value) => handleChange("medical", value)}
-          />
-          <EditableField
-            label="Other Allowances"
-            value={formData.otherAllow}
-            type="number"
-            onChange={(value) => handleChange("otherAllow", value)}
-          />
-          <EditableField
-            label="PF"
-            value={formData.pf}
-            type="number"
-            onChange={(value) => handleChange("pf", value)}
-          />
-          <EditableField
-            label="TDS"
-            value={formData.tds}
-            type="number"
-            onChange={(value) => handleChange("tds", value)}
-          />
-          <EditableField
-            label="ESI"
-            value={formData.esi}
-            type="number"
-            onChange={(value) => handleChange("esi", value)}
-          />
-          <EditableField
-            label="Payment Frequency"
-            value={formData.paymentFrequency}
-            type="select"
-            options={[
-              { value: "monthly", label: "Monthly" },
-              { value: "weekly", label: "Weekly" },
-              { value: "bi-weekly", label: "Bi-Weekly" },
-            ]}
-            onChange={(value) => handleChange("paymentFrequency", value)}
-          />
-        </div>
-      ) : (
-        <div>
-          <Descriptions column={2}>
-            <Descriptions.Item label="Basic Salary">
-              {formatCurrency(data.basicSalary)}
-            </Descriptions.Item>
-            <Descriptions.Item label="HRA">
-              {formatCurrency(data.hra)}
-            </Descriptions.Item>
-            <Descriptions.Item label="DA">
-              {formatCurrency(data.da)}
-            </Descriptions.Item>
-            <Descriptions.Item label="Conveyance">
-              {formatCurrency(data.conveyance)}
-            </Descriptions.Item>
-            <Descriptions.Item label="Medical">
-              {formatCurrency(data.medical)}
-            </Descriptions.Item>
-            <Descriptions.Item label="Other Allowances">
-              {formatCurrency(data.otherAllow)}
-            </Descriptions.Item>
-            <Descriptions.Item label="PF">
-              {formatCurrency(data.pf)}
-            </Descriptions.Item>
-            <Descriptions.Item label="TDS">
-              {formatCurrency(data.tds)}
-            </Descriptions.Item>
-            <Descriptions.Item label="ESI">
-              {formatCurrency(data.esi)}
-            </Descriptions.Item>
-            <Descriptions.Item label="Payment Frequency">
-              {data.paymentFrequency
-                ? data.paymentFrequency.charAt(0).toUpperCase() +
-                  data.paymentFrequency.slice(1)
-                : "N/A"}
-            </Descriptions.Item>
-          </Descriptions>
+      {loading ? (
+        <Skeleton active paragraph={{ rows: 10 }} />
+      ) : isEditing ? (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Basic Salary
+              </label>
+              <InputNumber
+                className="w-full"
+                value={formData.basicSalary}
+                onChange={(value) => handleChange("basicSalary", value)}
+                min={0}
+                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                HRA
+              </label>
+              <InputNumber
+                className="w-full"
+                value={formData.hra}
+                onChange={(value) => handleChange("hra", value)}
+                min={0}
+                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                DA
+              </label>
+              <InputNumber
+                className="w-full"
+                value={formData.da}
+                onChange={(value) => handleChange("da", value)}
+                min={0}
+                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Conveyance
+              </label>
+              <InputNumber
+                className="w-full"
+                value={formData.conveyance}
+                onChange={(value) => handleChange("conveyance", value)}
+                min={0}
+                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Medical
+              </label>
+              <InputNumber
+                className="w-full"
+                value={formData.medical}
+                onChange={(value) => handleChange("medical", value)}
+                min={0}
+                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Other Allowances
+              </label>
+              <InputNumber
+                className="w-full"
+                value={formData.otherAllow}
+                onChange={(value) => handleChange("otherAllow", value)}
+                min={0}
+                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                PF
+              </label>
+              <InputNumber
+                className="w-full"
+                value={formData.pf}
+                onChange={(value) => handleChange("pf", value)}
+                min={0}
+                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                TDS
+              </label>
+              <InputNumber
+                className="w-full"
+                value={formData.tds}
+                onChange={(value) => handleChange("tds", value)}
+                min={0}
+                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                ESI
+              </label>
+              <InputNumber
+                className="w-full"
+                value={formData.esi}
+                onChange={(value) => handleChange("esi", value)}
+                min={0}
+                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Payment Frequency
+              </label>
+              <Select
+                className="w-full"
+                value={formData.paymentFrequency}
+                onChange={(value) => handleChange("paymentFrequency", value)}
+                options={[
+                  { value: "monthly", label: "Monthly" },
+                  { value: "weekly", label: "Weekly" },
+                  { value: "bi-weekly", label: "Bi-Weekly" },
+                ]}
+              />
+            </div>
+          </div>
 
           <Divider />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-blue-50 p-4 rounded-lg">
               <h4 className="font-semibold text-blue-700">Gross Salary</h4>
               <p className="text-xl font-bold">
-                {formatCurrency(data.grossSalary)}
+                {formatCurrency(calculateGrossSalary())}
               </p>
             </div>
             <div className="bg-red-50 p-4 rounded-lg">
               <h4 className="font-semibold text-red-700">Total Deductions</h4>
               <p className="text-xl font-bold">
-                {formatCurrency(data.totalDeductions)}
+                {formatCurrency(calculateTotalDeductions())}
               </p>
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
               <h4 className="font-semibold text-green-700">Net Salary</h4>
               <p className="text-xl font-bold">
-                {formatCurrency(data.netSalary)}
+                {formatCurrency(calculateNetSalary())}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : !data ? (
+        <Empty description="No salary details available" />
+      ) : (
+        <div className="space-y-6">
+          <Descriptions column={2}>
+            {data.basicSalary !== undefined && (
+              <Descriptions.Item label="Basic Salary">
+                {formatCurrency(data.basicSalary)}
+              </Descriptions.Item>
+            )}
+
+            {data.hra !== undefined && (
+              <Descriptions.Item label="HRA">
+                {formatCurrency(data.hra)}
+              </Descriptions.Item>
+            )}
+
+            {data.da !== undefined && (
+              <Descriptions.Item label="DA">
+                {formatCurrency(data.da)}
+              </Descriptions.Item>
+            )}
+
+            {data.conveyance !== undefined && (
+              <Descriptions.Item label="Conveyance">
+                {formatCurrency(data.conveyance)}
+              </Descriptions.Item>
+            )}
+
+            {data.medical !== undefined && (
+              <Descriptions.Item label="Medical">
+                {formatCurrency(data.medical)}
+              </Descriptions.Item>
+            )}
+
+            {data.otherAllow !== undefined && (
+              <Descriptions.Item label="Other Allowances">
+                {formatCurrency(data.otherAllow)}
+              </Descriptions.Item>
+            )}
+
+            {data.pf !== undefined && (
+              <Descriptions.Item label="PF">
+                {formatCurrency(data.pf)}
+              </Descriptions.Item>
+            )}
+
+            {data.tds !== undefined && (
+              <Descriptions.Item label="TDS">
+                {formatCurrency(data.tds)}
+              </Descriptions.Item>
+            )}
+
+            {data.esi !== undefined && (
+              <Descriptions.Item label="ESI">
+                {formatCurrency(data.esi)}
+              </Descriptions.Item>
+            )}
+
+            {data.paymentFrequency && (
+              <Descriptions.Item label="Payment Frequency">
+                {data.paymentFrequency.charAt(0).toUpperCase() +
+                  data.paymentFrequency.slice(1)}
+              </Descriptions.Item>
+            )}
+          </Descriptions>
+
+          <Divider />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-blue-700">Gross Salary</h4>
+              <p className="text-xl font-bold">
+                {formatCurrency(
+                  (data.basicSalary || 0) +
+                    (data.hra || 0) +
+                    (data.da || 0) +
+                    (data.conveyance || 0) +
+                    (data.medical || 0) +
+                    (data.otherAllow || 0)
+                )}
+              </p>
+            </div>
+            <div className="bg-red-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-red-700">Total Deductions</h4>
+              <p className="text-xl font-bold">
+                {formatCurrency((data.pf || 0) + (data.tds || 0) + (data.esi || 0))}
+              </p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-green-700">Net Salary</h4>
+              <p className="text-xl font-bold">
+                {formatCurrency(
+                  (data.basicSalary || 0) +
+                    (data.hra || 0) +
+                    (data.da || 0) +
+                    (data.conveyance || 0) +
+                    (data.medical || 0) +
+                    (data.otherAllow || 0) -
+                    ((data.pf || 0) + (data.tds || 0) + (data.esi || 0))
+                )}
               </p>
             </div>
           </div>
@@ -1502,7 +2077,277 @@ const SalaryDetailsCard = ({
   );
 };
 
+
+
+
+
+
+
+
+
+
+
 // Experience Card Component
+// const ExperienceCard = ({
+//   data,
+//   loading,
+//   isEditing,
+//   onEdit,
+//   onCancel,
+//   onSave,
+// }) => {
+//   const [formData, setFormData] = useState({
+//     companyName: "",
+//     jobTitle: "",
+//     employmentType: "full-time",
+//     startDate: "",
+//     endDate: "",
+//     currentlyWorking: false,
+//     description: "",
+//   });
+
+//   const [experiences, setExperiences] = useState(data || []);
+//   const [editingIndex, setEditingIndex] = useState(null);
+
+//   useEffect(() => {
+//     if (data) {
+//       setExperiences(data);
+//     }
+//   }, [data]);
+
+//   const handleChange = (field, value) => {
+//     setFormData((prev) => ({ ...prev, [field]: value }));
+//   };
+
+//   const handleAddExperience = () => {
+//     setEditingIndex(null);
+//     setFormData({
+//       companyName: "",
+//       jobTitle: "",
+//       employmentType: "full-time",
+//       startDate: "",
+//       endDate: "",
+//       currentlyWorking: false,
+//       description: "",
+//     });
+//     onEdit();
+//   };
+
+//   const handleEditExperience = (index) => {
+//     setEditingIndex(index);
+//     setFormData({
+//       companyName: experiences[index].companyName || "",
+//       jobTitle: experiences[index].jobTitle || "",
+//       employmentType: experiences[index].employmentType || "full-time",
+//       startDate: experiences[index].startDate || "",
+//       endDate: experiences[index].endDate || "",
+//       currentlyWorking: experiences[index].currentlyWorking || false,
+//       description: experiences[index].description || "",
+//     });
+//     onEdit();
+//   };
+
+//   const handleSaveExperience = () => {
+//     if (editingIndex !== null) {
+//       // Update existing experience
+//       const updatedExperiences = [...experiences];
+//       updatedExperiences[editingIndex] = formData;
+//       setExperiences(updatedExperiences);
+//     } else {
+//       // Add new experience
+//       setExperiences((prev) => [...prev, formData]);
+//     }
+//     onSave(experiences);
+//   };
+
+//   const handleRemoveExperience = (index) => {
+//     const updatedExperiences = experiences.filter((_, i) => i !== index);
+//     setExperiences(updatedExperiences);
+//     onSave(updatedExperiences);
+//   };
+
+//   const calculateDuration = (startDate, endDate) => {
+//     if (!startDate) return "N/A";
+
+//     const start = new Date(startDate);
+//     const end = endDate ? new Date(endDate) : new Date();
+
+//     let years = end.getFullYear() - start.getFullYear();
+//     let months = end.getMonth() - start.getMonth();
+
+//     if (months < 0) {
+//       years--;
+//       months += 12;
+//     }
+
+//     return `${years} years ${months} months`;
+//   };
+
+//   if (loading) {
+//     return (
+//       <Card>
+//         <Skeleton active paragraph={{ rows: 4 }} />
+//       </Card>
+//     );
+//   }
+
+//   return (
+//     <Card
+//       title={
+//         <div className="flex justify-between items-center">
+//           <span className="flex items-center">
+//             <ClockCircleOutlined className="mr-2" />
+//             Work Experience
+//           </span>
+//           {!isEditing && (
+//             <Button
+//               icon={<EditOutlined />}
+//               onClick={handleAddExperience}
+//               disabled={loading}
+//             >
+//               Add Experience
+//             </Button>
+//           )}
+//         </div>
+//       }
+//     >
+//       {isEditing ? (
+//         <div className="space-y-4">
+//           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//             <EditableField
+//               label="Company Name"
+//               value={formData.companyName}
+//               onChange={(value) => handleChange("companyName", value)}
+//             />
+//             <EditableField
+//               label="Job Title"
+//               value={formData.jobTitle}
+//               onChange={(value) => handleChange("jobTitle", value)}
+//             />
+//             <EditableField
+//               label="Employment Type"
+//               value={formData.employmentType}
+//               type="select"
+//               options={[
+//                 { value: "full-time", label: "Full Time" },
+//                 { value: "part-time", label: "Part Time" },
+//                 { value: "contract", label: "Contract" },
+//                 { value: "internship", label: "Internship" },
+//               ]}
+//               onChange={(value) => handleChange("employmentType", value)}
+//             />
+//             <EditableField
+//               label="Start Date"
+//               value={formData.startDate}
+//               type="date"
+//               onChange={(value) => handleChange("startDate", value)}
+//             />
+//             <EditableField
+//               label="Currently Working"
+//               value={formData.currentlyWorking}
+//               type="switch"
+//               checkedChildren="Yes"
+//               unCheckedChildren="No"
+//               onChange={(value) => handleChange("currentlyWorking", value)}
+//             />
+//             {!formData.currentlyWorking && (
+//               <EditableField
+//                 label="End Date"
+//                 value={formData.endDate}
+//                 type="date"
+//                 onChange={(value) => handleChange("endDate", value)}
+//               />
+//             )}
+//           </div>
+//           <EditableField
+//             label="Description"
+//             value={formData.description}
+//             type="textarea"
+//             onChange={(value) => handleChange("description", value)}
+//           />
+
+//           <div className="flex justify-end space-x-2 mt-4">
+//             <Button onClick={onCancel}>Cancel</Button>
+//             <Button type="primary" onClick={handleSaveExperience}>
+//               {editingIndex !== null ? "Update Experience" : "Add Experience"}
+//             </Button>
+//           </div>
+//         </div>
+//       ) : experiences && experiences.length > 0 ? (
+//         <div className="space-y-4">
+//           {experiences.map((exp, index) => (
+//             <Card key={index} className="relative">
+//               <div className="absolute top-4 right-4 flex space-x-2">
+//                 <Button
+//                   size="small"
+//                   icon={<EditOutlined />}
+//                   onClick={() => handleEditExperience(index)}
+//                 />
+//                 <Popconfirm
+//                   title="Are you sure to delete this experience?"
+//                   onConfirm={() => handleRemoveExperience(index)}
+//                   okText="Yes"
+//                   cancelText="No"
+//                 >
+//                   <Button size="small" icon={<DeleteOutlined />} danger />
+//                 </Popconfirm>
+//               </div>
+
+//               <Descriptions column={2}>
+//                 <Descriptions.Item label="Company">
+//                   {exp.companyName || "N/A"}
+//                 </Descriptions.Item>
+//                 <Descriptions.Item label="Position">
+//                   {exp.jobTitle || "N/A"}
+//                 </Descriptions.Item>
+//                 <Descriptions.Item label="Employment Type">
+//                   {exp.employmentType
+//                     ? exp.employmentType.charAt(0).toUpperCase() +
+//                       exp.employmentType.slice(1)
+//                     : "N/A"}
+//                 </Descriptions.Item>
+//                 <Descriptions.Item label="Duration">
+//                   {calculateDuration(exp.startDate, exp.endDate)}
+//                 </Descriptions.Item>
+//                 <Descriptions.Item label="Start Date">
+//                   {exp.startDate
+//                     ? format(new Date(exp.startDate), "PPP")
+//                     : "N/A"}
+//                 </Descriptions.Item>
+//                 <Descriptions.Item label="End Date">
+//                   {exp.currentlyWorking
+//                     ? "Present"
+//                     : exp.endDate
+//                     ? format(new Date(exp.endDate), "PPP")
+//                     : "N/A"}
+//                 </Descriptions.Item>
+//               </Descriptions>
+
+//               {exp.description && (
+//                 <div className="mt-4">
+//                   <p className="font-semibold">Description:</p>
+//                   <p className="text-gray-700">{exp.description}</p>
+//                 </div>
+//               )}
+//             </Card>
+//           ))}
+//         </div>
+//       ) : (
+//         <Empty description="No work experience records found" />
+//       )}
+//     </Card>
+//   );
+// };
+
+
+
+
+
+
+
+
+
+
 const ExperienceCard = ({
   data,
   loading,
@@ -1563,16 +2408,14 @@ const ExperienceCard = ({
   };
 
   const handleSaveExperience = () => {
+    const updatedExperiences = [...experiences];
     if (editingIndex !== null) {
-      // Update existing experience
-      const updatedExperiences = [...experiences];
       updatedExperiences[editingIndex] = formData;
-      setExperiences(updatedExperiences);
     } else {
-      // Add new experience
-      setExperiences((prev) => [...prev, formData]);
+      updatedExperiences.push(formData);
     }
-    onSave(experiences);
+    setExperiences(updatedExperiences);
+    onSave(updatedExperiences);
   };
 
   const handleRemoveExperience = (index) => {
@@ -1583,28 +2426,24 @@ const ExperienceCard = ({
 
   const calculateDuration = (startDate, endDate) => {
     if (!startDate) return "N/A";
-
+    
     const start = new Date(startDate);
     const end = endDate ? new Date(endDate) : new Date();
-
-    let years = end.getFullYear() - start.getFullYear();
-    let months = end.getMonth() - start.getMonth();
-
-    if (months < 0) {
-      years--;
-      months += 12;
-    }
-
+    
+    const diffInMonths = (end.getFullYear() - start.getFullYear()) * 12 + 
+                         (end.getMonth() - start.getMonth());
+    
+    const years = Math.floor(diffInMonths / 12);
+    const months = diffInMonths % 12;
+    
     return `${years} years ${months} months`;
   };
 
-  if (loading) {
-    return (
-      <Card>
-        <Skeleton active paragraph={{ rows: 4 }} />
-      </Card>
-    );
-  }
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
 
   return (
     <Card
@@ -1616,7 +2455,7 @@ const ExperienceCard = ({
           </span>
           {!isEditing && (
             <Button
-              icon={<EditOutlined />}
+              icon={<PlusOutlined />}
               onClick={handleAddExperience}
               disabled={loading}
             >
@@ -1626,64 +2465,106 @@ const ExperienceCard = ({
         </div>
       }
     >
-      {isEditing ? (
-        <div className="space-y-4">
+      {loading ? (
+        <Skeleton active paragraph={{ rows: 6 }} />
+      ) : isEditing ? (
+        <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <EditableField
-              label="Company Name"
-              value={formData.companyName}
-              onChange={(value) => handleChange("companyName", value)}
-            />
-            <EditableField
-              label="Job Title"
-              value={formData.jobTitle}
-              onChange={(value) => handleChange("jobTitle", value)}
-            />
-            <EditableField
-              label="Employment Type"
-              value={formData.employmentType}
-              type="select"
-              options={[
-                { value: "full-time", label: "Full Time" },
-                { value: "part-time", label: "Part Time" },
-                { value: "contract", label: "Contract" },
-                { value: "internship", label: "Internship" },
-              ]}
-              onChange={(value) => handleChange("employmentType", value)}
-            />
-            <EditableField
-              label="Start Date"
-              value={formData.startDate}
-              type="date"
-              onChange={(value) => handleChange("startDate", value)}
-            />
-            <EditableField
-              label="Currently Working"
-              value={formData.currentlyWorking}
-              type="switch"
-              checkedChildren="Yes"
-              unCheckedChildren="No"
-              onChange={(value) => handleChange("currentlyWorking", value)}
-            />
-            {!formData.currentlyWorking && (
-              <EditableField
-                label="End Date"
-                value={formData.endDate}
-                type="date"
-                onChange={(value) => handleChange("endDate", value)}
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Company Name
+              </label>
+              <Input
+                value={formData.companyName}
+                onChange={(e) => handleChange("companyName", e.target.value)}
               />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Job Title
+              </label>
+              <Input
+                value={formData.jobTitle}
+                onChange={(e) => handleChange("jobTitle", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Employment Type
+              </label>
+              <Select
+                className="w-full"
+                value={formData.employmentType}
+                onChange={(value) => handleChange("employmentType", value)}
+                options={[
+                  { value: "full-time", label: "Full Time" },
+                  { value: "part-time", label: "Part Time" },
+                  { value: "contract", label: "Contract" },
+                  { value: "internship", label: "Internship" },
+                ]}
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Start Date
+              </label>
+              <DatePicker
+                className="w-full"
+                value={formData.startDate ? dayjs(formData.startDate) : null}
+                onChange={(date, dateString) =>
+                  handleChange("startDate", dateString)
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-600 text-sm font-medium mb-1">
+                Currently Working
+              </label>
+              <Switch
+                checked={formData.currentlyWorking}
+                onChange={(checked) => handleChange("currentlyWorking", checked)}
+                checkedChildren="Yes"
+                unCheckedChildren="No"
+              />
+            </div>
+
+            {!formData.currentlyWorking && (
+              <div>
+                <label className="block text-gray-600 text-sm font-medium mb-1">
+                  End Date
+                </label>
+                <DatePicker
+                  className="w-full"
+                  value={formData.endDate ? dayjs(formData.endDate) : null}
+                  onChange={(date, dateString) =>
+                    handleChange("endDate", dateString)
+                  }
+                />
+              </div>
             )}
           </div>
-          <EditableField
-            label="Description"
-            value={formData.description}
-            type="textarea"
-            onChange={(value) => handleChange("description", value)}
-          />
 
-          <div className="flex justify-end space-x-2 mt-4">
+          <div>
+            <label className="block text-gray-600 text-sm font-medium mb-1">
+              Description
+            </label>
+            <Input.TextArea
+              rows={4}
+              value={formData.description}
+              onChange={(e) => handleChange("description", e.target.value)}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2">
             <Button onClick={onCancel}>Cancel</Button>
-            <Button type="primary" onClick={handleSaveExperience}>
+            <Button 
+              type="primary" 
+              onClick={handleSaveExperience}
+            >
               {editingIndex !== null ? "Update Experience" : "Add Experience"}
             </Button>
           </div>
@@ -1691,7 +2572,7 @@ const ExperienceCard = ({
       ) : experiences && experiences.length > 0 ? (
         <div className="space-y-4">
           {experiences.map((exp, index) => (
-            <Card key={index} className="relative">
+            <Card key={index} className="relative hover:shadow-md transition-shadow">
               <div className="absolute top-4 right-4 flex space-x-2">
                 <Button
                   size="small"
@@ -1708,42 +2589,39 @@ const ExperienceCard = ({
                 </Popconfirm>
               </div>
 
-              <Descriptions column={2}>
-                <Descriptions.Item label="Company">
-                  {exp.companyName || "N/A"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Position">
-                  {exp.jobTitle || "N/A"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Employment Type">
-                  {exp.employmentType
-                    ? exp.employmentType.charAt(0).toUpperCase() +
-                      exp.employmentType.slice(1)
-                    : "N/A"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Duration">
-                  {calculateDuration(exp.startDate, exp.endDate)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Start Date">
-                  {exp.startDate
-                    ? format(new Date(exp.startDate), "PPP")
-                    : "N/A"}
-                </Descriptions.Item>
-                <Descriptions.Item label="End Date">
-                  {exp.currentlyWorking
-                    ? "Present"
-                    : exp.endDate
-                    ? format(new Date(exp.endDate), "PPP")
-                    : "N/A"}
-                </Descriptions.Item>
-              </Descriptions>
-
-              {exp.description && (
-                <div className="mt-4">
-                  <p className="font-semibold">Description:</p>
-                  <p className="text-gray-700">{exp.description}</p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-semibold">{exp.companyName || "N/A"}</h3>
+                    <p className="text-gray-600">{exp.jobTitle || "N/A"}</p>
+                  </div>
+                  <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                    {exp.employmentType 
+                      ? exp.employmentType.charAt(0).toUpperCase() + exp.employmentType.slice(1)
+                      : "N/A"}
+                  </div>
                 </div>
-              )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Duration</p>
+                    <p>{calculateDuration(exp.startDate, exp.endDate)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Period</p>
+                    <p>
+                      {formatDate(exp.startDate)} - {exp.currentlyWorking ? "Present" : formatDate(exp.endDate)}
+                    </p>
+                  </div>
+                </div>
+
+                {exp.description && (
+                  <div>
+                    <p className="text-sm text-gray-500">Description</p>
+                    <p className="text-gray-700 whitespace-pre-line">{exp.description}</p>
+                  </div>
+                )}
+              </div>
             </Card>
           ))}
         </div>
@@ -1753,16 +2631,231 @@ const ExperienceCard = ({
     </Card>
   );
 };
-const AssetCard = ({ data, loading, isEditing, onEdit, onCancel, onSave }) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const AssetCard = ({ data, loading, isEditing, onEdit, onCancel, onSave }) => {
+//   const [formData, setFormData] = useState({
+//     name: "",
+//     price: "",
+//     purchaseDate: "",
+//     quantity: 1,
+//   });
+
+//   const [assets, setAssets] = useState(data || []);
+//   const [editingIndex, setEditingIndex] = useState(null);
+
+//   useEffect(() => {
+//     if (data) {
+//       setAssets(data);
+//     }
+//   }, [data]);
+
+//   const handleChange = (field, value) => {
+//     setFormData((prev) => ({ ...prev, [field]: value }));
+//   };
+
+//   const handleAddAsset = () => {
+//     setEditingIndex(null);
+//     setFormData({
+//       name: "",
+//       price: "",
+//       purchaseDate: "",
+//       quantity: 1,
+//     });
+//     onEdit();
+//   };
+
+//   const handleEditAsset = (index) => {
+//     setEditingIndex(index);
+//     setFormData({
+//       name: assets[index].name || "",
+//       price: assets[index].price || "",
+//       purchaseDate: assets[index].purchaseDate || "",
+//       quantity: assets[index].quantity || 1,
+//     });
+//     onEdit();
+//   };
+
+//   const handleSaveAsset = () => {
+//     if (editingIndex !== null) {
+//       // Update existing asset
+//       const updatedAssets = [...assets];
+//       updatedAssets[editingIndex] = formData;
+//       setAssets(updatedAssets);
+//     } else {
+//       // Add new asset
+//       setAssets((prev) => [...prev, formData]);
+//     }
+//     onSave(assets);
+//   };
+
+//   const handleRemoveAsset = (index) => {
+//     const updatedAssets = assets.filter((_, i) => i !== index);
+//     setAssets(updatedAssets);
+//     onSave(updatedAssets);
+//   };
+
+//   if (loading) {
+//     return (
+//       <Card>
+//         <Skeleton active paragraph={{ rows: 4 }} />
+//       </Card>
+//     );
+//   }
+
+//   return (
+//     <Card
+//       title={
+//         <div className="flex justify-between items-center">
+//           <span className="flex items-center">
+//             <ShoppingOutlined className="mr-2" />
+//             Assets
+//           </span>
+//           {!isEditing && (
+//             <Button
+//               icon={<PlusOutlined />}
+//               onClick={handleAddAsset}
+//               disabled={loading}
+//             >
+//               Add Asset
+//             </Button>
+//           )}
+//         </div>
+//       }
+//     >
+//       {isEditing ? (
+//         <div className="space-y-4">
+//           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//             <EditableField
+//               label="Asset Name"
+//               value={formData.name}
+//               onChange={(value) => handleChange("name", value)}
+//             />
+//             <EditableField
+//               label="Price"
+//               value={formData.price}
+//               type="number"
+//               onChange={(value) => handleChange("price", value)}
+//             />
+//             <EditableField
+//               label="Purchase Date"
+//               value={formData.purchaseDate}
+//               type="date"
+//               onChange={(value) => handleChange("purchaseDate", value)}
+//             />
+//             <EditableField
+//               label="Quantity"
+//               value={formData.quantity}
+//               type="number"
+//               min={1}
+//               onChange={(value) => handleChange("quantity", value)}
+//             />
+//           </div>
+
+//           <div className="flex justify-end space-x-2 mt-4">
+//             <Button onClick={onCancel}>Cancel</Button>
+//             <Button type="primary" onClick={handleSaveAsset}>
+//               {editingIndex !== null ? "Update Asset" : "Add Asset"}
+//             </Button>
+//           </div>
+//         </div>
+//       ) : assets && assets.length > 0 ? (
+//         <div className="space-y-4">
+//           {assets.map((asset, index) => (
+//             <Card key={index} className="relative">
+//               <div className="absolute top-4 right-4 flex space-x-2">
+//                 <Button
+//                   size="small"
+//                   icon={<EditOutlined />}
+//                   onClick={() => handleEditAsset(index)}
+//                 />
+//                 <Popconfirm
+//                   title="Are you sure to delete this asset?"
+//                   onConfirm={() => handleRemoveAsset(index)}
+//                   okText="Yes"
+//                   cancelText="No"
+//                 >
+//                   <Button size="small" icon={<DeleteOutlined />} danger />
+//                 </Popconfirm>
+//               </div>
+
+//               <Descriptions column={2}>
+//                 <Descriptions.Item label="Asset Name">
+//                   {asset.name || "N/A"}
+//                 </Descriptions.Item>
+//                 <Descriptions.Item label="Price">
+//                   {asset.price ? `₹${asset.price}` : "N/A"}
+//                 </Descriptions.Item>
+//                 <Descriptions.Item label="Purchase Date">
+//                   {asset.purchaseDate
+//                     ? format(new Date(asset.purchaseDate), "PPP")
+//                     : "N/A"}
+//                 </Descriptions.Item>
+//                 <Descriptions.Item label="Quantity">
+//                   {asset.quantity || "N/A"}
+//                 </Descriptions.Item>
+//                 <Descriptions.Item label="Total Value">
+//                   {asset.price && asset.quantity
+//                     ? `₹${asset.price * asset.quantity}`
+//                     : "N/A"}
+//                 </Descriptions.Item>
+//               </Descriptions>
+//             </Card>
+//           ))}
+//         </div>
+//       ) : (
+//         <Empty description="No asset records found" />
+//       )}
+//     </Card>
+//   );
+// };
+
+
+
+
+
+
+
+const AssetCard = ({
+  data,
+  loading,
+  isEditing,
+  onEdit,
+  onCancel,
+  onSave,
+  onVerify,
+}) => {
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     purchaseDate: "",
     quantity: 1,
+    verified: false,
   });
 
   const [assets, setAssets] = useState(data || []);
   const [editingIndex, setEditingIndex] = useState(null);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewImage, setPreviewImage] = useState("");
 
   useEffect(() => {
     if (data) {
@@ -1781,6 +2874,7 @@ const AssetCard = ({ data, loading, isEditing, onEdit, onCancel, onSave }) => {
       price: "",
       purchaseDate: "",
       quantity: 1,
+      verified: false,
     });
     onEdit();
   };
@@ -1792,27 +2886,37 @@ const AssetCard = ({ data, loading, isEditing, onEdit, onCancel, onSave }) => {
       price: assets[index].price || "",
       purchaseDate: assets[index].purchaseDate || "",
       quantity: assets[index].quantity || 1,
+      verified: assets[index].verified || false,
     });
     onEdit();
   };
 
   const handleSaveAsset = () => {
+    let updatedAssets;
+
     if (editingIndex !== null) {
       // Update existing asset
-      const updatedAssets = [...assets];
+      updatedAssets = [...assets];
       updatedAssets[editingIndex] = formData;
-      setAssets(updatedAssets);
     } else {
       // Add new asset
-      setAssets((prev) => [...prev, formData]);
+      updatedAssets = [...assets, formData];
     }
-    onSave(assets);
+
+    setAssets(updatedAssets);
+    onSave(updatedAssets);
+    onCancel();
   };
 
   const handleRemoveAsset = (index) => {
     const updatedAssets = assets.filter((_, i) => i !== index);
     setAssets(updatedAssets);
     onSave(updatedAssets);
+  };
+
+  const handlePreview = (url) => {
+    setPreviewImage(url);
+    setPreviewVisible(true);
   };
 
   if (loading) {
@@ -1828,11 +2932,12 @@ const AssetCard = ({ data, loading, isEditing, onEdit, onCancel, onSave }) => {
       title={
         <div className="flex justify-between items-center">
           <span className="flex items-center">
-            <ShoppingOutlined className="mr-2" />
-            Assets
+            <ShoppingOutlined className="mr-2 text-blue-500" />
+            <span className="text-lg font-semibold">Assets</span>
           </span>
           {!isEditing && (
             <Button
+              type="primary"
               icon={<PlusOutlined />}
               onClick={handleAddAsset}
               disabled={loading}
@@ -1842,6 +2947,7 @@ const AssetCard = ({ data, loading, isEditing, onEdit, onCancel, onSave }) => {
           )}
         </div>
       }
+      className="shadow-lg"
     >
       {isEditing ? (
         <div className="space-y-4">
@@ -1850,12 +2956,14 @@ const AssetCard = ({ data, loading, isEditing, onEdit, onCancel, onSave }) => {
               label="Asset Name"
               value={formData.name}
               onChange={(value) => handleChange("name", value)}
+              placeholder="Enter asset name"
             />
             <EditableField
-              label="Price"
+              label="Price (₹)"
               value={formData.price}
               type="number"
               onChange={(value) => handleChange("price", value)}
+              placeholder="Enter price"
             />
             <EditableField
               label="Purchase Date"
@@ -1870,9 +2978,17 @@ const AssetCard = ({ data, loading, isEditing, onEdit, onCancel, onSave }) => {
               min={1}
               onChange={(value) => handleChange("quantity", value)}
             />
+            <EditableField
+              label="Verification"
+              value={formData.verified}
+              type="switch"
+              checkedChildren="Verified"
+              unCheckedChildren="Unverified"
+              onChange={(value) => handleChange("verified", value)}
+            />
           </div>
 
-          <div className="flex justify-end space-x-2 mt-4">
+          <div className="flex justify-end space-x-2 mt-6">
             <Button onClick={onCancel}>Cancel</Button>
             <Button type="primary" onClick={handleSaveAsset}>
               {editingIndex !== null ? "Update Asset" : "Add Asset"}
@@ -1880,9 +2996,13 @@ const AssetCard = ({ data, loading, isEditing, onEdit, onCancel, onSave }) => {
           </div>
         </div>
       ) : assets && assets.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {assets.map((asset, index) => (
-            <Card key={index} className="relative">
+            <Card
+              key={index}
+              className="relative border border-gray-100 hover:border-blue-100 transition-all"
+              bodyStyle={{ padding: "16px" }}
+            >
               <div className="absolute top-4 right-4 flex space-x-2">
                 <Button
                   size="small"
@@ -1899,36 +3019,118 @@ const AssetCard = ({ data, loading, isEditing, onEdit, onCancel, onSave }) => {
                 </Popconfirm>
               </div>
 
-              <Descriptions column={2}>
-                <Descriptions.Item label="Asset Name">
-                  {asset.name || "N/A"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Price">
-                  {asset.price ? `₹${asset.price}` : "N/A"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Purchase Date">
-                  {asset.purchaseDate
-                    ? format(new Date(asset.purchaseDate), "PPP")
-                    : "N/A"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Quantity">
-                  {asset.quantity || "N/A"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Total Value">
-                  {asset.price && asset.quantity
-                    ? `₹${asset.price * asset.quantity}`
-                    : "N/A"}
-                </Descriptions.Item>
-              </Descriptions>
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="w-full md:w-1/4">
+                  <div className="h-40 bg-gray-50 rounded-md flex items-center justify-center overflow-hidden border">
+                    <ShoppingOutlined className="text-4xl text-gray-400" />
+                  </div>
+                </div>
+
+                <div className="w-full md:w-3/4">
+                  <Descriptions
+                    column={1}
+                    size="small"
+                    className="asset-details"
+                  >
+                    <Descriptions.Item label="Asset Name">
+                      <span className="font-medium">
+                        {asset.name || "N/A"}
+                      </span>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Price">
+                      <Tag color="blue" className="text-sm">
+                        {asset.price ? `₹${asset.price}` : "N/A"}
+                      </Tag>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Purchase Date">
+                      {asset.purchaseDate
+                        ? format(new Date(asset.purchaseDate), "PPP")
+                        : "N/A"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Quantity">
+                      {asset.quantity || "N/A"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Total Value">
+                      <Tag color="green" className="text-sm">
+                        {asset.price && asset.quantity
+                          ? `₹${asset.price * asset.quantity}`
+                          : "N/A"}
+                      </Tag>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Status">
+                      <Tag
+                        color={asset.verified ? "green" : "orange"}
+                        icon={
+                          asset.verified ? <CheckOutlined /> : <CloseOutlined />
+                        }
+                      >
+                        {asset.verified ? "Verified" : "Pending Verification"}
+                      </Tag>
+                    </Descriptions.Item>
+                  </Descriptions>
+
+                  {onVerify && !asset.verified && (
+                    <div className="mt-4">
+                      <Button
+                        type="primary"
+                        size="small"
+                        onClick={() => onVerify(asset._id)}
+                      >
+                        Verify Asset
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </Card>
           ))}
         </div>
       ) : (
-        <Empty description="No asset records found" />
+        <Empty
+          description={
+            <span className="text-gray-500">No assets added yet</span>
+          }
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        >
+          <Button type="primary" onClick={handleAddAsset}>
+            Add Your First Asset
+          </Button>
+        </Empty>
+      )}
+
+      {previewVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl max-h-screen overflow-auto">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h3 className="text-lg font-medium">Asset Preview</h3>
+              <Button
+                icon={<CloseOutlined />}
+                type="text"
+                onClick={() => setPreviewVisible(false)}
+              />
+            </div>
+            <div className="p-4 flex justify-center">
+              <ShoppingOutlined className="text-6xl text-gray-400" />
+            </div>
+          </div>
+        </div>
       )}
     </Card>
   );
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const DocumentCard = ({
   data,

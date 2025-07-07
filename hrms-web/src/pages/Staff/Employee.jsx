@@ -34,6 +34,7 @@ import { FaExclamationCircle } from "react-icons/fa";
 import { fetchStaff, deleteStaff } from "../../api/auth";
 import { debounce } from "lodash";
 import { exportToExcel } from "../../utils/exportUtils";
+import toast from "react-hot-toast";
 
 // Custom skeleton components
 const TableSkeleton = () => (
@@ -145,37 +146,81 @@ export default function StaffListPage() {
   };
 
   // Handle delete
-  const handleDelete = (id) => {
-    Modal.confirm({
-      title: (
-        <div className="flex items-center">
-          <FaExclamationCircle className="text-red-500 mr-2" />
-          <span>Delete Staff Member</span>
-        </div>
-      ),
-      icon: null,
-      content: (
-        <div className="flex items-start">
-          <FiTrash2 className="text-red-500 mr-2 mt-1" />
-          <span>
-            Are you sure you want to delete this staff member? This action
-            cannot be undone.
-          </span>
-        </div>
-      ),
-      okText: "Delete",
-      okType: "danger",
-      okButtonProps: {
-        icon: <FiTrash2 />,
-        loading: deleteMutation.isLoading,
-      },
-      cancelText: "Cancel",
-      width: 500,
-      centered: true,
-      onOk: () => deleteMutation.mutate(id),
-    });
-  };
+  // const handleDelete = async(id) => {
+    
+  //  await Modal.confirm({
+  //     title: (
+  //       <div className="flex items-center">
+  //         <FaExclamationCircle className="text-red-500 mr-2" />
+  //         <span>Delete Staff Member</span>
+  //       </div>
+  //     ),
+  //     icon: null,
+  //     content: (
+  //       <div className="flex items-start">
+  //         <FiTrash2 className="text-red-500 mr-2 mt-1" />
+  //         <span>
+  //           Are you sure you want to delete this staff member? This action
+  //           cannot be undone.
+  //         </span>
+  //       </div>
+  //     ),
+  //     okText: "Delete",
+  //     okType: "danger",
+  //     okButtonProps: {
+  //       icon: <FiTrash2 />,
+  //       loading: deleteMutation.isLoading,
+  //     },
+  //     cancelText: "Cancel",
+  //     width: 500,
+  //     centered: true,
+  //     onOk: () => deleteMutation.mutate(id),
+  //   });
+  // };
 
+const handleDelete = async (id) => {
+  toast.custom((t) => (
+    <div className={`bg-white border rounded-lg shadow-lg p-4 w-[400px] ${t.visible ? 'animate-enter' : 'animate-leave'}`}>
+      <div className="flex items-start gap-3">
+        <FaExclamationCircle className="text-red-500 mt-1 text-xl" />
+        <div className="flex-1">
+          <p className="font-semibold text-gray-800">Delete Staff Member</p>
+          <p className="text-sm text-gray-600 mt-1">
+            Are you sure you want to delete this staff member? This action cannot be undone.
+          </p>
+
+          <div className="flex justify-end mt-4 gap-2">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-4 py-1 rounded-md text-gray-600 border border-gray-300 hover:bg-gray-100 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                
+                toast.dismiss(t.id);
+                deleteMutation.mutate(id);
+              }}
+              className="px-4 py-1 rounded-md bg-red-600 text-white flex items-center gap-1 hover:bg-red-700 transition"
+            >
+              <FiTrash2 /> Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  ));
+};
+
+ 
+
+
+
+
+
+
+  
   // Handle export to Excel
   const handleExport = () => {
     if (data?.data?.length) {
@@ -283,7 +328,7 @@ export default function StaffListPage() {
   ];
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container h-[92vh] overflow-y-auto mx-auto p-4">
       {contextHolder}
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">

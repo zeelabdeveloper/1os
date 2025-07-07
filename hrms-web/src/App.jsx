@@ -1,250 +1,3 @@
-// import React, { Suspense, lazy } from "react";
-// import {
-//   BrowserRouter as Router,
-//   Routes,
-//   Route,
-//   Navigate,
-// } from "react-router-dom";
-// import Loading from "./components/Loading";
-// import ErrorBoundary from "./components/ErrorBoundary";
-// import ProtectedRoute from "./components/ProtectedRoute";
-// const Home = lazy(() => import("./pages/Home"));
-// const Login = lazy(() => import("./pages/Login"));
-// const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-// const NotFound = lazy(() => import("./components/NotFound"));
-// import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-// import { Toaster } from "react-hot-toast";
-
-// const queryClient = new QueryClient();
-
-// const App = () => {
-//   return (
-//     <Router>
-//       <QueryClientProvider client={queryClient}>
-//         <Toaster position="top-right" reverseOrder={false} />
-//         <ErrorBoundary>
-//           <Suspense fallback={<Loading />}>
-//             <Routes>
-//               <Route
-//                 path="/"
-//                 element={
-//                   <ProtectedRoute>
-//                     <Home />
-//                   </ProtectedRoute>
-//                 }
-//               >
-//                 <Route index element={<Navigate to="/" />} />
-//                 <Route path="dashboard" element={lazyLoad("Dashboard")} />
-//                 <Route path="/" element={lazyLoad("Dashboard")} />
-//                 <Route path="categories" element={lazyLoad("Categories")} />
-//                 <Route path="profiles" element={lazyLoad("Profile")} />
-
-//                 <Route
-//                   path="/coco/userlist"
-//                   element={lazyLoad("Coco/UserList")}
-//                 />
-//                 <Route
-//                   path="/coco/createuser"
-//                   element={lazyLoad("Coco/CreateUser")}
-//                 />
-//                 <Route
-//                   path="/coco/attendance"
-//                   element={lazyLoad("Coco/Attendance")}
-//                 />
-//                 <Route
-//                   path="/coco/request-list"
-//                   element={lazyLoad("Coco/RequestList")}
-//                 />
-//                 <Route path="/coco/store" element={lazyLoad("Coco/Store")} />
-//                 {/* Accounts  */}
-//                 <Route
-//                   path="/Account/list"
-//                   element={lazyLoad("Account/AccountList")}
-//                 />
-
-//                 {/* Teams */}
-
-//                 <Route path="/team/logs" element={lazyLoad("Team/Members")} />
-
-//                 {/* permissions */}
-
-//                 <Route
-//                   path="/permission/departments"
-//                   element={lazyLoad("Permission/departments")}
-//                 />
-//                 <Route
-//                   path="/permission/roles"
-//                   element={lazyLoad("Permission/Roles")}
-//                 />
-//                 <Route
-//                   path="/permission/branches"
-//                   element={lazyLoad("Permission/branch")}
-//                 />
-//                 <Route
-//                   path="/permission/permissions-list"
-//                   element={lazyLoad("Permission/permissionlist")}
-//                 />
-//                 <Route
-//                   path="/permission/assign-permissions"
-//                   element={lazyLoad("Permission/AssignPermissions")}
-//                 />
-
-//                 {/* payroll */}
-//                 <Route
-//                   path="/payroll/set-salary"
-//                   element={lazyLoad("PAYROLL/SetSalary")}
-//                 />
-//                 <Route
-//                   path="/payroll/pay-slip"
-//                   element={lazyLoad("payroll/PaySlip")}
-//                 />
-//                 {/* Content */}
-//                 <Route
-//                   path="/content/letter"
-//                   element={lazyLoad("content/letter")}
-//                 />
-//                 <Route
-//                   path="/payroll/pay-slip"
-//                   element={lazyLoad("payroll/PaySlip")}
-//                 />
-
-//                 {/* store */}
-//                 <Route
-//                   path="/store/storegroup"
-//                   element={lazyLoad("store/StoreGroup")}
-//                 />
-
-//                 <Route path="/store/staff" element={lazyLoad("store/Staff")} />
-//                 <Route path="/store/roles" element={lazyLoad("store/Roles")} />
-
-//                 {/* Performance Routes */}
-//                 <Route
-//                   path="/performance/indicators"
-//                   element={lazyLoad("performance/indicators")}
-//                 />
-//                 <Route
-//                   path="/performance/goals"
-//                   element={lazyLoad("performance/goals")}
-//                 />
-//                 <Route
-//                   path="/performance/appraisals"
-//                   element={lazyLoad("performance/appraisals")}
-//                 />
-//                 <Route
-//                   path="/performance/appraisals/team"
-//                   element={lazyLoad("performance/ManageTeamAppraisals")}
-//                 />
-//                 <Route
-//                   path="/performance/appraisal"
-//                   element={lazyLoad("performance/ManageMyAppraisals")}
-//                 />
-//                 <Route
-//                   path="/performance/feedback"
-//                   element={lazyLoad("performance/feedback")}
-//                 />
-//                 <Route
-//                   path="/performance/reviews"
-//                   element={lazyLoad("performance/reviews")}
-//                 />
-
-//                 {/* staff */}
-
-//                 <Route
-//                   path="/staff/employees"
-//                   element={lazyLoad("staff/employee")}
-//                 />
-//                 <Route
-//                   path="/staff/create"
-//                   element={lazyLoad("staff/createemployee")}
-//                 />
-//                 <Route
-//                   path="/staff/employee"
-//                   element={lazyLoad("staff/ViewStaff")}
-//                 />
-
-//                 {/* Attendance */}
-
-//                 <Route
-//                   path="/attendance/daily"
-//                   element={lazyLoad("attendance/daily")}
-//                 />
-
-//                 <Route
-//                   path="/attendance/monthly"
-//                   element={lazyLoad("attendance/monthly")}
-//                 />
-//                 <Route
-//                   path="/attendance/reports"
-//                   element={lazyLoad("attendance/report")}
-//                 />
-
-//                 {/* Hrms Systetm Setup */}
-
-//                 <Route path="/1os/setup" element={lazyLoad("1os/setup")} />
-
-//                 {/* Recruitment */}
-
-//                 <Route
-//                   path="/recruitment/jobs"
-//                   element={lazyLoad("recruitment/jobs")}
-//                 />
-//                 <Route
-//                   path="/recruitment/create"
-//                   element={lazyLoad("recruitment/create")}
-//                 />
-//                 <Route
-//                   path="/recruitment/applications"
-//                   element={lazyLoad("recruitment/applications")}
-//                 />
-//                 <Route
-//                   path="/recruitment/application"
-//                   element={lazyLoad("recruitment/application")}
-//                 />
-//                 <Route
-//                   path="/recruitment/candidates"
-//                   element={lazyLoad("recruitment/candidates")}
-//                 />
-//                 <Route
-//                   path="/recruitment/onboarding"
-//                   element={lazyLoad("recruitment/onboarding")}
-//                 />
-//                 <Route
-//                   path="/recruitment/startonboarding"
-//                   element={lazyLoad("recruitment/startonboarding")}
-//                 />
-//                 <Route
-//                   path="/recruitment/interviews"
-//                   element={lazyLoad("recruitment/interview")}
-//                 />
-
-//                 {/* system Setting/ */}
-
-//                 <Route path="/controllers" element={lazyLoad("settings")} />
-//                 <Route
-//                   path="/developer-settings"
-//                   element={lazyLoad("DeveloperSetting")}
-//                 />
-//               </Route>
-
-//               <Route path="/login" element={<Login />} />
-//               <Route path="/forget-pass" element={<ForgotPassword />} />
-
-//               <Route path="*" element={<NotFound />} />
-//             </Routes>
-//           </Suspense>
-//         </ErrorBoundary>
-//       </QueryClientProvider>
-//     </Router>
-//   );
-// };
-
-// export default App;
-
-// function lazyLoad(pageName) {
-//   const Component = lazy(() => import(`./pages/${pageName}`));
-//   return <Component />;
-// }
-
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -285,11 +38,11 @@ import StoreGroup from "./pages/store/StoreGroup";
 import Staff from "./pages/store/Staff";
 
 import Indicators from "./pages/performance/indicators";
-import Goals from "./pages/performance/goals";
+
 import Appraisals from "./pages/performance/appraisals";
-import ManageTeamAppraisals from "./pages/performance/ManageTeamAppraisals";
+
 import ManageMyAppraisals from "./pages/performance/ManageMyAppraisals";
-import Feedback from "./pages/performance/feedback";
+import Feedback from "./pages/performance/Feedback";
 import Reviews from "./pages/performance/reviews";
 import Employee from "./pages/staff/employee";
 import CreateEmployee from "./pages/staff/createemployee";
@@ -311,6 +64,10 @@ import DeveloperSetting from "./pages/DeveloperSetting";
 import EditProfile from "./pages/EditProfile";
 import NewsPage from "./pages/Content/News";
 import Faq from "./pages/Faq";
+import GoalList from "./pages/Performance/Goals";
+import ManageTeamAppraisals from "./pages/Performance/ManageTeamAppraisals";
+import MyTaskManagement from "./pages/Performance/MyTaskManagement";
+import TeamTaskManagement from "./pages/Performance/TeamTaskManagement";
 
 const queryClient = new QueryClient();
 
@@ -329,7 +86,6 @@ const App = () => {
                 </ProtectedRoute>
               }
             >
-              
               <Route path="/" element={<Dashboard />} />
               <Route path="categories" element={<Categories />} />
               <Route path="profiles" element={<Profile />} />
@@ -370,7 +126,7 @@ const App = () => {
 
               {/* Performance Routes */}
               <Route path="performance/indicators" element={<Indicators />} />
-              <Route path="performance/goals" element={<Goals />} />
+              <Route path="performance/goals" element={<GoalList />} />
               <Route path="performance/appraisals" element={<Appraisals />} />
               <Route
                 path="performance/appraisals/team"
@@ -382,6 +138,8 @@ const App = () => {
               />
               <Route path="performance/feedback" element={<Feedback />} />
               <Route path="performance/reviews" element={<Reviews />} />
+              <Route path="performance/my-task" element={<MyTaskManagement />} />
+              <Route path="performance/team-task" element={<TeamTaskManagement />} />
 
               {/* Staff Routes */}
               <Route path="staff/employees" element={<Employee />} />

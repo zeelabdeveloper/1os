@@ -56,7 +56,7 @@ const statusOptions = [
   { value: "Rejected", label: "Rejected", color: "error" },
 ];
 
-const AppraisalList = () => {
+const ManageTeamAppraisals = () => {
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState({
     status: null,
@@ -523,4 +523,4 @@ const AppraisalList = () => {
   );
 };
 
-export default AppraisalList;
+export default ManageTeamAppraisals;
