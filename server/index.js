@@ -5,7 +5,7 @@ const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const morgan = require("morgan");
-const { refreshEmailConfig } = require("./helper/emailConfig.js");
+const { refreshEmailConfig, EmailConfig } = require("./helper/emailConfig.js");
 // const { refreshEmailConfig } = require("./helper/emailConfig.js");
 dotenv.config();
 
@@ -98,6 +98,8 @@ app.use(
 
 // permission
 app.use("/api/v1/permission", require("./routes/permissionRoutes.js"));
+// career
+app.use("/api/v1/career", require("./routes/careerRoutes.js"));
 
 // access For Only Developer
 
@@ -109,6 +111,6 @@ app.use(
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => { 
   await refreshEmailConfig();
-
+ 
   console.log(`Server running on port ${PORT}`);
 });

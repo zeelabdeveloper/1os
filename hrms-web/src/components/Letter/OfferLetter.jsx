@@ -27,7 +27,7 @@ import {
   InfoCircleOutlined,
 } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import axios from "../../axiosConfig";
 import MDEditor from "@uiw/react-markdown-editor";
 import { toast } from "react-hot-toast";
 import { getLetterTemp } from "../../api/letter";
@@ -89,7 +89,7 @@ const LetterTemplates = () => {
       toast.error(err.response?.data?.message || "Failed to fetch templates");
     },
   });
-  console.log(templates);
+   
   // Create template mutation
   const createTemplateMutation = useMutation({
     mutationFn: (templateData) =>

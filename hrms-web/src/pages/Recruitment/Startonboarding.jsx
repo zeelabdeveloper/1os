@@ -5,7 +5,7 @@ import InterviewSessionDetail from "../../components/InterviewSession/InterviewS
 import InterviewSessionList from "../../components/InterviewSession/InterviewSessionList";
 import DocumentVerification from "../../components/onboarding/DocsVerify";
 import AssetManagement from "../../components/onboarding/AssetManagement";
-import TrainingManagement from "../../components/onboarding/TrainingManagement";
+// import TrainingManagement from "../../components/onboarding/TrainingManagement";
 import LetterManagement from "../../components/onboarding/LetterManagement";
 import ConvertToEMP from "../../components/onboarding/ConverToEMP";
 
@@ -16,7 +16,7 @@ const MemoizedInterviewSessionList = memo(InterviewSessionList);
 const MemoizedInterviewSessionDetail = memo(InterviewSessionDetail);
 const MemoizedDocumentVerification = memo(DocumentVerification);
 const MemoizedAssetManagement = memo(AssetManagement);
-const MemoizedTrainingManagement = memo(TrainingManagement);
+// const MemoizedTrainingManagement = memo(TrainingManagement);
 const MemoizedLetterManagement = memo(LetterManagement);
 
 function InterviewManagementApp() {
@@ -48,7 +48,7 @@ function InterviewManagementApp() {
 
           <MemoizedDocumentVerification />
           <MemoizedAssetManagement />
-          <MemoizedTrainingManagement />
+          {/* <MemoizedTrainingManagement /> */}
           <MemoizedLetterManagement />
           <ConvertToEMP />
         </div>

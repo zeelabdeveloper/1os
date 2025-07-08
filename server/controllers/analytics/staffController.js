@@ -271,7 +271,7 @@ exports.getBranchAnalytics = async (req, res) => {
 
 // Department-wise analytics
 exports.getDepartmentAnalytics = async (req, res) => {
-  console.log( "hh")
+ 
   try {
     const departmentStats = await Organization.aggregate([
       {

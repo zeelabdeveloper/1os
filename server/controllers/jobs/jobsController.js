@@ -1,6 +1,9 @@
+const { EmailConfig } = require("../../helper/emailConfig");
 const Application = require("../../models/jobs/applicationSchema");
 const Job = require("../../models/jobs/jobsSchema");
 const Onboarding = require("../../models/jobs/Onboarding");
+const EmailNotification = require("../../models/setting/emailNotification");
+const sendEmail = require("../../services/sendInterviewScheduledEmail");
 
 // Create a new job
 const createJob = async (req, res) => {
@@ -268,12 +271,58 @@ const getApplicationsForJob = async (req, res) => {
     });
   }
 };
+// const getHiredApplicationsForJob = async (req, res) => {
+//   try {
+
+
+//     const applications = await Application.find({
+//       status: { $in: ["hired", "onboarding"] },
+//     }).then{  
+//       await Onboarding.findOneAndUpdate({ application: app._id }, {})
+
+//     )}
+
+   
+
+//     res.status(200).json(applications);
+//   } catch (error) {
+//     console.error("Error fetching applications:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Failed to fetch applications",
+//       error: error.message,
+//     });
+//   }
+// };
+
+
+
+
+
+
 const getHiredApplicationsForJob = async (req, res) => {
   try {
-    const applications = await Application.find({
-      status: { $in: ["hired", "onboarding"] }
-    });
-
+    const applications = await Application.aggregate([
+      {
+        $match: {
+          status: { $in: ["hired", "onboarding"] }
+        }
+      },
+      {
+        $lookup: {
+          from: "onboardings",
+          localField: "_id",
+          foreignField: "applicationId",
+          as: "onboarding"
+        }
+      },
+      {
+        $addFields: {
+          onboarding: { $arrayElemAt: ["$onboarding", 0] }
+        }
+      }
+    ]);
+console.log(applications)
     res.status(200).json(applications);
   } catch (error) {
     console.error("Error fetching applications:", error);
@@ -284,6 +333,20 @@ const getHiredApplicationsForJob = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const fetchApplicationById = async (req, res) => {
   try {
@@ -370,12 +433,126 @@ const createApplication = async (req, res) => {
       status: "applied",
     });
 
+    const allNotification = await EmailNotification.findOne();
+    if (allNotification.newApplicationStatus) {
+      // Generate tracking URL
+      const trackingUrl = `/track-application/${application._id}`;
+
+      const mailOptions = {
+        from: `${EmailConfig.mailFromName} <${EmailConfig.mailFromAddress}>`,
+        to: req.body.email, // Using email from application body
+        subject: "Your Zeelab Application Has Been Received",
+        html: `
+<!DOCTYPE html>
+<html>
+<head>
+    <style type="text/css">
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #4f46e5;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .content {
+            padding: 30px;
+        }
+        .info-box {
+            background-color: #f3f4f6;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .info-item {
+            margin-bottom: 10px;
+        }
+        .label {
+            font-weight: 600;
+            color: #4f46e5;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 14px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #4f46e5;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Application Received!</h1>
+        </div>
+        <div class="content">
+            <p>Hello ${req.body.name},</p>
+            <p>Thank you for applying with Zeelab. We've received your application.</p>
+            
+            <div class="info-box">
+                <div class="info-item">
+                    <span class="label">Application ID:</span> ${
+                      application._id
+                    }
+                </div>
+                <div class="info-item">
+                    <span class="label">Current Status:</span> Applied
+                </div>
+            </div>
+            
+            <p>You can track your application status using the link below:</p>
+            
+            <a href="${trackingUrl}" class="button">Track Your Application</a>
+            
+            <p>We'll review your application and get back to you soon.</p>
+        </div>
+        <div class="footer">
+            <p>If you have any questions, please contact our support team.</p>
+            <p>© ${new Date().getFullYear()} Zeelab. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+`,
+      };
+
+      const emailResult = await sendEmail(mailOptions);
+
+      if (!emailResult.success) {
+        console.error("Email sending failed:", emailResult.error);
+        // Don't return error here - application was created successfully
+      }
+    }
+
     res.status(201).json(application);
   } catch (error) {
     console.error("Error creating application:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to create application",
+      message: error.message || "Failed to create application",
       error: error.message,
     });
   }

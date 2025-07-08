@@ -23,6 +23,10 @@ const interviewSessionSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  recordingLink: {
+    type: String,
+    trim: true
+  },
   status: {
     type: String,
     enum: ['scheduled', 'in_progress', 'completed', 'cancelled', 'rescheduled'],

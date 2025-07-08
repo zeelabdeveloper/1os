@@ -22,9 +22,14 @@ import {
   CalendarOutlined,
   TeamOutlined,
   TagOutlined,
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchBranches, fetchDepartmentsByBranch, fetchRoleByDepartment } from "../../api/auth";
+import {
+  fetchBranches,
+  fetchDepartmentsByBranch,
+  fetchRoleByDepartment,
+} from "../../api/auth";
 import { createJob } from "../../api/jobs";
 import toast from "react-hot-toast";
 
@@ -81,7 +86,7 @@ const PostJobForm = () => {
       setRequirements("");
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
     },
-    onError: () => toast.error("Failed to post job"),
+    onError: (e) => toast.error( e?.response?.data?.message ||   "Failed to post job"),
   });
 
   const onFinish = (values) => {
@@ -118,7 +123,7 @@ const PostJobForm = () => {
 
               <Form.Item
                 name="location"
-                label="Location"
+                label="Multiple Location"
                 rules={[{ required: true, message: "Please enter location" }]}
               >
                 <Input
@@ -126,13 +131,29 @@ const PostJobForm = () => {
                   placeholder="e.g. Remote / Delhi"
                 />
               </Form.Item>
+
+
+
+
+
+ 
+
+ 
+
+
+
+
             </Card>
           </Col>
 
           {/* Organization Structure Card */}
           <Col xs={24} md={12}>
             <Card title="Organization Structure" className="h-full">
-              <Form.Item name="branch" label="Branch" rules={[{ required: true }]}>
+              <Form.Item
+                name="branch"
+                label="Division"
+                rules={[{ required: true }]}
+              >
                 <Select
                   placeholder="Select Branch"
                   onChange={handleBranchChange}
@@ -165,7 +186,11 @@ const PostJobForm = () => {
                 </Select>
               </Form.Item>
 
-              <Form.Item name="role" label="Role" rules={[{ required: true }]}>
+              <Form.Item
+                name="role"
+                label="Designation"
+                rules={[{ required: true }]}
+              >
                 <Select
                   placeholder="Select Role"
                   disabled={!selectedDepartment}
@@ -247,7 +272,10 @@ const PostJobForm = () => {
           <Col xs={24} md={12}>
             <Card title="Requirements">
               <Form.Item name="experience" label="Experience Required">
-                <Select prefix={<TagOutlined />} placeholder="Select Experience">
+                <Select
+                  prefix={<TagOutlined />}
+                  placeholder="Select Experience"
+                >
                   <Option value="0-1">0-1 Year</Option>
                   <Option value="1-3">1-3 Years</Option>
                   <Option value="3-5">3-5 Years</Option>
@@ -256,10 +284,10 @@ const PostJobForm = () => {
               </Form.Item>
 
               <Form.Item name="skills" label="Skills (Add multiple)">
-                <Select 
+                <Select
                   prefix={<TagOutlined />}
-                  mode="tags" 
-                  placeholder="e.g. React, Node.js, MongoDB" 
+                  mode="tags"
+                  placeholder="e.g. React, Node.js, MongoDB"
                 />
               </Form.Item>
             </Card>
@@ -280,7 +308,9 @@ const PostJobForm = () => {
                         <Form.Item
                           {...restField}
                           name={[name, "question"]}
-                          rules={[{ required: true, message: "Enter question" }]}
+                          rules={[
+                            { required: true, message: "Enter question" },
+                          ]}
                         >
                           <Input placeholder="Custom Question" />
                         </Form.Item>
@@ -291,7 +321,9 @@ const PostJobForm = () => {
                         >
                           <Select placeholder="Type" style={{ width: 140 }}>
                             <Option value="text">Text</Option>
-                            <Option value="multiple-choice">Multiple Choice</Option>
+                            <Option value="multiple-choice">
+                              Multiple Choice
+                            </Option>
                             <Option value="file">File Upload</Option>
                           </Select>
                         </Form.Item>

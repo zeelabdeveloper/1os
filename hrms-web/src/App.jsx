@@ -30,8 +30,6 @@
 // import Branch from "./pages/Permission/Branch";
 // import PermissionList from "./pages/Permission/PermissionList";
 
- 
- 
 // import Letter from "./pages/content/Letter";
 // import StoreGroup from "./pages/store/StoreGroup";
 // import Staff from "./pages/store/Staff";
@@ -44,7 +42,7 @@
 // import Feedback from "./pages/performance/Feedback";
 // import Reviews from "./pages/performance/Reviews";
 // import StaffListPage from "./pages/staff/Employee";
- 
+
 // import ViewStaff from "./pages/staff/ViewStaff";
 // import DailyAttendance from "./pages/attendance/Daily";
 // import MonthlyAttendance from "./pages/attendance/Monthly";
@@ -71,7 +69,6 @@
 // import BankAccountListPage from "./pages/Account/AccountList";
 // import TeamMembers from "./pages/Team/Members";
 // import CreateEmployeeMain from "./pages/staff/Createemployee";
-
 
 // const queryClient = new QueryClient();
 
@@ -120,7 +117,6 @@
 //               />
 
 //               {/* Payroll Routes */}
-            
 
 //               {/* Content Routes */}
 //               <Route path="content/letter" element={<Letter />} />
@@ -207,10 +203,6 @@
 
 // export default App;
 
-
-
-
-
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -243,8 +235,6 @@ import Roles from "./pages/Permission/Roles";
 import Branch from "./pages/Permission/Branch";
 import PermissionList from "./pages/Permission/PermissionList";
 
-
-
 import Letter from "./pages/Content/Letter";
 import StoreGroup from "./pages/Store/StoreGroup";
 import Staff from "./pages/Store/Staff";
@@ -257,7 +247,7 @@ import ManageMyAppraisals from "./pages/Performance/ManageMyAppraisals";
 import Feedback from "./pages/Performance/Feedback";
 import Reviews from "./pages/Performance/Reviews";
 import StaffListPage from "./pages/Staff/Employee";
- 
+
 import ViewStaff from "./pages/Staff/ViewStaff";
 import DailyAttendance from "./pages/Attendance/Daily";
 import MonthlyAttendance from "./pages/Attendance/Monthly";
@@ -284,6 +274,7 @@ import ViewProfile from "./pages/Profile";
 import BankAccountListPage from "./pages/Account/AccountList";
 import TeamMembers from "./pages/Team/Members";
 import CreateEmployeeMain from "./pages/Staff/CreateEmployee";
+import ApplicationTrack from "./pages/ApplicationTrack";
 
 const queryClient = new QueryClient();
 
@@ -332,7 +323,6 @@ const App = () => {
               />
 
               {/* Payroll Routes */}
-             
 
               {/* Content Routes */}
               <Route path="content/letter" element={<Letter />} />
@@ -409,6 +399,7 @@ const App = () => {
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/forget-pass" element={<ForgotPassword />} />
+            <Route path="/career/application" element={<ApplicationTrack />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </ErrorBoundary>
@@ -418,11 +409,3 @@ const App = () => {
 };
 
 export default App;
-
-
-
-
-
-
-
-

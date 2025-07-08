@@ -24,9 +24,16 @@ const emailSettingSchema = new mongoose.Schema(
     newComplaint: { type: Boolean, default: true },
     newWarning: { type: Boolean, default: true },
     newNews: { type: Boolean, default: true },
+    // recuirment Notifications
+    newApplicationStatus: { type: Boolean, default: false },
+    interviewInitiateInterviewer: { type: Boolean, default: false },
+    interviewInitiateApplicant: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
-const EmailNotification = mongoose.model("EmailNotification", emailSettingSchema);
+const EmailNotification = mongoose.model(
+  "EmailNotification",
+  emailSettingSchema
+);
 module.exports = EmailNotification;

@@ -55,7 +55,7 @@ const SalaryDetails = memo(() => {
       <Form.Item
         name={["salary", "bankAccount"]}
         label="Bank Account for Salary"
-        rules={[{ required: true, message: "Please select a bank account!" }]}
+       
       >
         <Select
           placeholder="Select Account For Paying this user"

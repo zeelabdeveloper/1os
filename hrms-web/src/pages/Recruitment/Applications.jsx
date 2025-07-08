@@ -171,7 +171,7 @@ const ApplicationManagement = () => {
       {/* Applications by Status */}
       <Row gutter={[16, 16]}>
         {Object.entries(statusConfig).map(([statusKey, status]) => (
-          <Col span={24} md={8} key={statusKey}>
+          <Col  span={24} md={8} key={statusKey}>
             <Card
               title={
                 <Space>
@@ -183,14 +183,14 @@ const ApplicationManagement = () => {
                 </Space>
               }
               headStyle={{ borderBottom: `2px solid ${status.color}` }}
-              className="status-column"
+              className="status-column h-[40vh] overflow-y-auto   "
             >
               {applications
                 .filter((app) => app.status === statusKey)
                 .map((application) => (
                   <Card
                     key={application._id}
-                    className="mb-4 application-card"
+                    className="mb-4     application-card"
                     hoverable
                     actions={[
                       <Tooltip title="View Details">

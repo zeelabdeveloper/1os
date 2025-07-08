@@ -144,18 +144,104 @@ module.exports = {
       const allNotification = await EmailNotification.findOne();
       if (allNotification.newEmployee) {
         const mailOptions = {
-          from: `"Zeelab Pharmacy" <${EmailConfig.mailFromAddress}>`,
+          from: `${EmailConfig.mailFromName} <${EmailConfig.mailFromAddress}>`,
           to: req?.body?.user?.email,
-          subject: "Zeelab - Profile Created",
+          subject: "Welcome to Zeelab - Your Profile Has Been Created",
           html: `
-  <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; padding: 20px;">
-    <div style=" margin: auto; background-color: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
-     
-      
+<!DOCTYPE html>
+<html>
+<head>
+    <style type="text/css">
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background-color: #4f46e5;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .content {
+            padding: 30px;
+        }
+        .credentials {
+            background-color: #f3f4f6;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .credential-item {
+            margin-bottom: 10px;
+        }
+        .label {
+            font-weight: 600;
+            color: #4f46e5;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+            font-size: 14px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #4f46e5;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to Zeelab!</h1>
+        </div>
+        <div class="content">
+            <p>Hello,</p>
+            <p>Your employee profile has been successfully created. Below are your login credentials:</p>
+            
+            <div class="credentials">
+                <div class="credential-item">
+                    <span class="label">Employee ID:</span> ${newEmployeeId}
+                </div>
+                <div class="credential-item">
+                    <span class="label">Password:</span> ${
+                      req.body.user.password
+                    }
+                </div>
+            </div>
+            
+            <p>For security reasons, we recommend changing your password after your first login.</p>
+            
+            <a href="https://your-zeelab-portal.com/login" class="button">Login to Your Account</a>
+        </div>
+        <div class="footer">
+            <p>If you didn't request this account or need any assistance, please contact our support team.</p>
+            <p>© ${new Date().getFullYear()} Zeelab. All rights reserved.</p>
+        </div>
     </div>
-  </div>
-  `,
+</body>
+</html>
+`,
         };
+
         const emailResult = await sendEmail(mailOptions);
 
         if (!emailResult.success) {
@@ -163,7 +249,7 @@ module.exports = {
             success: false,
             message:
               emailResult.error?.message ||
-              "Employee Created But Failed to send email. Please try again.",
+              "Employee created but failed to send email. Please try again.",
           });
         }
       }

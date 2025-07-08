@@ -141,8 +141,9 @@ exports.createNews = async (req, res) => {
         </div>
         `;
 
+ 
         await sendEmail({
-          from: `"Zee Pharmacy" <${EmailConfig.mailFromAddress}>`,
+          from: `${EmailConfig.mailUsername} <${EmailConfig.mailFromAddress}>`,
           to: users.map((u) => u.email),
           subject: `📰 Zee News: ${news.title}`,
           html: emailHTML,

@@ -158,7 +158,7 @@ const EditJobForm = ({ jobData, onSuccess }) => {
             <Card title="Organization Structure" className="h-full">
               <Form.Item
                 name="branch"
-                label="Branch"
+                label="Division"
                 rules={[{ required: true }]}
               >
                 <Select
@@ -193,7 +193,7 @@ const EditJobForm = ({ jobData, onSuccess }) => {
                 </Select>
               </Form.Item>
 
-              <Form.Item name="role" label="Role" rules={[{ required: true }]}>
+              <Form.Item name="role" label="Designation" rules={[{ required: true }]}>
                 <Select
                   placeholder="Select Role"
                   disabled={!selectedDepartment}

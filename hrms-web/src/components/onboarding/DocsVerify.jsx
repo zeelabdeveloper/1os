@@ -14,6 +14,7 @@ import {
   Switch,
   Drawer,
   Space,
+  Select,
 } from "antd";
 import {
   UploadOutlined,
@@ -263,7 +264,7 @@ const DocumentVerification = memo(() => {
           }
         >
           <Form form={form} layout="vertical">
-            <Form.Item
+            {/* <Form.Item
               name="documentType"
               label="Document Type"
               rules={[
@@ -272,7 +273,75 @@ const DocumentVerification = memo(() => {
               ]}
             >
               <Input placeholder="e.g., Aadhar Card, Passport, Driving License" />
-            </Form.Item>
+            </Form.Item> */}
+
+
+
+
+
+
+
+
+
+
+
+
+<Form.Item
+  name="documentType"
+  label="Document Type"
+  rules={[
+    { required: true, message: "Document type is required" },
+    { max: 50, message: "Maximum 50 characters allowed" },
+  ]}
+>
+  <Select
+    showSearch
+    placeholder="Select or type document type (e.g., Aadhar Card, Passport)"
+    optionFilterProp="children"
+    filterOption={(input, option) =>
+      option.children.toLowerCase().includes(input.toLowerCase())
+    }
+  >
+    <Select.Option value="Aadhar Card">Aadhar Card</Select.Option>
+    <Select.Option value="Passport">Passport</Select.Option>
+    <Select.Option value="Driving License">Driving License</Select.Option>
+    <Select.Option value="Voter ID">Voter ID</Select.Option>
+    <Select.Option value="PAN Card">PAN Card</Select.Option>
+    <Select.Option value="Ration Card">Ration Card</Select.Option>
+    <Select.Option value="Birth Certificate">Birth Certificate</Select.Option>
+    <Select.Option value="School Certificate">School Certificate</Select.Option>
+    <Select.Option value="Degree Certificate">Degree Certificate</Select.Option>
+    <Select.Option value="Bank Passbook">Bank Passbook</Select.Option>
+    <Select.Option value="Electricity Bill">Electricity Bill</Select.Option>
+    <Select.Option value="Water Bill">Water Bill</Select.Option>
+    <Select.Option value="Gas Bill">Gas Bill</Select.Option>
+    <Select.Option value="Rental Agreement">Rental Agreement</Select.Option>
+    <Select.Option value="Property Document">Property Document</Select.Option>
+    <Select.Option value="Insurance Policy">Insurance Policy</Select.Option>
+    <Select.Option value="Salary Slip">Salary Slip</Select.Option>
+    <Select.Option value="Form 16">Form 16</Select.Option>
+    <Select.Option value="ITR Documents">ITR Documents</Select.Option>
+    <Select.Option value="Company Incorporation">Company Incorporation</Select.Option>
+    <Select.Option value="GST Certificate">GST Certificate</Select.Option>
+    <Select.Option value="Other">Other</Select.Option>
+  </Select>
+</Form.Item>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             <Form.Item
               name="documentNumber"
@@ -316,7 +385,7 @@ const DocumentVerification = memo(() => {
               customRequest={handleUpload}
               listType="text"
               maxCount={1}
-              accept="image/*,.pdf"
+              accept="image/*"
               beforeUpload={(file) => {
                 const isLt5M = file.size / 1024 / 1024 < 5;
                 if (!isLt5M) {

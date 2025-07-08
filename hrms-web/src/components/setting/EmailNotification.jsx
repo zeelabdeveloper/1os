@@ -185,9 +185,29 @@ const EmailNotificationSettings = () => {
       ],
     },
 
-
-
-
+    {
+      title: "Recruitment Management",
+      items: [
+        {
+          name: "newApplicationStatus",
+          label: "New Application Status",
+          icon: <FileDoneOutlined />,
+          color: "#08979c",
+        },
+        {
+          name: "interviewInitiateApplicant",
+          label: "Applicant - Interview Initiate",
+          icon: <FileDoneOutlined />,
+          color: "#02979c",
+        },
+        {
+          name: "interviewInitiateInterviewer",
+          label: "Interviewer - Interview Initiate",
+          icon: <FileDoneOutlined />,
+          color: "#08919c",
+        },
+      ],
+    },
   ];
 
   if (isLoading)

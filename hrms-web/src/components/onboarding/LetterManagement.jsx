@@ -62,7 +62,7 @@ const LetterManagement = () => {
     onSuccess: useCallback(
       (data) => {
         console.log(data);
-        toast.success("Letter sent successfully");
+        toast.success( data.message || "Letter sent successfully");
         setDrawerVisible(false);
         form.resetFields();
       },

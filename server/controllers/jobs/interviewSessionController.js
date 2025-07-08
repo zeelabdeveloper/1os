@@ -5,6 +5,7 @@ const Onboarding = require("../../models/jobs/Onboarding");
 const mongoose = require("mongoose");
 const sendEmail = require("../../services/forgetpassmail");
 const { EmailConfig } = require("../../helper/emailConfig");
+const EmailNotification = require("../../models/setting/emailNotification");
 // @desc    Get single interview session
 // @route   GET /api/v1/interview/interviewSessions/:id
 // @access  Private
@@ -202,81 +203,83 @@ exports.createInterviewSession = async (req, res, next) => {
       await newOnboarding.save();
     }
 
-    const recipients = [
-      application?.email,
-      interviewRound?.interviewer?.email,
-    ].filter(Boolean); // Ensures no `undefined` values
+    const allNotification = await EmailNotification.findOne().lean();
+
+    const recipients = [];
+
+    if (allNotification?.interviewInitiateApplicant && application?.email) {
+      recipients.push(application.email);
+    }
+
+    if (
+      allNotification.interviewInitiateInterviewer &&
+      interviewRound?.interviewer?.email
+    ) {
+      recipients.push(interviewRound.interviewer.email);
+    }
 
     const mailOptions = {
-      from: `"Zeelab Pharmacy" <${EmailConfig.mailFromAddress}>`,
+      from: `${EmailConfig.mailFromName} <${EmailConfig.mailFromAddress}>`,
       to: recipients,
       subject: "Zeelab - Interview Schedule Confirmation",
       html: `
-  <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; padding: 20px;">
-    <div style=" margin: auto; background-color: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
-      <div style="background-color: #007bff; padding: 20px; color: white; text-align: center;">
-        <h2 style="margin: 0;">Zeelab Interview Scheduled</h2>
-        <p style="margin: 0; font-size: 14px;">We're excited to move forward with this interview round!</p>
-      </div>
-      <div style="padding: 30px;">
-        <h3 style="color: #333;">Hello,</h3>
-        <p style="color: #555;">We are pleased to inform you that the following interview has been scheduled:</p>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-          <tr>
-            <td style="padding: 10px; font-weight: bold; color: #333;">👤 Candidate:</td>
-            <td style="padding: 10px; color: #555;">${
-              application?.name || "N/A"
-            }</td>
-          </tr>
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 10px; font-weight: bold; color: #333;">🧑‍💼 Interviewer:</td>
-            <td style="padding: 10px; color: #555;">${
-              interviewRound?.interviewer?.firstName || "N/A"
-            }</td>
-          </tr>
-          <tr>
-            <td style="padding: 10px; font-weight: bold; color: #333;">🕒 Start Time:</td>
-            <td style="padding: 10px; color: #555;">${new Date(
-              startTime
-            ).toLocaleString()}</td>
-          </tr>
-          <tr style="background-color: #f9f9f9;">
-            <td style="padding: 10px; font-weight: bold; color: #333;">⏰ End Time:</td>
-            <td style="padding: 10px; color: #555;">${new Date(
-              endTime
-            ).toLocaleString()}</td>
-          </tr>
-          ${
-            meetingLink
-              ? `<tr>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; padding: 20px;">
+          <div style="max-width: 600px; margin: auto; background-color: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden;">
+            <div style="background-color: #007bff; padding: 20px; color: white; text-align: center;">
+              <h2 style="margin: 0;">Zeelab Interview Scheduled</h2>
+              <p style="margin: 0; font-size: 14px;">We're excited to move forward with this interview round!</p>
+            </div>
+            <div style="padding: 30px;">
+              <h3 style="color: #333;">Hello,</h3>
+              <p style="color: #555;">We are pleased to inform you that the following interview has been scheduled:</p>
+              <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <tr>
+                  <td style="padding: 10px; font-weight: bold; color: #333; width: 30%;">👤 Candidate:</td>
+                  <td style="padding: 10px; color: #555;">${
+                    application?.name || "N/A"
+                  }</td>
+                </tr>
+                <tr style="background-color: #f9f9f9;">
+                  <td style="padding: 10px; font-weight: bold; color: #333;">🧑‍💼 Interviewer:</td>
+                  <td style="padding: 10px; color: #555;">${
+                    interviewRound?.interviewer?.firstName || "N/A"
+                  }</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px; font-weight: bold; color: #333;">🕒 Start Time:</td>
+                  <td style="padding: 10px; color: #555;">${new Date(
+                    startTime
+                  ).toLocaleString()}</td>
+                </tr>
+                <tr style="background-color: #f9f9f9;">
+                  <td style="padding: 10px; font-weight: bold; color: #333;">⏰ End Time:</td>
+                  <td style="padding: 10px; color: #555;">${new Date(
+                    endTime
+                  ).toLocaleString()}</td>
+                </tr>
+                ${
+                  meetingLink
+                    ? `
+                <tr>
                   <td style="padding: 10px; font-weight: bold; color: #333;">📍 Meeting Link:</td>
-                  <td style="padding: 10px;"><a href="${meetingLink}" style="color: #007bff;">${meetingLink}</a></td>
+                  <td style="padding: 10px;"><a href="${meetingLink}" style="color: #007bff; word-break: break-all;">${meetingLink}</a></td>
                 </tr>`
-              : ""
-          }
-        </table>
-        <p style="margin-top: 30px; color: #777;">Please be prepared and on time. If you have any questions, feel free to reach out to our team.</p>
-        <p style="color: #007bff; font-weight: 500;">All the best!</p>
-        <p style="color: #333;"><strong>– Zeelab Team</strong></p>
-      </div>
-      <div style="background-color: #f1f1f1; text-align: center; padding: 15px; font-size: 12px; color: #888;">
-        © ${new Date().getFullYear()} Zeelab Pharmacy. All rights reserved.
-      </div>
-    </div>
-  </div>
-  `,
+                    : ""
+                }
+              </table>
+              <p style="margin-top: 30px; color: #777;">Please be prepared and on time. If you have any questions, feel free to reach out to our team.</p>
+              <p style="color: #007bff; font-weight: 500;">All the best!</p>
+              <p style="color: #333;"><strong>– Zeelab Team</strong></p>
+            </div>
+            <div style="background-color: #f1f1f1; text-align: center; padding: 15px; font-size: 12px; color: #888;">
+              © ${new Date().getFullYear()} Zeelab Pharmacy. All rights reserved.
+            </div>
+          </div>
+        </div>
+      `,
     };
 
-    const emailResult = await sendEmail(mailOptions);
-
-    if (!emailResult.success) {
-      return res.status(500).json({
-        success: false,
-        message:
-          emailResult.error?.message ||
-          "Failed to send email. Please try again.",
-      });
-    }
+    await sendEmail(mailOptions);
 
     res.status(201).json({
       success: true,
@@ -348,13 +351,21 @@ exports.updateInterviewSession = async (req, res, next) => {
 exports.updateInterviewSessionStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status, isOutCome } = req.body;
+    const { status, notes, feedback, recordingLink, isOutCome } = req.body;
 
     const session = await InterviewSession.findById(id);
     if (!session) {
       return res.status(404).json({
         success: false,
         message: "No interview session found with that ID",
+      });
+    }
+
+    if (feedback || recordingLink) {
+      await InterviewSession.findByIdAndUpdate(id, req.body);
+      return res.status(201).json({
+        success: true,
+        message: "Thanks For Your Feedback.",
       });
     }
 
