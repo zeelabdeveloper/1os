@@ -78,7 +78,7 @@ exports.getInterviewByInterviewer = async (req, res) => {
     }
 
     // First find all interview rounds for this user
-    const rounds = await InterViewRound.find({ interviewer: userId });
+   const rounds = await InterViewRound.find({ interviewer: userId })
     const roundIds = rounds.map((round) => round._id);
 
     // Then find all interview sessions for these rounds
@@ -87,8 +87,10 @@ exports.getInterviewByInterviewer = async (req, res) => {
     })
       .populate("interviewRoundId")
       .populate("applicationId")
-      .sort({ "interviewRoundId.roundNumber": 1 });
-
+      .sort({ "interviewRoundId.roundNumber": 1 }).sort({
+  createdAt: -1
+});
+ 
     res.status(200).json({
       success: true,
       data: interviewSessions,
@@ -352,7 +354,7 @@ exports.updateInterviewSessionStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status, notes, feedback, recordingLink, isOutCome } = req.body;
-
+ 
     const session = await InterviewSession.findById(id);
     if (!session) {
       return res.status(404).json({
@@ -381,36 +383,8 @@ exports.updateInterviewSessionStatus = async (req, res, next) => {
       session.outcome = status;
     }
     // Status update
-    else if (status) {
-      const validStatus = [
-        "scheduled",
-        "in_progress",
-        "completed",
-        "cancelled",
-        "rescheduled",
-      ];
-      if (!validStatus.includes(status)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid status value",
-        });
-      }
-
-      // Additional validation for completed status
-      if (status === "completed" && session.outcome === "pending") {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Cannot mark as completed when outcome is pending. Please set outcome first.",
-        });
-      }
-
+    else {
       session.status = status;
-    } else {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide either 'status' or set 'isOutCome' to true",
-      });
     }
 
     await session.save();

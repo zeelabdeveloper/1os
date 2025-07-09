@@ -75,7 +75,7 @@ const InterviewSessionList = () => {
     queryFn: () => fetchInterviewSessions(candidateId),
     staleTime: 500,
   });
-
+console.log(sessions)
   // Mutations
   const deleteMutation = useMutation({
     mutationFn: deleteInterviewSession,
@@ -139,13 +139,13 @@ const InterviewSessionList = () => {
         onChange={(value) => handleStatusChange(record._id, value)}
         bordered={false}
       >
-        {Object.keys(statusMap).map((key) => (
+        {/* {Object.keys(statusMap).map((key) => (
           <Option key={key} value={key}>
             <MemoizedTag color={statusMap[key].color} icon={statusMap[key].icon}>
               {key.replace("_", " ")}
             </MemoizedTag>
           </Option>
-        ))}
+        ))} */}
       </Select>
     );
   }, [handleStatusChange]);
@@ -164,12 +164,13 @@ const InterviewSessionList = () => {
         style={{ width: 120 }}
         onChange={(value) => handleStatusChange(record._id, value, true)}
         bordered={false}
+        
       >
-        {Object.keys(outcomeMap).map((key) => (
+        {/* {Object.keys(outcomeMap).map((key) => (
           <Option key={key} value={key}>
             <Badge status={outcomeMap[key].color} text={outcomeMap[key].text} />
           </Option>
-        ))}
+        ))} */}
       </Select>
     );
   }, [handleStatusChange]);
@@ -314,3 +315,9 @@ const InterviewSessionList = () => {
 };
 
 export default React.memo(InterviewSessionList);
+
+
+
+
+
+ 

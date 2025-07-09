@@ -171,7 +171,7 @@ const ApplicationManagement = () => {
       {/* Applications by Status */}
       <Row gutter={[16, 16]}>
         {Object.entries(statusConfig).map(([statusKey, status]) => (
-          <Col  span={24} md={8} key={statusKey}>
+          <Col span={24} md={8} key={statusKey}>
             <Card
               title={
                 <Space>
@@ -338,19 +338,17 @@ const ApplicationDetailsModal = ({ application, onClose, statusConfig }) => {
                   </Space>
                 )}
               </Descriptions.Item>
-              <Descriptions.Item label="Date of Birth">
-                {application.dob
-                  ? new Date(application.dob).toLocaleDateString()
-                  : "Not specified"}
-              </Descriptions.Item>
+
               <Descriptions.Item label="Resume">
-                <a
-                  href={`${import.meta.env.VITE_BACKEND_URL}${
-                    application.resume
-                  }`}
-                >
-                  View Now
-                </a>
+                {application?.resume && (
+                  <a
+                    href={`${import.meta.env.VITE_BACKEND_URL}${
+                      application.resume
+                    }`}
+                  >
+                    View Now
+                  </a>
+                )}
               </Descriptions.Item>
             </Descriptions>
           </Card>
@@ -386,7 +384,7 @@ const ApplicationDetailsModal = ({ application, onClose, statusConfig }) => {
             </Timeline>
           </Card>
 
-          <Card title="Change Status">
+          {/* <Card title="Change Status">
             <Space direction="vertical" style={{ width: "100%" }}>
               {Object.entries(statusConfig).map(([statusKey, status]) => (
                 <Button
@@ -409,7 +407,7 @@ const ApplicationDetailsModal = ({ application, onClose, statusConfig }) => {
                 </Button>
               ))}
             </Space>
-          </Card>
+          </Card> */}
         </Col>
       </Row>
     </Modal>
@@ -448,7 +446,7 @@ const ApplicationForm = ({ jobs, onSuccess }) => {
     <Form form={form} layout="vertical" onFinish={onFinish}>
       <Form.Item
         name="jobId"
-        label="Select Job"
+        label="Select Role"
         rules={[{ required: true, message: "Please select a job" }]}
       >
         <Select
@@ -494,9 +492,67 @@ const ApplicationForm = ({ jobs, onSuccess }) => {
             <Input />
           </Form.Item>
         </Col>
-        <Col span={12}>
+        {/* <Col span={12}>
           <Form.Item name="dob" label="Date of Birth">
             <DatePicker style={{ width: "100%" }} />
+          </Form.Item>
+        </Col> */}
+
+        <Col span={12}>
+          <Form.Item name="currentLocation" label="Current Location">
+            <Input />
+          </Form.Item>
+        </Col>
+
+        <Col span={12}>
+          <Form.Item name="division" label="Division Selection">
+            <Select>
+              <Select.Option value="COCO">COCO</Select.Option>
+              <Select.Option value="SIS">SIS</Select.Option>
+              <Select.Option value="OFFICE">Office</Select.Option>
+              <Select.Option value="WAREHOUSE">Ware House</Select.Option>
+            </Select>
+          </Form.Item>
+        </Col>
+
+        <Col span={12}>
+          <Form.Item name="position" label="Position">
+            <Input />
+          </Form.Item>
+        </Col>
+
+        <Col span={12}>
+          <Form.Item name="zone" label="Zone Selection">
+            <Select>
+              <Select.Option value="NORTH">North Zone</Select.Option>
+              <Select.Option value="SOUTH">South Zone</Select.Option>
+              <Select.Option value="EAST">East Zone</Select.Option>
+              <Select.Option value="WEST">West Zone</Select.Option>
+            </Select>
+          </Form.Item>
+        </Col>
+
+        <Col span={12}>
+          <Form.Item name="salary" label="Salary">
+            <Input type="number" />
+          </Form.Item>
+        </Col>
+
+        <Col span={12}>
+          <Form.Item name="experience" label="Experience (Years)">
+            <Input type="number" />
+          </Form.Item>
+        </Col>
+
+        <Col span={12}>
+          <Form.Item name="education" label="Education">
+            <Input />
+          </Form.Item>
+        </Col>
+
+        <Col span={12}>
+          <Form.Item name="currentCompany" label="Current Company">
+            <Input />
           </Form.Item>
         </Col>
       </Row>
@@ -526,11 +582,7 @@ const ApplicationForm = ({ jobs, onSuccess }) => {
         <TextArea rows={4} />
       </Form.Item>
 
-      <Form.Item
-        name="resume"
-        label="Resume"
-        rules={[{ required: true, message: "Please upload your resume" }]}
-      >
+      <Form.Item name="resume" label="Resume">
         <Upload
           fileList={fileList}
           maxCount={1}

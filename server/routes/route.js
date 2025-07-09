@@ -15,7 +15,7 @@ const router = express.Router();
 
 router.post("/login", loginUser);
 router.post("/forgot-password", forgotPassword);
-router.get("/auth/verify", verifyToken);
+router.post("/auth/verify", verifyToken);
 router.get("/fetchUser", fetchUser);
 router.post("/createUser", createUser);
 router.post("/employees/convert", convertUserFromOnboarding);

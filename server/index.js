@@ -22,31 +22,22 @@ app.use(morgan("tiny"));
 app.use(express.json());
 app.use(cookieParser());
 
+// app.use(
+//   cors({
+//     origin: [
+//       "https://capable-melomakarona-858a10.netlify.app",
+//       "http://localhost:5173",
+//     ],
+//     credentials: true,
+//   })
+// );
+
 app.use(
   cors({
-    origin: [
-      "https://capable-melomakarona-858a10.netlify.app",
-      "http://localhost:5173",
-    ],
-    credentials: true,
+    origin: "*",
+    credentials: false,
   })
 );
-// app.use(
-//   cors({
-//     origin: "*",
-//     credentials: true,
-//   })
-// );
-
-// app.use(
-//   cors({
-//     origin: (origin, callback) => {
-
-//       callback(null, origin || "*");
-//     },
-//     credentials: true,
-//   })
-// );
 
 // Routes
 app.use("/api/v1", require("./routes/route.js"));
@@ -109,9 +100,11 @@ app.use(
   require("./routes/DeveloperRouteAccess.js")
 );
 
+app.get("/health", (req, res) => res.send("Working"));
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, async () => { 
+app.listen(PORT, async () => {
   await refreshEmailConfig();
- 
+
   console.log(`Server running on port ${PORT}`);
 });

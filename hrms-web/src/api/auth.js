@@ -2,13 +2,16 @@ import axios from "../axiosConfig";
 
 export const loginUser = async (credentials) => {
   const response = await axios.post("/api/v1/login", credentials, {
-    withCredentials: true,
+   
   });
   return response.data;
 };
 
 export const verifyUser = async () => {
-  const response = await axios.get("/api/v1/auth/verify");
+  console.log("dfdfdf")
+  const response = await axios.post("/api/v1/auth/verify", {
+    token: localStorage.getItem("token"),
+  });
   return response.data;
 };
 
@@ -19,13 +22,13 @@ export const sendForgotPasswordEmail = async ({ email }) => {
 
 export const fetchUser = async (credentials) => {
   const response = await axios.get("/api/v1/fetchUser", {
-    withCredentials: true,
+  
   });
   return response.data;
 };
 export const fetchManagers = async (credentials) => {
   const response = await axios.get("/api/v1/fetchUser", {
-    withCredentials: true,
+   
   });
   return response.data;
 };
@@ -193,7 +196,6 @@ export const fetchStaff = async (params = {}) => {
 };
 
 export const deleteStaff = async (id) => {
-  
   const response = await axios.delete(`/api/v1/user/staff/${id}`);
   return response.data;
 };

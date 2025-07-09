@@ -4,7 +4,6 @@ const ApplicationSchema = new mongoose.Schema({
   jobId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Job",
-    required: true,
   },
   name: {
     type: String,
@@ -13,12 +12,37 @@ const ApplicationSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique:true,
+    unique: true,
   },
   phone: {
     type: String,
     required: true,
   },
+  currentLocation: {
+    type: String,
+  },
+  division: {
+    type: String,
+  },
+  position: {
+    type: String,
+  },
+  zone: {
+    type: String,
+  },
+  salary: {
+    type: String,
+  },
+  experience: {
+    type: String,
+  },
+  education: {
+    type: String,
+  },
+  currentCompany: {
+    type: String,
+  },
+
   gender: {
     type: String,
     enum: ["male", "female", "other"],
@@ -27,15 +51,14 @@ const ApplicationSchema = new mongoose.Schema({
   weaknesses: String,
   resume: {
     type: String,
-    required: true,
   },
   coverLetter: String,
   status: {
     type: String,
-    enum: ["applied", "phone_screen",  "onboarding" , "onboarded" ,   "interview", "hired", "rejected"],
+
     default: "applied",
   },
- 
+
   appliedAt: {
     type: Date,
     default: Date.now,

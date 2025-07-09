@@ -1,4 +1,3 @@
-
 import { Navigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import useAuthStore from "../stores/authStore";
@@ -9,6 +8,8 @@ import { lazy, Suspense } from "react";
 const AccessDenied = lazy(() => import("../pages/AccessDenied"));
 
 const ProtectedRoute = ({ children }) => {
+ 
+  console.log("protect")
   const location = useLocation();
   const { isAuthenticated, loginSuccess, logout, permissions } = useAuthStore();
 
@@ -17,6 +18,7 @@ const ProtectedRoute = ({ children }) => {
     queryFn: () =>
       verifyUser()
         .then((data) => {
+         
           loginSuccess(
             data.user,
             Array.isArray(data.permissions) ? data.permissions : [],
@@ -38,8 +40,7 @@ const ProtectedRoute = ({ children }) => {
   const hasAccess = permissions?.some(
     (permission) => permission.url === location.pathname
   );
- 
- 
+
   if (isLoading) return <Loading />;
 
   if (!isAuthenticated) {
@@ -58,3 +59,9 @@ const ProtectedRoute = ({ children }) => {
 };
 
 export default ProtectedRoute;
+
+
+
+
+
+ 

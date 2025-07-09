@@ -63,22 +63,17 @@ exports.loginUser = async (req, res) => {
       userId: fullUser._id,
     });
 
-  
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: false,
+    //   sameSite: "Lax",
+    //   maxAge: 365 * 24 * 60 * 60 * 1000,
+    //   path: "/",
+    // });
 
-
-res.cookie("token", token, {
-  httpOnly: true, // prevent client-side access
-  secure: true, // only send over HTTPS
-  sameSite: "none", // allow cross-site cookies
-  maxAge: 365 * 24 * 60 * 60 * 1000,
-  path: "/",
-});
-
-
-
-
-
-    return res.status(200).json({ success: true, message: "Login successful" });
+    return res
+      .status(200)
+      .json({ success: true, token, message: "Login successful" });
   } catch (error) {
     console.error("Login error:", error);
     return res
@@ -193,7 +188,7 @@ exports.checkEmployeeConversion = async (req, res) => {
     // Find if this application has been converted to a user
     const usefr = await Application.findById(applicationId);
     const user = await User.findOne({ email: usefr.email });
- 
+
     if (!user) {
       return res.status(200).json({ isConverted: false });
     }
@@ -203,7 +198,7 @@ exports.checkEmployeeConversion = async (req, res) => {
       employee: user,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
@@ -366,8 +361,7 @@ exports.createDepartment = async (req, res) => {
 
 exports.verifyToken = async (req, res) => {
   try {
-    // 1. Extract token from cookies or Authorization header
-    const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+    const token = req.body.token;
 
     if (!token) {
       return res.status(401).json({

@@ -1,5 +1,5 @@
 // src/pages/recruitment/ApplicationDetails.jsx
-import React, { useState } from "react";
+import React, { memo, useCallback, useState } from "react";
 import {
   Card,
   Space,
@@ -19,15 +19,9 @@ import {
   Breadcrumb,
   Dropdown,
   Menu,
-  Modal,
-  DatePicker,
-  InputNumber,
-  Switch,
   Steps,
-  Badge,
 } from "antd";
 import {
-  EyeOutlined,
   CheckOutlined,
   CloseOutlined,
   PhoneOutlined,
@@ -41,29 +35,26 @@ import {
   EditOutlined,
   ArrowLeftOutlined,
   HomeOutlined,
-  DownloadOutlined,
   RocketOutlined,
+  CodeOutlined,
+  CheckCircleOutlined,
   DollarOutlined,
-  IdcardOutlined,
-  EnvironmentOutlined,
-  TeamOutlined,
+  MehOutlined,
+  PauseOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  fetchApplicationById,
-  updateApplicationStatus,
-  initiateOnboarding,
-} from "../../api/jobs";
+import { fetchApplicationById, updateApplicationStatus } from "../../api/jobs";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
+import InterviewSessionList from "../../components/InterviewSession/InterviewSessionList";
+import InterviewSessionDetail from "../../components/InterviewSession/InterviewSessionDetail";
 
 const { Panel } = Collapse;
 const { Text, Title } = Typography;
-const { TextArea } = Input;
+
 const { Option } = Select;
-const { Step } = Steps;
 
 const statusConfig = {
   applied: { title: "Applied", icon: <FileTextOutlined />, color: "#3b82f6" },
@@ -72,15 +63,47 @@ const statusConfig = {
     icon: <PhoneOutlined />,
     color: "#f97316",
   },
-  interview: { title: "Interview", icon: <UserOutlined />, color: "#8b5cf6" },
-  hired: { title: "Hired", icon: <CheckOutlined />, color: "#10b981" },
-  rejected: { title: "Rejected", icon: <CloseOutlined />, color: "#ef4444" },
+
+  interview_round: {
+    title: "Interview Round",
+    icon: <UserOutlined />,
+    color: "#8b5cf6",
+  },
+
+  selected: {
+    title: "Selected",
+    icon: <CheckCircleOutlined />,
+    color: "#10b981",
+  },
+  offer_sent: {
+    title: "Offer Sent",
+    icon: <DollarOutlined />,
+    color: "#059669",
+  },
   onboarding: {
     title: "Onboarding",
     icon: <RocketOutlined />,
-    color: "#8b5cf6",
+    color: "#7c3aed",
+  },
+  not_interested: {
+    title: "Not Interested",
+    icon: <MehOutlined />,
+    color: "#64748b",
+  },
+  rejected: {
+    title: "Rejected",
+    icon: <CloseOutlined />,
+    color: "#ef4444",
+  },
+  on_hold: {
+    title: "On Hold",
+    icon: <PauseOutlined />,
+    color: "#f59e0b",
   },
 };
+
+const MemoizedInterviewSessionList = memo(InterviewSessionList);
+const MemoizedInterviewSessionDetail = memo(InterviewSessionDetail);
 
 const ApplicationDetails = () => {
   const location = useLocation();
@@ -93,9 +116,6 @@ const ApplicationDetails = () => {
   const [statusNotes, setStatusNotes] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [showStatusForm, setShowStatusForm] = useState(false);
-
-  const [onboardingStep, setOnboardingStep] = useState(0);
-  const [onboardingForm] = Form.useForm();
 
   const { data: application, isLoading } = useQuery({
     queryKey: ["application", applicationId],
@@ -128,41 +148,35 @@ const ApplicationDetails = () => {
     });
   };
 
-  const handleOnboardingSubmit = (values) => {
-    console.log(values);
-    const payload = {
-      applicationId: application._id,
-      candidateId: application.candidateId,
-      jobId: application.jobId?._id,
-      ...values,
-      joiningDate: values.joiningDate.format("YYYY-MM-DD"),
-      salary: Number(values.salary),
-      bonus: values.bonus ? Number(values.bonus) : 0,
-    };
+  const [selectedSession, setSelectedSession] = useState(null);
 
-    startOnboarding(payload);
-  };
+  // Memoized handler to prevent recreating function on each render
+  const handleSelectSession = useCallback((session) => {
+    setSelectedSession(session);
+  }, []);
+
+  const handleEditComplete = useCallback(() => {
+    setSelectedSession(null);
+  }, []);
 
   const statusMenu = (
     <Menu>
-      {Object.entries(statusConfig)
-        .map(([key, status]) => (
-          <Menu.Item
-            key={key}
-            onClick={() => {
-              setSelectedStatus(key);
-              setShowStatusForm(true);
-            }}
-            className="flex items-center gap-2"
-          >
-            <span
-              className={`w-3 h-3 rounded-full`}
-              style={{ backgroundColor: status.color }}
-            />
-            {status.title}
-          </Menu.Item>
-        ))
-        .splice(0, 5)}
+      {Object.entries(statusConfig).map(([key, status]) => (
+        <Menu.Item
+          key={key}
+          onClick={() => {
+            setSelectedStatus(key);
+            setShowStatusForm(true);
+          }}
+          className="flex items-center gap-2"
+        >
+          <span
+            className={`w-3 h-3 rounded-full`}
+            style={{ backgroundColor: status.color }}
+          />
+          {status.title}
+        </Menu.Item>
+      ))}
     </Menu>
   );
 
@@ -236,14 +250,55 @@ const ApplicationDetails = () => {
         </div>
       </div>
 
+
+
+
+
+
+
+
+
+
+
+
+{console.log(application)}
+
+
+
+      {application?.status==="interview_round" && (
+        <MemoizedInterviewSessionList onSelectSession={handleSelectSession} />
+      )}
+      {selectedSession && (
+        <MemoizedInterviewSessionDetail
+          sessionId={selectedSession._id}
+          onEdit={handleEditComplete}
+        />
+      )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Candidate Profile Card */}
         <div className="lg:col-span-1">
           <Card className="shadow-lg border-0 rounded-xl overflow-hidden">
             <div className="flex flex-col items-center py-6">
               <Avatar
-                src={application.avatar}
+                src={application?.avatar || null}
                 size={120}
+                icon={!application?.avatar && <UserOutlined />}
                 className="border-4 border-white shadow-md"
               />
               <Title level={4} className="mt-4 mb-1">
@@ -300,18 +355,20 @@ const ApplicationDetails = () => {
                 >
                   {application.phone}
                 </Button>
-                <Button
-                  type="text"
-                  icon={<FileTextOutlined />}
-                  block
-                  className="text-left flex items-center text-gray-700 hover:text-blue-500"
-                  href={`${import.meta.env.VITE_BACKEND_URL}${
-                    application.resume
-                  }`}
-                  target="_blank"
-                >
-                  View Resume
-                </Button>
+                {application.resume && (
+                  <Button
+                    type="text"
+                    icon={<FileTextOutlined />}
+                    block
+                    className="text-left flex items-center text-gray-700 hover:text-blue-500"
+                    href={`${import.meta.env.VITE_BACKEND_URL}${
+                      application.resume
+                    }`}
+                    target="_blank"
+                  >
+                    View Resume
+                  </Button>
+                )}
               </div>
             </div>
           </Card>
@@ -344,14 +401,8 @@ const ApplicationDetails = () => {
                       ))}
                     </Select>
                   </Form.Item>
-                  <Form.Item label="Notes (Optional)" className="md:col-span-2">
+                  <Form.Item label="Action" className="md:col-span-2">
                     <div className="flex gap-2">
-                      <Input
-                        placeholder="Add any notes about this status change"
-                        value={statusNotes}
-                        onChange={(e) => setStatusNotes(e.target.value)}
-                        className="flex-1"
-                      />
                       <Button
                         type="primary"
                         onClick={handleStatusUpdate}
@@ -384,7 +435,8 @@ const ApplicationDetails = () => {
               Candidate Information
             </Title>
 
-            <Descriptions column={2} className="custom-descriptions">
+            <Descriptions column={2} className="custom-descriptions" bordered>
+              {/* Personal Information */}
               <Descriptions.Item label="Gender">
                 {application.gender === "male" ? (
                   <Tag
@@ -408,13 +460,49 @@ const ApplicationDetails = () => {
                   </Tag>
                 )}
               </Descriptions.Item>
-              <Descriptions.Item label="Date of Birth">
-                {application.dob
-                  ? dayjs(application.dob).format("MMM D, YYYY")
+
+              <Descriptions.Item label="Phone Number">
+                {application.phone || "Not specified"}
+              </Descriptions.Item>
+
+              {/* Location Information */}
+              <Descriptions.Item label="Current Location" span={2}>
+                {application.currentLocation || "Not specified"}
+              </Descriptions.Item>
+
+              {/* Professional Information */}
+              <Descriptions.Item label="Division" span={2}>
+                {application.division || "Not specified"}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Position" span={2}>
+                {application.position || "Not specified"}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Zone" span={2}>
+                {application.zone || "Not specified"}
+              </Descriptions.Item>
+
+              {/* Career Information */}
+              <Descriptions.Item label="Salary" span={2}>
+                {application.salary
+                  ? `$${application.salary}`
                   : "Not specified"}
               </Descriptions.Item>
-              <Descriptions.Item label="Address" span={2}>
-                {application.address || "Not specified"}
+
+              <Descriptions.Item label="Experience" span={2}>
+                {application.experience
+                  ? `${application.experience} years`
+                  : "Not specified"}
+              </Descriptions.Item>
+
+              {/* Education & Company */}
+              <Descriptions.Item label="Education" span={2}>
+                {application.education || "Not specified"}
+              </Descriptions.Item>
+
+              <Descriptions.Item label="Current Company" span={2}>
+                {application.currentCompany || "Not specified"}
               </Descriptions.Item>
             </Descriptions>
           </Card>

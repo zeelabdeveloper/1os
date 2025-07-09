@@ -6,117 +6,69 @@ import {
   Typography,
   Button,
   Select,
-  Modal,
-  Form,
+  DatePicker,
   Input,
   Avatar,
   Divider,
   Spin,
-  Alert,
-  Collapse,
+  List,
   Descriptions,
-  Empty,
+  Collapse,
 } from "antd";
 import {
-  CheckCircleOutlined,
-  CloseCircleOutlined,
   ClockCircleOutlined,
-  ExclamationCircleOutlined,
   UserOutlined,
   EditOutlined,
   CalendarOutlined,
-  VideoCameraOutlined,
-  LinkOutlined,
+  FilterOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  EnvironmentOutlined,
+  SolutionOutlined,
+  BookOutlined,
+  WarningOutlined,
+  TeamOutlined,
+  DollarOutlined,
 } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import customParseFormat from "dayjs/plugin/customParseFormat";
 import useAuthStore from "../stores/authStore";
 import axios from "../axiosConfig";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
 
-dayjs.extend(relativeTime);
-dayjs.extend(customParseFormat);
 const { Text, Title } = Typography;
 const { Option } = Select;
-const { TextArea } = Input;
+const { RangePicker } = DatePicker;
 const { Panel } = Collapse;
 
-const statusOptions = [
-  {
-    value: "scheduled",
-    label: "Scheduled",
-    color: "blue",
-    icon: <ClockCircleOutlined />,
-  },
-  {
-    value: "in_progress",
-    label: "In Progress",
-    color: "orange",
-    icon: <ClockCircleOutlined />,
-  },
-  {
-    value: "completed",
-    label: "Completed",
-    color: "green",
-    icon: <CheckCircleOutlined />,
-  },
-  {
-    value: "cancelled",
-    label: "Cancelled",
-    color: "red",
-    icon: <CloseCircleOutlined />,
-  },
-  {
-    value: "rescheduled",
-    label: "Rescheduled",
-    color: "purple",
-    icon: <ExclamationCircleOutlined />,
-  },
+const STATUS_FILTER_OPTIONS = [
+  { value: "scheduled", label: "Scheduled", color: "blue" },
+  { value: "in_progress", label: "In Progress", color: "orange" },
+  { value: "completed", label: "Completed", color: "green" },
+  { value: "cancelled", label: "Cancelled", color: "red" },
 ];
 
-const outcomeOptions = [
-  {
-    value: "selected",
-    label: "Selected",
-    color: "green",
-    icon: <CheckCircleOutlined />,
-  },
-  {
-    value: "rejected",
-    label: "Rejected",
-    color: "red",
-    icon: <CloseCircleOutlined />,
-  },
-  {
-    value: "hold",
-    label: "On Hold",
-    color: "orange",
-    icon: <ExclamationCircleOutlined />,
-  },
-  {
-    value: "pending",
-    label: "Pending",
-    color: "blue",
-    icon: <ClockCircleOutlined />,
-  },
+const OUTCOME_FILTER_OPTIONS = [
+  { value: "selected", label: "Selected", color: "green" },
+  { value: "rejected", label: "Rejected", color: "red" },
+  { value: "hold", label: "On Hold", color: "orange" },
+  { value: "pending", label: "Pending", color: "blue" },
 ];
 
 const fetchInterviewerSessions = async (interviewerId) => {
   const { data } = await axios.get(
     `/api/v1/interview/interviewSessions/by-interviewer/${interviewerId}`
   );
-  if (!data.success)
-    throw new Error(data.message || "Failed to fetch sessions");
   return data.data || [];
 };
 
-const updateInterviewSession = async ({ id, updateData }) => {
+const updateInterviewStatus = async ({ id, isOutCome, status }) => {
   const { data } = await axios.patch(
     `/api/v1/interview/interviewSessions/${id}`,
-    updateData
+    {
+      isOutCome,
+      status,
+    }
   );
   return data;
 };
@@ -124,351 +76,333 @@ const updateInterviewSession = async ({ id, updateData }) => {
 const InterviewSessionManager = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
-  const [form] = Form.useForm();
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [currentSession, setCurrentSession] = useState(null);
-  const navigate = useNavigate();
+  const [expandedRows, setExpandedRows] = useState([]);
 
-  const {
-    data: sessions = [],
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  // State for filters
+  const [statusFilter, setStatusFilter] = useState([]);
+  const [outcomeFilter, setOutcomeFilter] = useState([]);
+  const [dateRange, setDateRange] = useState([]);
+  const [searchText, setSearchText] = useState("");
+
+  const { data: sessions = [], isLoading } = useQuery({
     queryKey: ["interviewSessions", user?._id],
     queryFn: () => fetchInterviewerSessions(user._id),
     enabled: !!user?._id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const mutation = useMutation({
-    mutationFn: updateInterviewSession,
+    mutationFn: updateInterviewStatus,
     onSuccess: (data) => {
-      toast.success(data.message || "Session updated successfully");
+      toast.success(data.message || "Status updated successfully");
       queryClient.invalidateQueries(["interviewSessions", user?._id]);
-      setIsModalVisible(false);
     },
-    onError: (error) => {
-      toast.error(error?.response?.data?.message || "Failed to update session");
+    onError: (e) => {
+      toast.error(e?.response?.data?.message || "Can't Update!");
     },
   });
 
-  const handleStatusChange = (sessionId, newStatus) => {
-    mutation.mutate({
-      id: sessionId,
-      updateData: { status: newStatus },
-    });
-  };
+  const filteredSessions = useMemo(() => {
+    return sessions
+      .filter((session) => {
+        if (statusFilter.length > 0 && !statusFilter.includes(session.status)) {
+          return false;
+        }
+        if (
+          outcomeFilter.length > 0 &&
+          (!session.outcome || !outcomeFilter.includes(session.outcome))
+        ) {
+          return false;
+        }
+        if (dateRange.length === 2) {
+          const sessionDate = dayjs(session.startTime);
+          if (
+            sessionDate.isBefore(dateRange[0], "day") ||
+            sessionDate.isAfter(dateRange[1], "day")
+          ) {
+            return false;
+          }
+        }
+        if (searchText) {
+          const searchLower = searchText.toLowerCase();
+          if (
+            !session.applicationId?.name?.toLowerCase().includes(searchLower) &&
+            !session.interviewRoundId?.name?.toLowerCase().includes(searchLower)
+          ) {
+            return false;
+          }
+        }
+        return true;
+      })
+      .sort((a, b) => dayjs(b.startTime).diff(dayjs(a.startTime)));
+  }, [sessions, statusFilter, outcomeFilter, dateRange, searchText]);
 
-  const handleOutcomeChange = (sessionId, newOutcome) => {
-    mutation.mutate({
-      id: sessionId,
-      updateData: { isOutCome: true, status: newOutcome },
-    });
-  };
+  const handleStatusChange = useCallback(
+    (sessionId, isOutCome, newStatus) => {
+      mutation.mutate({ id: sessionId, isOutCome, status: newStatus });
+    },
+    [mutation]
+  );
 
-  const handleOpenEditModal = (session) => {
-    setCurrentSession(session);
-    form.setFieldsValue({
-      feedback: session.feedback || "",
-      notes: session.notes || "",
-      meetingLink: session.meetingLink || "",
-      recordingLink: session.recordingLink || "",
-    });
-    setIsModalVisible(true);
-  };
+  const resetFilters = useCallback(() => {
+    setStatusFilter([]);
+    setOutcomeFilter([]);
+    setDateRange([]);
+    setSearchText("");
+  }, []);
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      mutation.mutate({
-        id: currentSession._id,
-        updateData: values,
-      });
-    } catch (err) {
-      console.error("Validation error:", err);
-    }
-  };
-
-  const groupedSessions = useMemo(() => {
-    const now = dayjs();
-    return {
-      upcoming: sessions.filter(
-        (s) =>
-          ["scheduled", "in_progress"].includes(s.status) &&
-          dayjs(s.endTime).isAfter(now)
-      ),
-      completed: sessions.filter(
-        (s) =>
-          s.status === "completed" ||
-          (["scheduled", "in_progress"].includes(s.status) &&
-            dayjs(s.endTime).isBefore(now))
-      ),
-      others: sessions.filter((s) =>
-        ["cancelled", "rescheduled"].includes(s.status)
-      ),
-    };
-  }, [sessions]);
-
-  const renderSessionCard = (session) => {
-    const statusConfig = statusOptions.find(
-      (opt) => opt.value === session.status
+  const toggleExpandRow = useCallback((sessionId) => {
+    setExpandedRows((prev) =>
+      prev.includes(sessionId)
+        ? prev.filter((id) => id !== sessionId)
+        : [...prev, sessionId]
     );
-    const outcomeConfig = outcomeOptions.find(
-      (opt) => opt.value === (session.outcome || "pending")
-    );
-    const isCompleted =
-      session.status === "completed" ||
-      dayjs(session.endTime).isBefore(dayjs());
+  }, []);
 
+  const renderField = (icon, value, label) => {
+    if (!value) return null;
     return (
-      <Card
-        key={session._id}
-        className="mb-4 shadow-sm"
-        actions={[
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleOpenEditModal(session)}
-          >
-            Edit Feedback
-          </Button>,
-        ]}
+      <Descriptions.Item
+        label={
+          <span className="flex items-center gap-1">
+            {icon}
+            <span>{label}</span>
+          </span>
+        }
       >
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="flex items-start justify-between mb-2">
-              <Space>
-                <Tag icon={statusConfig?.icon} color={statusConfig?.color}>
-                  {statusConfig?.label}
-                </Tag>
-                <Text strong className="text-lg">
-                  {session.interviewRoundId?.name}
-                </Text>
-              </Space>
-
-              <Tag color={outcomeConfig?.color} icon={outcomeConfig?.icon}>
-                {outcomeConfig?.label}
-              </Tag>
-            </div>
-
-            <div className="flex items-center gap-2 mb-3">
-              <Avatar
-                src={session.applicationId?.photo}
-                icon={<UserOutlined />}
-                size="small"
-              />
-              <Text
-                className="text-blue-600 hover:underline cursor-pointer"
-                onClick={() =>
-                  navigate(
-                    `/recruitment/application?id=${session.applicationId?._id}`
-                  )
-                }
-              >
-                {session.applicationId?.name}
-              </Text>
-            </div>
-
-            <Descriptions size="small" column={1}>
-              <Descriptions.Item
-                label={
-                  <>
-                    <CalendarOutlined /> Date
-                  </>
-                }
-              >
-                {dayjs(session.startTime).format("MMM D, YYYY")}
-              </Descriptions.Item>
-              <Descriptions.Item
-                label={
-                  <>
-                    <ClockCircleOutlined /> Time
-                  </>
-                }
-              >
-                {dayjs(session.startTime).format("h:mm A")} -{" "}
-                {dayjs(session.endTime).format("h:mm A")}
-              </Descriptions.Item>
-              {session.meetingLink && (
-                <Descriptions.Item
-                  label={
-                    <>
-                      <VideoCameraOutlined /> Meeting Link
-                    </>
-                  }
-                >
-                  <a
-                    href={session.meetingLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Join Meeting
-                  </a>
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-
-            <Collapse ghost className="mt-2">
-              <Collapse.Panel header="Quick Actions" key="actions">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Text strong className="block mb-2">
-                      Update Status
-                    </Text>
-                    <Select
-                      value={session.status}
-                      onChange={(v) => handleStatusChange(session._id, v)}
-                      style={{ width: "100%" }}
-                    >
-                      {statusOptions.map((opt) => (
-                        <Select.Option key={opt.value} value={opt.value}>
-                          <Tag color={opt.color} icon={opt.icon}>
-                            {opt.label}
-                          </Tag>
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </div>
-                  <div>
-                    <Text strong className="block mb-2">
-                      Update Outcome
-                    </Text>
-                    <Select
-                      value={session.outcome || "pending"}
-                      onChange={(v) => handleOutcomeChange(session._id, v)}
-                      style={{ width: "100%" }}
-                    >
-                      {outcomeOptions.map((opt) => (
-                        <Select.Option key={opt.value} value={opt.value}>
-                          <Tag color={opt.color} icon={opt.icon}>
-                            {opt.label}
-                          </Tag>
-                        </Select.Option>
-                      ))}
-                    </Select>
-                  </div>
-                </div>
-              </Collapse.Panel>
-              {(session.notes || session.feedback) && (
-                <Collapse.Panel header="Notes & Feedback" key="feedback">
-                  {session.feedback && (
-                    <div className="mb-3">
-                      <Text strong className="block">
-                        Feedback:
-                      </Text>
-                      <Text className="whitespace-pre-line">
-                        {session.feedback}
-                      </Text>
-                    </div>
-                  )}
-                  {session.notes && (
-                    <div>
-                      <Text strong className="block">
-                        Private Notes:
-                      </Text>
-                      <Text className="whitespace-pre-line">
-                        {session.notes}
-                      </Text>
-                    </div>
-                  )}
-                </Collapse.Panel>
-              )}
-            </Collapse>
-          </div>
-        </div>
-      </Card>
+        {value}
+      </Descriptions.Item>
     );
   };
 
-  if (!user?._id) return null;
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spin size="large" tip="Loading your interview sessions..." />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <Alert
-        message="Error loading sessions"
-        description={error.message}
-        type="error"
-        showIcon
-        className="m-4"
-      />
-    );
-  }
-
-  if (sessions.length === 0) {
-    return (
-     null
-    );
+  if (sessions?.length == 0) {
+    return null;
   }
 
   return (
     <div className="p-4">
       <Card
-        title={<Title level={4}>My Interview Sessions</Title>}
-        bordered={false}
-        className="shadow-sm"
-      >
-        {Object.entries(groupedSessions).map(([group, groupSessions]) => {
-          if (groupSessions.length === 0) return null;
-
-          return (
-            <div key={group} className="mb-6">
-              <Text strong className="text-lg capitalize block mb-2">
-                {group} ({groupSessions.length})
-              </Text>
-              <Divider className="my-2" />
-              <div className="space-y-4">
-                {groupSessions.map((session) => renderSessionCard(session))}
-              </div>
+        title={
+          <div className="flex justify-between items-center">
+            <Title level={4} className="mb-0">
+              My Interview Sessions
+            </Title>
+            <div className="flex items-center gap-2">
+              <Button icon={<FilterOutlined />} onClick={resetFilters}>
+                Reset Filters
+              </Button>
             </div>
-          );
-        })}
-      </Card>
-
-      <Modal
-        title={`Session Feedback - ${
-          currentSession?.interviewRoundId?.name || "Interview"
-        }`}
-        visible={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        onOk={handleSubmit}
-        confirmLoading={mutation.isLoading}
-        width={700}
-        destroyOnClose
-      >
-        <Form form={form} layout="vertical">
-          <div className="grid grid-cols-1 gap-4">
-            <Form.Item name="notes" label="Private Notes">
-              <TextArea
-                readOnly
-                rows={1}
-                placeholder="Internal notes about the session..."
-              />
-            </Form.Item>
-            <Form.Item name="feedback" label="Candidate Feedback">
-              <TextArea
-                rows={4}
-                placeholder="Detailed feedback about the candidate..."
-              />
-            </Form.Item>
-
-            <Form.Item name="recordingLink" label="Recording Link">
-              <Input
-                placeholder="https://recording.example.com/your-recording"
-                prefix={<LinkOutlined />}
-              />
-            </Form.Item>
           </div>
-        </Form>
-      </Modal>
+        }
+        bordered={false}
+      >
+        {/* Filter Bar */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Input
+            placeholder="Search by candidate or round"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+          />
+
+          <Select
+            mode="multiple"
+            placeholder="Filter by status"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={STATUS_FILTER_OPTIONS}
+            optionRender={({ value, label, color }) => (
+              <Tag color={color}>{label}</Tag>
+            )}
+          />
+
+          <Select
+            mode="multiple"
+            placeholder="Filter by outcome"
+            value={outcomeFilter}
+            onChange={setOutcomeFilter}
+            options={OUTCOME_FILTER_OPTIONS}
+            optionRender={({ value, label, color }) => (
+              <Tag color={color}>{label}</Tag>
+            )}
+          />
+
+          <RangePicker
+            style={{ width: "100%" }}
+            value={dateRange}
+            onChange={setDateRange}
+          />
+        </div>
+
+        <Divider className="my-2" />
+
+        {/* Session List */}
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <Spin size="large" tip="Loading sessions..." />
+          </div>
+        ) : filteredSessions.length === 0 ? (
+          <div className="text-center py-8">
+            <Text type="secondary">
+              No sessions found matching your filters
+            </Text>
+          </div>
+        ) : (
+          <List
+            itemLayout="vertical"
+            dataSource={filteredSessions}
+            renderItem={(session) => (
+              <Card
+                key={session._id}
+                className="mb-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => toggleExpandRow(session._id)}
+              >
+                <div className="flex flex-col md:flex-row justify-between w-full">
+                  {/* Basic Info (always shown) */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-2">
+                      <Avatar
+                        src={session.applicationId?.photo}
+                        icon={<UserOutlined />}
+                      />
+                      <div>
+                        <Text strong>{session.applicationId?.name}</Text>
+                        <div className="text-sm text-gray-500">
+                          {session.interviewRoundId?.name} (Round{" "}
+                          {session.interviewRoundId?.roundNumber})
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 mt-2">
+                      <div className="flex items-center gap-1">
+                        <CalendarOutlined />
+                        <Text>
+                          {dayjs(session.startTime).format("MMM D, YYYY")}
+                        </Text>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <ClockCircleOutlined />
+                        <Text>
+                          {dayjs(session.startTime).format("h:mm A")} -{" "}
+                          {dayjs(session.endTime).format("h:mm A")}
+                        </Text>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row md:items-center gap-4 mt-4 md:mt-0">
+                    <Select
+                      value={session.status}
+                      onChange={(value) =>
+                        handleStatusChange(session._id, false, value)
+                      }
+                      style={{ width: 150 }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {STATUS_FILTER_OPTIONS.map(({ value, label, color }) => (
+                        <Option key={value} value={value}>
+                          <Tag color={color}>{label}</Tag>
+                        </Option>
+                      ))}
+                    </Select>
+
+                    {session.status === "completed" && (
+                      <Select
+                        value={session.outcome || "pending"}
+                        onChange={(value) =>
+                          handleStatusChange(session._id, true, value)
+                        }
+                        style={{ width: 150 }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {OUTCOME_FILTER_OPTIONS.map(
+                          ({ value, label, color }) => (
+                            <Option key={value} value={value}>
+                              <Tag color={color}>{label}</Tag>
+                            </Option>
+                          )
+                        )}
+                      </Select>
+                    )}
+                  </div>
+                </div>
+
+                {/* Expanded Details */}
+                {expandedRows.includes(session._id) && (
+                  <div className="mt-4 pt-4 border-t">
+                    <Descriptions column={2} bordered size="small">
+                      {renderField(
+                        <MailOutlined />,
+                        session.applicationId?.email,
+                        "Email"
+                      )}
+                      {renderField(
+                        <PhoneOutlined />,
+                        session.applicationId?.phone,
+                        "Phone"
+                      )}
+                      {renderField(
+                        <EnvironmentOutlined />,
+                        session.applicationId?.currentLocation,
+                        "Location"
+                      )}
+                      {renderField(
+                        <SolutionOutlined />,
+                        session.applicationId?.position,
+                        "Position"
+                      )}
+                      {renderField(
+                        <TeamOutlined />,
+                        session.applicationId?.currentCompany,
+                        "Current Company"
+                      )}
+                      {renderField(
+                        <BookOutlined />,
+                        session.applicationId?.education,
+                        "Education"
+                      )}
+                      {renderField(
+                        <DollarOutlined />,
+                        session.applicationId?.salary,
+                        "Expected Salary"
+                      )}
+                      {renderField(
+                        <WarningOutlined />,
+                        session.applicationId?.weaknesses,
+                        "Weaknesses"
+                      )}
+                      {session.notes && (
+                        <Descriptions.Item label="Notes" span={2}>
+                          {session.notes}
+                        </Descriptions.Item>
+                      )}
+                      {session.feedback && (
+                        <Descriptions.Item label="Feedback" span={2}>
+                          {session.feedback}
+                        </Descriptions.Item>
+                      )}
+                      {console.log(session)}
+                      {session?.applicationId?.resume && (
+                        <Descriptions.Item label="Resume" span={2}>
+                          <a
+                            href={`${import.meta.env.VITE_BACKEND_URL}${
+                              session?.applicationId?.resume
+                            }`}
+                            target="_blank"
+                          >
+                            Download
+                          </a>
+                        </Descriptions.Item>
+                      )}
+                    </Descriptions>
+                  </div>
+                )}
+              </Card>
+            )}
+          />
+        )}
+      </Card>
     </div>
   );
 };

@@ -10,13 +10,12 @@ import { FullLogo, LoginBackground, ZeelabShop1 } from "../locale/local";
 const { Title } = Typography;
 
 const Login = () => {
-  const navigate = useNavigate();
   const isDesktop = useMediaQuery({ minWidth: 992 });
-
+  console.log(isDesktop);
   const mutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
-      console.log(data);
+      localStorage.setItem("token", data.token);
       toast.success(`Welcome to Zeelab Pharmacy!`);
       window.location.href = "/";
     },

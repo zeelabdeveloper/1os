@@ -425,7 +425,7 @@ const createApplication = async (req, res) => {
     if (req.file) {
       resumePath = `/uploads/company/${req.file.filename}`;
     }
-
+       console.log(req.body)
     const application = await Application.create({
       ...req.body,
 

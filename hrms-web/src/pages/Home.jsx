@@ -7,12 +7,11 @@ import TopHeader from "../components/layouts/TopHeader";
 const { Content } = Layout;
 
 function Home() {
+  console.log("home")
   return (
     <Layout className="h-screen overflow-hidden">
       <LeftMenu />
       <Layout>
-      
-
         <div className="h-screen backdrop-invert-0 overflow-hidden">
           <TopHeader />
 

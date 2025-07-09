@@ -281,6 +281,7 @@ import SeparationFromStaff from "./pages/SeparationFromStaff";
 const queryClient = new QueryClient();
 
 const App = () => {
+
   return (
     <Router>
       <QueryClientProvider client={queryClient}>

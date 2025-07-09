@@ -52,6 +52,7 @@ const fetchUsers = async () => {
   }
 };
 const createUser = async (userData) => {
+  console.log("Coco User List")
   try {
     const response = await axios.post(`/api/v1/storeuser`, userData);
     return response.data;

@@ -4,20 +4,20 @@ const interviewSessionSchema = new mongoose.Schema({
   applicationId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Application',
-    required: true
+    
   },
   interviewRoundId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'InterviewRound',
-    required: true
+    
   },
   startTime: {
     type: Date,
-    required: true
+    
   },
   endTime: {
     type: Date,
-    required: true
+    
   },
   feedback: {
     type: String,

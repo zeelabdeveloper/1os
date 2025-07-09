@@ -199,7 +199,7 @@ const InterviewSessionForm = ({ session, onSuccess }) => {
           <Form.Item
             name="timeRange"
             label="Date & Time"
-            rules={[{ required: true, message: 'Please select date and time' }]}
+            
           >
             <RangePicker 
               showTime 

@@ -65,8 +65,9 @@ export const initiateOnboarding = async (data) => {
 };
 
 export const fetchApplicationById = async (id) => {
-  console.log(id);
+ 
   const response = await axios.get(`/api/v1/jobs/application/${id}`);
+   
   return response.data;
 };
 export const deleteApplicationStatus = async (id) => {
