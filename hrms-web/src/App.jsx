@@ -275,6 +275,8 @@ import BankAccountListPage from "./pages/Account/AccountList";
 import TeamMembers from "./pages/Team/Members";
 import CreateEmployeeMain from "./pages/Staff/CreateEmployee";
 import ApplicationTrack from "./pages/ApplicationTrack";
+import Separation from "./pages/Recruitment/Separation";
+import SeparationFromStaff from "./pages/SeparationFromStaff";
 
 const queryClient = new QueryClient();
 
@@ -383,6 +385,7 @@ const App = () => {
               <Route path="recruitment/application" element={<Application />} />
               <Route path="recruitment/candidates" element={<Candidates />} />
               <Route path="recruitment/onboarding" element={<Onboarding />} />
+              <Route path="recruitment/separation" element={<Separation />} />
               <Route
                 path="recruitment/startonboarding"
                 element={<StartOnboarding />}
@@ -394,6 +397,7 @@ const App = () => {
               <Route path="faq" element={<Faq />} />
               <Route path="developer-settings" element={<DeveloperSetting />} />
               <Route path="edit-profile" element={<EditProfile />} />
+              <Route path=" separation" element={<SeparationFromStaff />} />
             </Route>
 
             {/* Public Routes */}

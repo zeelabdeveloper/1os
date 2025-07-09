@@ -275,7 +275,7 @@ exports.convertUserFromOnboarding = async (req, res) => {
     await newUser[0].save({ session });
 
     // Update application status
-    application.status = "hired";
+    application.status = "onboarded";
     await application.save({ session });
 
     // Commit transaction if all operations succeed

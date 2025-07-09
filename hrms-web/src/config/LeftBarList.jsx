@@ -153,7 +153,11 @@ const menuItems = [
 
       {
         key: "/recruitment/onboarding",
-        label: "Job Onboarding",
+        label: "Onboarding",
+      },
+      {
+        key: "/recruitment/separation",
+        label: "Separation",
       },
 
       {
@@ -313,6 +317,10 @@ const menuItems = [
       {
         key: "/edit-profile",
         label: "Edit Profile",
+      },
+      {
+        key: "/separation",
+        label: "Resignation",
       },
       {
         key: "/faq",

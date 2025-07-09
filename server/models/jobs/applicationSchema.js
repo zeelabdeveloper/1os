@@ -32,7 +32,7 @@ const ApplicationSchema = new mongoose.Schema({
   coverLetter: String,
   status: {
     type: String,
-    enum: ["applied", "phone_screen",  "onboarding" , "interview", "hired", "rejected"],
+    enum: ["applied", "phone_screen",  "onboarding" , "onboarded" ,   "interview", "hired", "rejected"],
     default: "applied",
   },
  
