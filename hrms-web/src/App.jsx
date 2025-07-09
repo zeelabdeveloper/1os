@@ -397,7 +397,7 @@ const App = () => {
               <Route path="faq" element={<Faq />} />
               <Route path="developer-settings" element={<DeveloperSetting />} />
               <Route path="edit-profile" element={<EditProfile />} />
-              <Route path=" separation" element={<SeparationFromStaff />} />
+              <Route path="separation" element={<SeparationFromStaff />} />
             </Route>
 
             {/* Public Routes */}

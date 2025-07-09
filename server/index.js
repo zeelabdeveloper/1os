@@ -56,6 +56,7 @@ app.use("/api/v1/company", require("./routes/company-routes.js"));
 app.use("/api/v1/user", require("./routes/user-route.js"));
 app.use("/api/v1/helper", require("./routes/helper-route.js"));
 app.use("/api/v1/attendance", require("./routes/attendance-routes.js"));
+app.use("/api/v1/separations", require("./routes/separation.js"));
 app.use("/api/v1/regularization", require("./routes/regularization.js"));
 app.use(
   "/api/v1/store/storeGroups",
