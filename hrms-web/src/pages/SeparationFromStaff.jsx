@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "../axiosConfig";
 import { toast } from "react-hot-toast";
 import {
@@ -19,14 +19,7 @@ import {
   Upload,
   message,
 } from "antd";
-import {
-  FileTextOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  ExclamationCircleOutlined,
-  UploadOutlined,
-  DownloadOutlined,
-} from "@ant-design/icons";
+import { FileTextOutlined, DownloadOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import useAuthStore from "../stores/authStore";
 
@@ -35,46 +28,104 @@ const { TextArea } = Input;
 const { confirm } = Modal;
 
 const SeparationFromStaff = () => {
+  console.log("ssdds");
   const { user } = useAuthStore();
   const [form] = Form.useForm();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
   const [actionType, setActionType] = useState("view");
-  const queryClient = useQueryClient();
 
   // Fetch user's separation requests
-  const { data: userRequests, isLoading } = useQuery({
+  // const { data: userRequests, isLoading } = useQuery({
+  //   queryKey: ["userSeparationRequests", user._id],
+  //   queryFn: async () => {
+  //     const response = await axios.get(
+  //       `/api/v1/separations/my-requests/${user?._id}`
+  //     );
+  //     return response.data;
+  //   },
+  //   enabled: !!user._id,
+  // });
+
+  // // Create separation request mutation
+  // const createSeparation = useMutation({
+  //   mutationFn: async (values) => {
+  //     const response = await axios.post("/api/v1/separations", values);
+  //     return response.data;
+  //   },
+  //   onSuccess: () => {
+  //     toast.success("Separation request submitted successfully");
+  //     form.resetFields();
+  //     setIsModalVisible(false);
+  //   },
+  //   onError: (error) => {
+  //     toast.error(error.response?.data?.error || "Failed to submit request");
+  //   },
+  // });
+
+
+
+
+
+
+
+
+
+
+const { data: userRequests, isLoading, refetch } = useQuery({
     queryKey: ["userSeparationRequests", user._id],
     queryFn: async () => {
-      const response = await axios.get(`/api/v1/separations/my-requests/${user?._id}`);
+      const response = await axios.get(
+        `/api/v1/separations/my-requests/${user?._id}`
+      );
       return response.data;
     },
     enabled: !!user._id,
-  });
+});
 
-  // Create separation request mutation
-  const createSeparation = useMutation({
+// Create separation request mutation
+const createSeparation = useMutation({
     mutationFn: async (values) => {
       const response = await axios.post("/api/v1/separations", values);
       return response.data;
     },
     onSuccess: () => {
       toast.success("Separation request submitted successfully");
-      queryClient.invalidateQueries(["userSeparationRequests", user?._id]);
       form.resetFields();
       setIsModalVisible(false);
+      refetch(); // यहाँ सीधे refetch को call करें
     },
     onError: (error) => {
       toast.error(error.response?.data?.error || "Failed to submit request");
     },
-  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // Handle form submission
   const handleSubmit = (values) => {
     values.expectedSeparationDate =
       values.expectedSeparationDate.format("YYYY-MM-DD");
-    createSeparation.mutate({ ...values, user: user._id });
+    createSeparation.mutate({
+      ...values,
+      user: user?._id,
+      createBy: user?._id,
+    });
   };
 
   // Show separation form modal
@@ -90,35 +141,6 @@ const SeparationFromStaff = () => {
     setActionType("view");
     setIsModalVisible(true);
   };
-
-  // Cancel request confirmation
-  const showCancelConfirm = (requestId) => {
-    confirm({
-      title: "Are you sure you want to cancel this request?",
-      icon: <ExclamationCircleOutlined />,
-      content: "This action cannot be undone.",
-      onOk() {
-        cancelRequest(requestId);
-      },
-    });
-  };
-
-  // Cancel request mutation
-  const cancelRequest = useMutation({
-    mutationFn: async (requestId) => {
-      const response = await axios.put(`/api/v1/separations/${requestId}`, {
-        status: "rejected",
-      });
-      return response.data;
-    },
-    onSuccess: () => {
-      toast.success("Request cancelled successfully");
-      queryClient.invalidateQueries(["userSeparationRequests", user._id]);
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.error || "Failed to cancel request");
-    },
-  });
 
   // Status tag colors
   const statusTagColors = {
@@ -173,16 +195,6 @@ const SeparationFromStaff = () => {
           >
             View
           </Button>
-          {record.status === "pending" && (
-            <Button
-              type="link"
-              danger
-              icon={<CloseOutlined />}
-              onClick={() => showCancelConfirm(record._id)}
-            >
-              Cancel
-            </Button>
-          )}
         </Space>
       ),
     },
@@ -254,7 +266,7 @@ const SeparationFromStaff = () => {
             >
               <Select placeholder="Select separation type">
                 <Option value="resignation">Resignation</Option>
-               
+
                 <Option value="retirement">Retirement</Option>
                 <Option value="other">Other</Option>
               </Select>
@@ -271,7 +283,7 @@ const SeparationFromStaff = () => {
               />
             </Form.Item>
 
-            <Form.Item
+            {/* <Form.Item
               name="noticePeriod"
               label="Notice Period (days)"
               rules={[
@@ -279,6 +291,43 @@ const SeparationFromStaff = () => {
               ]}
             >
               <Input type="number" min="1" />
+            </Form.Item>
+
+            <Form.Item
+              name="expectedSeparationDate"
+              label="Expected Separation Date"
+              rules={[
+                {
+                  required: true,
+                  message: "Please select expected separation date",
+                },
+              ]}
+            >
+              <DatePicker
+                style={{ width: "100%" }}
+                disabledDate={(current) =>
+                  current && current < dayjs().endOf("day")
+                }
+              />
+            </Form.Item> */}
+
+            <Form.Item
+              name="noticePeriod"
+              label="Notice Period (days)"
+              rules={[
+                { required: true, message: "Please enter notice period" },
+              ]}
+            >
+              <Input
+                type="number"
+                min="0"
+                onChange={(e) => {
+                  const days = parseInt(e.target.value || 0);
+                  const newDate =
+                    days === 0 ? dayjs() : dayjs().add(days, "day");
+                  form.setFieldsValue({ expectedSeparationDate: newDate });
+                }}
+              />
             </Form.Item>
 
             <Form.Item

@@ -141,7 +141,6 @@ exports.createNews = async (req, res) => {
         </div>
         `;
 
- 
         await sendEmail({
           from: `${EmailConfig.mailUsername} <${EmailConfig.mailFromAddress}>`,
           to: users.map((u) => u.email),
@@ -237,8 +236,7 @@ exports.deleteNews = async (req, res) => {
  */
 exports.getNewsByRole = async (req, res) => {
   const { role } = req.query;
-  console.log(role);
-  // Validate role ID
+
   if (!mongoose.Types.ObjectId.isValid(role)) {
     return res.status(400).json({
       success: false,

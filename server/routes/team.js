@@ -1,11 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
-const Employee = require("../models/EmployeeId");
-const sendEmail = require("../services/sendInterviewScheduledEmail");
+
 const mongoose = require("mongoose");
 const Department = require("../models/Department");
-const Organization = require("../models/Organization");
+
 // ✅ Create User
 
 // ✅ Get All Users
@@ -84,10 +83,16 @@ router.get("/allusers/:userId", async (req, res) => {
   }
 });
 
-
-
-
-
+router.get("/myteam/analytics/:id", async (req, res) => {
+  try {
+    const assignedDepartmentForHeadRole = await Department.find({
+      head: req.params.id,
+    });
+    return res.status(404).json({message:"Error"})
+  } catch (error) {
+    return res.status(404).json({message:"Error"})
+  }
+});
 
 // router.get("/allusers/:userId", async (req, res) => {
 //   try {

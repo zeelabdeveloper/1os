@@ -34,12 +34,19 @@ import {
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import debounce from "lodash/debounce";
+import useAuthStore from "../../stores/authStore";
+import SeparationAnalytics from "../../components/SeparationAnalytics";
 
 const { Option } = Select;
 const { TextArea } = Input;
 const { Step } = Steps;
 
 const AdminSeparationManagement = () => {
+
+ const queryClient = useQueryClient();
+
+
+  const { user } = useAuthStore();
   const [form] = Form.useForm();
   const [separationForm] = Form.useForm();
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -59,10 +66,14 @@ const AdminSeparationManagement = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [assetsConfirmed, setAssetsConfirmed] = useState(false);
-  const queryClient = useQueryClient();
 
   // Fetch separation requests
-  const { data: separationData, isLoading } = useQuery({
+  const {
+    data: separationData,
+    refetch,
+    
+    isLoading,
+  } = useQuery({
     queryKey: ["allSeparationRequests", searchParams],
     queryFn: async () => {
       const response = await axios.get("/api/v1/separations", {
@@ -71,7 +82,7 @@ const AdminSeparationManagement = () => {
       return response.data;
     },
   });
-console.log(separationData)
+
   // Fetch employees with pagination and search
   const { data: employeesData, isLoading: employeesLoading } = useQuery({
     queryKey: ["allEmployees", employeeSearchParams],
@@ -83,8 +94,9 @@ console.log(separationData)
       });
       return response.data;
     },
+    enabled: isSeparationModalVisible,
   });
- 
+
   // Update separation request mutation
   const updateSeparation = useMutation({
     mutationFn: async (values) => {
@@ -96,7 +108,10 @@ console.log(separationData)
     },
     onSuccess: () => {
       toast.success("Separation request updated successfully");
-      queryClient.invalidateQueries(["allSeparationRequests"]);
+      refetch();
+       queryClient.invalidateQueries({
+      queryKey: ['separationAnalytics']
+    });
       setIsModalVisible(false);
     },
     onError: (error) => {
@@ -116,7 +131,10 @@ console.log(separationData)
     },
     onSuccess: () => {
       toast.success("Separation initiated successfully");
-      queryClient.invalidateQueries(["allSeparationRequests"]);
+      refetch();
+      queryClient.invalidateQueries({
+      queryKey: ['separationAnalytics']
+    });
       setIsSeparationModalVisible(false);
       setCurrentStep(0);
       setSelectedEmployee(null);
@@ -140,7 +158,7 @@ console.log(separationData)
 
   // Handle form submission for review modal
   const handleSubmit = (values) => {
-    updateSeparation.mutate(values);
+    updateSeparation.mutate({ ...values, updatedBy: user?._id });
   };
 
   // Handle admin-initiated separation submission
@@ -150,11 +168,15 @@ console.log(separationData)
 
   // View and edit request
   const handleViewRequest = (request) => {
+    console.log(request);
     setSelectedRequest(request);
     form.setFieldsValue({
       status: request.status,
       adminComments: request.adminComments,
       noticePeriod: request.noticePeriod,
+      expectedSeparationDate: request.expectedSeparationDate
+        ? dayjs(request.expectedSeparationDate) // Just pass the ISO string directly to dayjs
+        : null,
     });
     setIsModalVisible(true);
   };
@@ -249,24 +271,35 @@ console.log(separationData)
           <Form.Item
             name="noticePeriod"
             label="Notice Period (days)"
-            initialValue={30}
             rules={[{ required: true, message: "Please enter notice period" }]}
           >
-            <Input type="number" min="1" />
+            <Input
+              type="number"
+              min={0}
+              onChange={(e) => {
+                const days = parseInt(e.target.value || 0);
+                const newDate = days === 0 ? dayjs() : dayjs().add(days, "day");
+                separationForm.setFieldsValue({
+                  expectedSeparationDate: newDate,
+                });
+              }}
+            />
           </Form.Item>
 
           <Form.Item
             name="expectedSeparationDate"
-            label="Separation Date"
+            label="Expected Separation Date"
             rules={[
-              { required: true, message: "Please select separation date" },
+              {
+                required: true,
+                message: "Please select expected separation date",
+              },
             ]}
-            initialValue={dayjs().add(30, "day")}
           >
             <DatePicker
               style={{ width: "100%" }}
               disabledDate={(current) =>
-                current && current < dayjs().startOf("day")
+                current && current < dayjs().endOf("day")
               }
             />
           </Form.Item>
@@ -366,23 +399,13 @@ console.log(separationData)
       key: "user",
       render: (user) => (
         <div className="flex items-center">
-          <Avatar
-            size="small"
-            src={user.profilePicture}
-            icon={<UserOutlined />}
-            className="mr-2"
-          />
-          {user.firstName} {user.lastName}
+          <Avatar size="small" icon={<UserOutlined />} className="mr-2" />
+          {user?.firstName} {user?.lastName}
         </div>
       ),
-      sorter: (a, b) => a.user.firstName.localeCompare(b.user.firstName),
+      sorter: (a, b) => a?.user?.firstName.localeCompare(b?.user?.firstName),
     },
-    {
-      title: "Employee ID",
-      dataIndex: "user",
-      key: "employeeId",
-      render: (user) => user.EmployeeId || "N/A",
-    },
+
     {
       title: "Request Date",
       dataIndex: "createdAt",
@@ -479,9 +502,15 @@ console.log(separationData)
   // Quick approve/reject action
   const handleQuickAction = async (requestId, action) => {
     try {
-      await axios.put(`/api/v1/separations/${requestId}`, { status: action });
+      await axios.put(`/api/v1/separations/${requestId}`, {
+        status: action,
+        updatedBy: user?._id,
+      });
       toast.success(`Request ${action} successfully`);
-      queryClient.invalidateQueries(["allSeparationRequests"]);
+      refetch();
+       queryClient.invalidateQueries({
+      queryKey: ['separationAnalytics']
+    });
     } catch (error) {
       toast.error(error.response?.data?.error || "Failed to update request");
     }
@@ -510,7 +539,7 @@ console.log(separationData)
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 h-[92vh] overflow-y-auto  ">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Employee Separations</h1>
         <Space>
@@ -559,7 +588,7 @@ console.log(separationData)
         }}
         bordered
       />
-
+      <SeparationAnalytics />
       {/* Review Modal */}
       <Modal
         title={
@@ -664,12 +693,39 @@ console.log(separationData)
 
               <Form.Item
                 name="noticePeriod"
-                label="Adjust Notice Period (days)"
+                label="Notice Period (days)"
                 rules={[
                   { required: true, message: "Please enter notice period" },
                 ]}
               >
-                <Input type="number" min="1" />
+                <Input
+                  type="number"
+                  min="0"
+                  onChange={(e) => {
+                    const days = parseInt(e.target.value || 0);
+                    const newDate =
+                      days === 0 ? dayjs() : dayjs().add(days, "day");
+                    form.setFieldsValue({ expectedSeparationDate: newDate });
+                  }}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="expectedSeparationDate"
+                label="Expected Separation Date"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please select expected separation date",
+                  },
+                ]}
+              >
+                <DatePicker
+                  style={{ width: "100%" }}
+                  disabledDate={(current) =>
+                    current && current < dayjs().endOf("day")
+                  }
+                />
               </Form.Item>
             </Form>
           </>

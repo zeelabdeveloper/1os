@@ -24,7 +24,7 @@ const loadEmailConfig = async () => {
         configData.mailFromName = config.mailFromName || "";
       }
     }
-    console.log("Email config loaded/refreshed.");
+    
   } catch (error) {
     console.error("Failed to load email config:", error.message);
   }

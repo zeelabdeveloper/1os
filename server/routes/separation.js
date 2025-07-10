@@ -1,20 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const Separation = require("../models/Separation");
-const User = require("../models/User");
 
 // Apply for separation
 
-
-
-
-
-
-
-
 router.post("/", async (req, res) => {
   try {
-    console.log( req.body)
     // Check if user already has a pending request
     const existingRequest = await Separation.findOne({
       user: req.body.user,
@@ -36,7 +27,7 @@ router.post("/", async (req, res) => {
         .status(400)
         .json({ error: "You already have a approved separation request" });
     }
-    console.log(req.body.user);
+
     const separation = new Separation({
       ...req.body,
     });
@@ -48,20 +39,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Get user's separation requests
 router.get("/my-requests/:id", async (req, res) => {
   try {
@@ -69,6 +46,86 @@ router.get("/my-requests/:id", async (req, res) => {
       createdAt: -1,
     });
     res.json(requests);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// In your separation routes file
+router.get("/analytics", async (req, res) => {
+  try {
+    const { startDate, endDate, type } = req.query;
+
+    const matchQuery = {
+      createdAt: {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      },
+    };
+
+    if (type) matchQuery.separationType = type;
+
+    // Total separations count
+    const totalSeparations = await Separation.countDocuments(matchQuery);
+
+    // Status breakdown
+    const statusBreakdown = await Separation.aggregate([
+      { $match: matchQuery },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]);
+
+    // Type breakdown
+    const typeBreakdown = await Separation.aggregate([
+      { $match: matchQuery },
+      { $group: { _id: "$separationType", count: { $sum: 1 } } },
+    ]);
+
+    // Previous period comparison
+    const prevPeriodStart = new Date(startDate);
+    const prevPeriodEnd = new Date(endDate);
+    const periodLength =
+      (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24);
+    prevPeriodStart.setDate(prevPeriodStart.getDate() - periodLength);
+    prevPeriodEnd.setDate(prevPeriodEnd.getDate() - periodLength);
+
+    const prevPeriodCount = await Separation.countDocuments({
+      createdAt: {
+        $gte: prevPeriodStart,
+        $lte: prevPeriodEnd,
+      },
+    });
+
+    const percentageChange =
+      prevPeriodCount > 0
+        ? ((totalSeparations - prevPeriodCount) / prevPeriodCount) * 100
+        : totalSeparations > 0
+        ? 100
+        : 0;
+
+    // Recent separations
+    const recentSeparations = await Separation.find(matchQuery)
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("user", "firstName lastName");
+
+    res.json({
+      totalSeparations,
+      approvedCount:
+        statusBreakdown.find((s) => s._id === "approved")?.count || 0,
+      pendingCount:
+        statusBreakdown.find((s) => s._id === "pending")?.count || 0,
+      rejectedCount:
+        statusBreakdown.find((s) => s._id === "rejected")?.count || 0,
+      approvalRate:
+        totalSeparations > 0
+          ? ((statusBreakdown.find((s) => s._id === "approved")?.count || 0) /
+              totalSeparations) *
+            100
+          : 0,
+      typeBreakdown,
+      percentageChange,
+      recentSeparations,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -94,25 +151,25 @@ router.get("/", async (req, res) => {
     // Try to populate if possible, but don't fail if it doesn't work
     try {
       query = query.populate({
-        path: 'user',
-        select: 'firstName lastName email EmployeeId profilePicture',
-        options: { strict: false }
+        path: "user",
+        select: "firstName lastName email EmployeeId profilePicture",
+        options: { strict: false },
       });
     } catch (populateError) {
-      console.warn('Population failed:', populateError.message);
+      console.warn("Population failed:", populateError.message);
       // Continue without population
     }
 
     const [requests, totalCount] = await Promise.all([
       query.exec(),
-      Separation.countDocuments(filter)
+      Separation.countDocuments(filter),
     ]);
 
     res.json({
       requests,
       totalCount,
       totalPages: Math.ceil(totalCount / limitNumber),
-      currentPage: pageNumber
+      currentPage: pageNumber,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -130,11 +187,6 @@ router.put("/:id", async (req, res) => {
 
     if (!separation) {
       return res.status(404).json({ error: "Separation request not found" });
-    }
-
-    // If approved, update user status
-    if (req.body.status === "approved") {
-      await User.findByIdAndUpdate(separation.user._id, { isActive: false });
     }
 
     res.json(separation);

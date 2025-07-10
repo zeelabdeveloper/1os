@@ -5,8 +5,10 @@ const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const morgan = require("morgan");
-const { refreshEmailConfig, EmailConfig } = require("./helper/emailConfig.js");
-// const { refreshEmailConfig } = require("./helper/emailConfig.js");
+const { refreshEmailConfig } = require("./helper/emailConfig.js");
+const cron = require("node-cron");
+const Separation = require("./models/Separation.js");
+const User = require("./models/User.js");
 dotenv.config();
 
 const app = express();
@@ -37,6 +39,40 @@ app.use(
     origin: "*",
     credentials: false,
   })
+);
+
+
+cron.schedule(
+  "59 17 * * *",
+  async () => {
+   
+    
+    try {
+      const today = new Date();
+     
+      const separations = await Separation.find({
+        status: "approved",
+        expectedSeparationDate: { $lte: today },
+      }).populate("user");
+      
+      for (const sep of separations) {
+      
+        if (sep.user && sep.user.isActive) {
+          await User.findByIdAndUpdate(sep.user._id, { isActive: false });
+          console.log(
+            `User ${sep.user._id} deactivated (Separation Date: ${sep.expectedSeparationDate})`
+          );
+        }
+      }
+      console.log("Done");
+    } catch (err) {
+      console.error("Separation cron job error:", err);
+    }
+  },
+  {
+    scheduled: true,
+    timezone: "Asia/Kolkata",
+  }
 );
 
 // Routes
