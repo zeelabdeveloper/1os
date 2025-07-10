@@ -35,6 +35,7 @@ import { fetchStaff, deleteStaff } from "../../api/auth";
 import { debounce } from "lodash";
 import { exportToExcel } from "../../utils/exportUtils";
 import toast from "react-hot-toast";
+import SystemDashboard from "../DashBoardForSystem/SystemDashboard";
 
 // Custom skeleton components
 const TableSkeleton = () => (
@@ -147,7 +148,7 @@ export default function StaffListPage() {
 
   // Handle delete
   // const handleDelete = async(id) => {
-    
+
   //  await Modal.confirm({
   //     title: (
   //       <div className="flex items-center">
@@ -178,49 +179,45 @@ export default function StaffListPage() {
   //   });
   // };
 
-const handleDelete = async (id) => {
-  toast.custom((t) => (
-    <div className={`bg-white border rounded-lg shadow-lg p-4 w-[400px] ${t.visible ? 'animate-enter' : 'animate-leave'}`}>
-      <div className="flex items-start gap-3">
-        <FaExclamationCircle className="text-red-500 mt-1 text-xl" />
-        <div className="flex-1">
-          <p className="font-semibold text-gray-800">Delete Staff Member</p>
-          <p className="text-sm text-gray-600 mt-1">
-            Are you sure you want to delete this staff member? This action cannot be undone.
-          </p>
+  const handleDelete = async (id) => {
+    toast.custom((t) => (
+      <div
+        className={`bg-white border rounded-lg shadow-lg p-4 w-[400px] ${
+          t.visible ? "animate-enter" : "animate-leave"
+        }`}
+      >
+        <div className="flex items-start gap-3">
+          <FaExclamationCircle className="text-red-500 mt-1 text-xl" />
+          <div className="flex-1">
+            <p className="font-semibold text-gray-800">Delete Staff Member</p>
+            <p className="text-sm text-gray-600 mt-1">
+              Are you sure you want to delete this staff member? This action
+              cannot be undone.
+            </p>
 
-          <div className="flex justify-end mt-4 gap-2">
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="px-4 py-1 rounded-md text-gray-600 border border-gray-300 hover:bg-gray-100 transition"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => {
-                
-                toast.dismiss(t.id);
-                deleteMutation.mutate(id);
-              }}
-              className="px-4 py-1 rounded-md bg-red-600 text-white flex items-center gap-1 hover:bg-red-700 transition"
-            >
-              <FiTrash2 /> Delete
-            </button>
+            <div className="flex justify-end mt-4 gap-2">
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="px-4 py-1 rounded-md text-gray-600 border border-gray-300 hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  deleteMutation.mutate(id);
+                }}
+                className="px-4 py-1 rounded-md bg-red-600 text-white flex items-center gap-1 hover:bg-red-700 transition"
+              >
+                <FiTrash2 /> Delete
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  ));
-};
+    ));
+  };
 
- 
-
-
-
-
-
-
-  
   // Handle export to Excel
   const handleExport = () => {
     if (data?.data?.length) {
@@ -330,6 +327,8 @@ const handleDelete = async (id) => {
   return (
     <div className="container h-[92vh] overflow-y-auto mx-auto p-4">
       {contextHolder}
+
+      <SystemDashboard />
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold flex items-center">
