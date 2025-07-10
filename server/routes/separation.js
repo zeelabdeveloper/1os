@@ -4,8 +4,17 @@ const Separation = require("../models/Separation");
 const User = require("../models/User");
 
 // Apply for separation
+
+
+
+
+
+
+
+
 router.post("/", async (req, res) => {
   try {
+    console.log( req.body)
     // Check if user already has a pending request
     const existingRequest = await Separation.findOne({
       user: req.body.user,
@@ -39,6 +48,20 @@ router.post("/", async (req, res) => {
   }
 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Get user's separation requests
 router.get("/my-requests/:id", async (req, res) => {
   try {
@@ -54,15 +77,43 @@ router.get("/my-requests/:id", async (req, res) => {
 // Admin get all separation requests
 router.get("/", async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, page = 1, limit = 10 } = req.query;
     const filter = {};
     if (status) filter.status = status;
 
-    const requests = await Separation.find(filter)
-      .populate("user", "firstName lastName email EmployeeId")
-      .sort({ createdAt: -1 });
+    // Convert page and limit to numbers
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
 
-    res.json(requests);
+    // Base query without population
+    let query = Separation.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((pageNumber - 1) * limitNumber)
+      .limit(limitNumber);
+
+    // Try to populate if possible, but don't fail if it doesn't work
+    try {
+      query = query.populate({
+        path: 'user',
+        select: 'firstName lastName email EmployeeId profilePicture',
+        options: { strict: false }
+      });
+    } catch (populateError) {
+      console.warn('Population failed:', populateError.message);
+      // Continue without population
+    }
+
+    const [requests, totalCount] = await Promise.all([
+      query.exec(),
+      Separation.countDocuments(filter)
+    ]);
+
+    res.json({
+      requests,
+      totalCount,
+      totalPages: Math.ceil(totalCount / limitNumber),
+      currentPage: pageNumber
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

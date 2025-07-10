@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "../../axiosConfig";
 import { toast } from "react-hot-toast";
@@ -18,6 +18,10 @@ import {
   message,
   Steps,
   Avatar,
+  Checkbox,
+  Pagination,
+  Spin,
+  Card,
 } from "antd";
 import {
   CheckOutlined,
@@ -26,8 +30,10 @@ import {
   SearchOutlined,
   UserOutlined,
   PlusOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import debounce from "lodash/debounce";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -38,24 +44,25 @@ const AdminSeparationManagement = () => {
   const [separationForm] = Form.useForm();
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isSeparationModalVisible, setIsSeparationModalVisible] = useState(false);
-  const [searchParams, setSearchParams] = useState({});
+  const [isSeparationModalVisible, setIsSeparationModalVisible] =
+    useState(false);
+  const [searchParams, setSearchParams] = useState({
+    status: "",
+    page: 1,
+    limit: 10,
+  });
+  const [employeeSearchParams, setEmployeeSearchParams] = useState({
+    search: "",
+    page: 1,
+    limit: 10,
+  });
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [assetsConfirmed, setAssetsConfirmed] = useState(false);
   const queryClient = useQueryClient();
 
-  // Fetch all employees
-  const { data: employees } = useQuery({
-    queryKey: ["allEmployees"],
-    queryFn: async () => {
-      const response = await axios.get("/api/v1/users");
-      return response.data.filter(user => user.isActive); // Only active employees
-    },
-  });
-
-  // Fetch all separation requests
-  const { data: separationRequests, isLoading } = useQuery({
+  // Fetch separation requests
+  const { data: separationData, isLoading } = useQuery({
     queryKey: ["allSeparationRequests", searchParams],
     queryFn: async () => {
       const response = await axios.get("/api/v1/separations", {
@@ -64,7 +71,20 @@ const AdminSeparationManagement = () => {
       return response.data;
     },
   });
-
+console.log(separationData)
+  // Fetch employees with pagination and search
+  const { data: employeesData, isLoading: employeesLoading } = useQuery({
+    queryKey: ["allEmployees", employeeSearchParams],
+    queryFn: async () => {
+      const response = await axios.get("/api/v1/user/staff", {
+        params: {
+          ...employeeSearchParams,
+        },
+      });
+      return response.data;
+    },
+  });
+ 
   // Update separation request mutation
   const updateSeparation = useMutation({
     mutationFn: async (values) => {
@@ -103,9 +123,20 @@ const AdminSeparationManagement = () => {
       separationForm.resetFields();
     },
     onError: (error) => {
-      toast.error(error.response?.data?.error || "Failed to initiate separation");
+      toast.error(
+        error.response?.data?.error || "Failed to initiate separation"
+      );
     },
   });
+
+  // Handle employee search with debounce
+  const handleEmployeeSearch = debounce((value) => {
+    setEmployeeSearchParams((prev) => ({
+      ...prev,
+      search: value,
+      page: 1,
+    }));
+  }, 500);
 
   // Handle form submission for review modal
   const handleSubmit = (values) => {
@@ -118,7 +149,7 @@ const AdminSeparationManagement = () => {
   };
 
   // View and edit request
-  const handleViewRequest = (request, action = "view") => {
+  const handleViewRequest = (request) => {
     setSelectedRequest(request);
     form.setFieldsValue({
       status: request.status,
@@ -147,28 +178,49 @@ const AdminSeparationManagement = () => {
             style={{ width: "100%" }}
             placeholder="Search employee by name or ID"
             optionFilterProp="children"
-            filterOption={(input, option) =>
-              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-            }
+            filterOption={false}
+            onSearch={handleEmployeeSearch}
             onChange={(value) => {
-              const emp = employees.find(e => e._id === value);
+              const emp = employeesData?.data?.find((e) => e._id === value);
               setSelectedEmployee(emp);
             }}
+            loading={employeesLoading}
+            notFoundContent={employeesLoading ? <Spin size="small" /> : null}
           >
-            {employees?.map(employee => (
-              <Option key={employee._id} value={employee._id}>
-                <div className="flex items-center">
-                  <Avatar 
-                    size="small" 
-                    src={employee.profilePicture} 
-                    icon={<UserOutlined />} 
-                    className="mr-2"
-                  />
-                  {employee.firstName} {employee.lastName} ({employee.EmployeeId || 'N/A'})
-                </div>
-              </Option>
-            ))}
+            {Array.isArray(employeesData?.data) &&
+              employeesData?.data?.map((employee) => (
+                <Option key={employee._id} value={employee._id}>
+                  <div className="flex items-center">
+                    <Avatar
+                      size="small"
+                      src={employee.profilePicture}
+                      icon={<UserOutlined />}
+                      className="mr-2"
+                    />
+                    {employee.firstName} {employee.lastName} (
+                    {employee.EmployeeId || "N/A"})
+                  </div>
+                </Option>
+              ))}
           </Select>
+
+          <div className="mt-4 flex justify-end">
+            <Pagination
+              size="small"
+              current={employeeSearchParams.page}
+              pageSize={employeeSearchParams.limit}
+              total={employeesData?.totalCount}
+              onChange={(page, pageSize) => {
+                setEmployeeSearchParams((prev) => ({
+                  ...prev,
+                  page,
+                  limit: pageSize,
+                }));
+              }}
+              showSizeChanger
+              showQuickJumper
+            />
+          </div>
         </div>
       ),
     },
@@ -190,32 +242,32 @@ const AdminSeparationManagement = () => {
               <Option value="resignation">Resignation</Option>
               <Option value="termination">Termination</Option>
               <Option value="retirement">Retirement</Option>
-              <Option value="layoff">Layoff</Option>
-              <Option value="absconding">Absconding</Option>
               <Option value="other">Other</Option>
             </Select>
           </Form.Item>
 
-          {selectedEmployee && (
-            <Form.Item
-              name="noticePeriod"
-              label="Notice Period (days)"
-              initialValue={30}
-              rules={[{ required: true, message: "Please enter notice period" }]}
-            >
-              <Input type="number" min="1" />
-            </Form.Item>
-          )}
+          <Form.Item
+            name="noticePeriod"
+            label="Notice Period (days)"
+            initialValue={30}
+            rules={[{ required: true, message: "Please enter notice period" }]}
+          >
+            <Input type="number" min="1" />
+          </Form.Item>
 
           <Form.Item
             name="expectedSeparationDate"
             label="Separation Date"
-            rules={[{ required: true, message: "Please select date" }]}
-            initialValue={dayjs().add(30, 'day')}
+            rules={[
+              { required: true, message: "Please select separation date" },
+            ]}
+            initialValue={dayjs().add(30, "day")}
           >
-            <DatePicker 
-              style={{ width: "100%" }} 
-              disabledDate={(current) => current && current < dayjs().startOf('day')}
+            <DatePicker
+              style={{ width: "100%" }}
+              disabledDate={(current) =>
+                current && current < dayjs().startOf("day")
+              }
             />
           </Form.Item>
 
@@ -227,34 +279,13 @@ const AdminSeparationManagement = () => {
             <TextArea rows={4} placeholder="Enter reason for separation" />
           </Form.Item>
 
-          {(separationForm.getFieldValue('separationType') === 'termination' || 
-            separationForm.getFieldValue('separationType') === 'absconding') && (
-            <Form.Item>
-              <div className="p-4 border rounded bg-gray-50">
-                <Form.Item
-                  name="assetsConfirmed"
-                  valuePropName="checked"
-                  rules={[
-                    {
-                      validator: (_, value) =>
-                        value ? Promise.resolve() : Promise.reject('Please confirm assets collection'),
-                    },
-                  ]}
-                >
-                  <Checkbox
-                    onChange={(e) => setAssetsConfirmed(e.target.checked)}
-                  >
-                    I confirm that all company assets have been collected from this employee
-                  </Checkbox>
-                </Form.Item>
-              </div>
-            </Form.Item>
-          )}
+          <Form.Item name="assetsConfirmed" valuePropName="checked">
+            <Checkbox onChange={(e) => setAssetsConfirmed(e.target.checked)}>
+              Confirm all company assets have been collected
+            </Checkbox>
+          </Form.Item>
 
-          <Form.Item
-            name="adminComments"
-            label="Admin Comments"
-          >
+          <Form.Item name="adminComments" label="Admin Comments">
             <TextArea rows={3} placeholder="Any additional comments" />
           </Form.Item>
         </Form>
@@ -265,35 +296,62 @@ const AdminSeparationManagement = () => {
       content: (
         <div className="mt-6">
           {selectedEmployee && (
-            <Descriptions bordered column={1}>
-              <Descriptions.Item label="Employee">
-                <div className="flex items-center">
-                  <Avatar 
-                    size="large" 
-                    src={selectedEmployee.profilePicture} 
-                    icon={<UserOutlined />} 
-                    className="mr-3"
-                  />
-                  <div>
-                    <h4 className="m-0">{selectedEmployee.firstName} {selectedEmployee.lastName}</h4>
-                    <p className="m-0 text-gray-500">{selectedEmployee.EmployeeId || 'N/A'}</p>
+            <Card title="Separation Summary">
+              <Descriptions bordered column={1}>
+                <Descriptions.Item label="Employee">
+                  <div className="flex items-center">
+                    <Avatar
+                      size="large"
+                      src={selectedEmployee.profilePicture}
+                      icon={<UserOutlined />}
+                      className="mr-3"
+                    />
+                    <div>
+                      <h4 className="m-0">
+                        {selectedEmployee.firstName} {selectedEmployee.lastName}
+                      </h4>
+                      <p className="m-0 text-gray-500">
+                        {selectedEmployee.EmployeeId || "N/A"} |{" "}
+                        {selectedEmployee.email}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Descriptions.Item>
-              <Descriptions.Item label="Separation Type">
-                {separationForm.getFieldValue('separationType')?.charAt(0).toUpperCase() + 
-                 separationForm.getFieldValue('separationType')?.slice(1)}
-              </Descriptions.Item>
-              <Descriptions.Item label="Notice Period">
-                {separationForm.getFieldValue('noticePeriod')} days
-              </Descriptions.Item>
-              <Descriptions.Item label="Separation Date">
-                {dayjs(separationForm.getFieldValue('expectedSeparationDate')).format('DD MMM YYYY')}
-              </Descriptions.Item>
-              <Descriptions.Item label="Reason">
-                {separationForm.getFieldValue('reason')}
-              </Descriptions.Item>
-            </Descriptions>
+                </Descriptions.Item>
+                <Descriptions.Item label="Separation Type">
+                  {separationForm
+                    .getFieldValue("separationType")
+                    ?.charAt(0)
+                    .toUpperCase() +
+                    separationForm.getFieldValue("separationType")?.slice(1)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Notice Period">
+                  {separationForm.getFieldValue("noticePeriod")} days
+                </Descriptions.Item>
+                <Descriptions.Item label="Separation Date">
+                  {dayjs(
+                    separationForm.getFieldValue("expectedSeparationDate")
+                  ).format("DD MMM YYYY")}
+                </Descriptions.Item>
+                <Descriptions.Item label="Reason">
+                  {separationForm.getFieldValue("reason") || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Assets Confirmation">
+                  {assetsConfirmed ? (
+                    <Tag color="green">Confirmed</Tag>
+                  ) : (
+                    <Tag color="orange">Pending</Tag>
+                  )}
+                </Descriptions.Item>
+              </Descriptions>
+
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+                <ExclamationCircleOutlined className="text-yellow-500 mr-2" />
+                <span className="text-yellow-700">
+                  This action will immediately deactivate the employee's account
+                  upon confirmation.
+                </span>
+              </div>
+            </Card>
           )}
         </div>
       ),
@@ -306,7 +364,18 @@ const AdminSeparationManagement = () => {
       title: "Employee",
       dataIndex: "user",
       key: "user",
-      render: (user) => `${user.firstName} ${user.lastName}`,
+      render: (user) => (
+        <div className="flex items-center">
+          <Avatar
+            size="small"
+            src={user.profilePicture}
+            icon={<UserOutlined />}
+            className="mr-2"
+          />
+          {user.firstName} {user.lastName}
+        </div>
+      ),
+      sorter: (a, b) => a.user.firstName.localeCompare(b.user.firstName),
     },
     {
       title: "Employee ID",
@@ -319,12 +388,20 @@ const AdminSeparationManagement = () => {
       dataIndex: "createdAt",
       key: "createdAt",
       render: (date) => dayjs(date).format("DD MMM YYYY"),
+      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
     },
     {
       title: "Type",
       dataIndex: "separationType",
       key: "separationType",
       render: (type) => type.charAt(0).toUpperCase() + type.slice(1),
+      filters: [
+        { text: "Resignation", value: "resignation" },
+        { text: "Termination", value: "termination" },
+        { text: "Retirement", value: "retirement" },
+        { text: "Other", value: "other" },
+      ],
+      onFilter: (value, record) => record.separationType === value,
     },
     {
       title: "Expected Date",
@@ -344,6 +421,13 @@ const AdminSeparationManagement = () => {
             .join(" ")}
         </Tag>
       ),
+      filters: [
+        { text: "Pending", value: "pending" },
+        { text: "Approved", value: "approved" },
+        { text: "Rejected", value: "rejected" },
+        { text: "Under Review", value: "under_review" },
+      ],
+      onFilter: (value, record) => record.status === value,
     },
     {
       title: "Actions",
@@ -355,31 +439,35 @@ const AdminSeparationManagement = () => {
             icon={<FileTextOutlined />}
             onClick={() => handleViewRequest(record)}
           >
-            Review
+            Details
           </Button>
           {record.status === "pending" && (
             <>
               <Popconfirm
                 title="Approve this request?"
-                description="Are you sure you want to approve this separation request?"
+                description="This will deactivate the employee's account."
                 onConfirm={() => handleQuickAction(record._id, "approved")}
-                okText="Yes"
-                cancelText="No"
+                okText="Approve"
+                cancelText="Cancel"
+                okButtonProps={{ danger: true }}
               >
                 <Button
                   type="text"
                   icon={<CheckOutlined />}
-                  style={{ color: "green" }}
+                  className="text-green-600"
                 />
               </Popconfirm>
               <Popconfirm
                 title="Reject this request?"
-                description="Are you sure you want to reject this separation request?"
                 onConfirm={() => handleQuickAction(record._id, "rejected")}
-                okText="Yes"
-                cancelText="No"
+                okText="Reject"
+                cancelText="Cancel"
               >
-                <Button type="text" danger icon={<CloseOutlined />} />
+                <Button
+                  type="text"
+                  icon={<CloseOutlined />}
+                  className="text-red-500"
+                />
               </Popconfirm>
             </>
           )}
@@ -399,21 +487,16 @@ const AdminSeparationManagement = () => {
     }
   };
 
-  // Search by status
-  const handleStatusFilter = (status) => {
-    setSearchParams({ ...searchParams, status });
-  };
-
   // Handle step change in separation modal
   const handleStepChange = (step) => {
     if (step === 1 && !selectedEmployee) {
       message.error("Please select an employee first");
       return;
     }
-    
+
     if (step === 2) {
-      // Validate form before proceeding to confirmation
-      separationForm.validateFields()
+      separationForm
+        .validateFields()
         .then(() => {
           setCurrentStep(step);
         })
@@ -422,17 +505,17 @@ const AdminSeparationManagement = () => {
         });
       return;
     }
-    
+
     setCurrentStep(step);
   };
 
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Separation Requests Management</h1>
+        <h1 className="text-2xl font-bold">Employee Separations</h1>
         <Space>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             icon={<PlusOutlined />}
             onClick={() => setIsSeparationModalVisible(true)}
           >
@@ -441,31 +524,50 @@ const AdminSeparationManagement = () => {
           <Select
             placeholder="Filter by status"
             allowClear
-            onChange={handleStatusFilter}
+            onChange={(value) =>
+              setSearchParams((prev) => ({ ...prev, status: value, page: 1 }))
+            }
             style={{ width: 200 }}
+            value={searchParams.status || undefined}
           >
             <Option value="pending">Pending</Option>
             <Option value="approved">Approved</Option>
             <Option value="rejected">Rejected</Option>
             <Option value="under_review">Under Review</Option>
           </Select>
-          <Button type="primary" icon={<SearchOutlined />}>
-            Search
-          </Button>
         </Space>
       </div>
 
       <Table
         columns={columns}
-        dataSource={Array.isArray(separationRequests) && separationRequests}
+        dataSource={separationData?.requests || []}
         rowKey="_id"
         loading={isLoading}
-        pagination={{ pageSize: 10 }}
+        pagination={{
+          current: searchParams.page,
+          pageSize: searchParams.limit,
+          total: separationData?.totalCount,
+          onChange: (page, pageSize) => {
+            setSearchParams((prev) => ({
+              ...prev,
+              page,
+              limit: pageSize,
+            }));
+          },
+          showSizeChanger: true,
+          showTotal: (total) => `Total ${total} items`,
+        }}
+        bordered
       />
 
       {/* Review Modal */}
       <Modal
-        title={`Review Separation Request - ${selectedRequest?.user?.firstName} ${selectedRequest?.user?.lastName}`}
+        title={
+          <div className="flex items-center">
+            <FileTextOutlined className="mr-2" />
+            <span>Separation Request Details</span>
+          </div>
+        }
         width={800}
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
@@ -486,18 +588,44 @@ const AdminSeparationManagement = () => {
         {selectedRequest && (
           <>
             <Descriptions bordered column={2}>
-              <Descriptions.Item label="Employee ID">
-                {selectedRequest.user.EmployeeId || "N/A"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Email">
-                {selectedRequest.user.email}
+              <Descriptions.Item label="Employee">
+                <div className="flex items-center">
+                  <Avatar
+                    size="large"
+                    src={selectedRequest.user.profilePicture}
+                    icon={<UserOutlined />}
+                    className="mr-3"
+                  />
+                  <div>
+                    <h4 className="m-0">
+                      {selectedRequest.user.firstName}{" "}
+                      {selectedRequest.user.lastName}
+                    </h4>
+                    <p className="m-0 text-gray-500">
+                      {selectedRequest.user.EmployeeId || "N/A"} |{" "}
+                      {selectedRequest.user.email}
+                    </p>
+                  </div>
+                </div>
               </Descriptions.Item>
               <Descriptions.Item label="Request Date">
-                {dayjs(selectedRequest.createdAt).format("DD MMM YYYY")}
+                {dayjs(selectedRequest.createdAt).format(
+                  "DD MMM YYYY, hh:mm A"
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="Separation Type">
-                {selectedRequest.separationType.charAt(0).toUpperCase() +
-                  selectedRequest.separationType.slice(1)}
+                <Tag color="blue">
+                  {selectedRequest.separationType.charAt(0).toUpperCase() +
+                    selectedRequest.separationType.slice(1)}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Status">
+                <Tag color={statusTagColors[selectedRequest.status]}>
+                  {selectedRequest.status
+                    .split("_")
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(" ")}
+                </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Expected Separation Date">
                 {dayjs(selectedRequest.expectedSeparationDate).format(
@@ -508,7 +636,7 @@ const AdminSeparationManagement = () => {
                 {selectedRequest.noticePeriod} days
               </Descriptions.Item>
               <Descriptions.Item label="Reason" span={2}>
-                {selectedRequest.reason}
+                {selectedRequest.reason || "N/A"}
               </Descriptions.Item>
             </Descriptions>
 
@@ -517,7 +645,7 @@ const AdminSeparationManagement = () => {
             <Form form={form} layout="vertical" onFinish={handleSubmit}>
               <Form.Item
                 name="status"
-                label="Status"
+                label="Update Status"
                 rules={[{ required: true, message: "Please select status" }]}
               >
                 <Select placeholder="Select status">
@@ -537,6 +665,9 @@ const AdminSeparationManagement = () => {
               <Form.Item
                 name="noticePeriod"
                 label="Adjust Notice Period (days)"
+                rules={[
+                  { required: true, message: "Please enter notice period" },
+                ]}
               >
                 <Input type="number" min="1" />
               </Form.Item>
@@ -547,7 +678,12 @@ const AdminSeparationManagement = () => {
 
       {/* Initiate Separation Modal */}
       <Modal
-        title="Initiate Separation Process"
+        title={
+          <div className="flex items-center">
+            <PlusOutlined className="mr-2" />
+            <span>Initiate Employee Separation</span>
+          </div>
+        }
         width={800}
         open={isSeparationModalVisible}
         onCancel={() => {
@@ -558,14 +694,17 @@ const AdminSeparationManagement = () => {
         }}
         footer={[
           currentStep > 0 && (
-            <Button key="back" onClick={() => handleStepChange(currentStep - 1)}>
+            <Button
+              key="back"
+              onClick={() => handleStepChange(currentStep - 1)}
+            >
               Back
             </Button>
           ),
           currentStep < steps.length - 1 ? (
-            <Button 
-              key="next" 
-              type="primary" 
+            <Button
+              key="next"
+              type="primary"
               onClick={() => handleStepChange(currentStep + 1)}
               disabled={currentStep === 0 && !selectedEmployee}
             >
@@ -576,9 +715,11 @@ const AdminSeparationManagement = () => {
               key="submit"
               type="primary"
               loading={createSeparation.isLoading}
-              onClick={() => separationForm.submit()}
+              onClick={() =>
+                handleSeparationSubmit(separationForm.getFieldValue())
+              }
             >
-              Confirm & Initiate Separation
+              Confirm Separation
             </Button>
           ),
         ]}

@@ -16,8 +16,8 @@ const SeparationSchema = new mongoose.Schema({
     required: true
   },
   noticePeriod: {
-    type: Number, // in days
-    default: 30
+    type: String,
+    default: 0
   },
   expectedSeparationDate: {
     type: Date,
@@ -29,11 +29,6 @@ const SeparationSchema = new mongoose.Schema({
     default: "pending"
   },
   adminComments: String,
-  exitInterview: {
-    conducted: Boolean,
-    date: Date,
-    notes: String
-  },
   assetsReturned: {
     type: Boolean,
     default: false
@@ -44,10 +39,6 @@ const SeparationSchema = new mongoose.Schema({
     hr: Boolean,
     admin: Boolean
   },
-  documents: [{
-    name: String,
-    url: String
-  }],
   createdAt: {
     type: Date,
     default: Date.now
@@ -62,5 +53,5 @@ SeparationSchema.pre("save", function(next) {
   this.updatedAt = Date.now();
   next();
 });
-const Separation= mongoose.model("Separation", SeparationSchema);
-module.exports =Separation
+
+module.exports = mongoose.model("Separation", SeparationSchema);

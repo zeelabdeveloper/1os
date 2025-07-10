@@ -732,76 +732,145 @@ module.exports = {
     }
   },
 
+  // getStaff: async (req, res) => {
+  //   const session = await mongoose.startSession();
+  //   try {
+  //     session.startTransaction();
+
+  //     const {
+  //       page = 1,
+  //       limit = 10,
+  //       search = "",
+  //       sortBy = "createdAt",
+  //       sortOrder = -1,
+  //       isCocoEmployee,
+  //     } = req.query;
+
+  //     // Validate inputs
+  //     const pageInt = parseInt(page);
+  //     const limitInt = parseInt(limit);
+  //     const sortOrderInt = parseInt(sortOrder);
+
+  //     if (isNaN(pageInt)) throw new Error("Invalid page number");
+  //     if (isNaN(limitInt)) throw new Error("Invalid limit value");
+  //     if (![-1, 1].includes(sortOrderInt))
+  //       throw new Error("Invalid sort order");
+
+  //     // Build query
+  //     const query = {
+  //       ...buildSearchQuery(search),
+  //       ...(isCocoEmployee ? { isCocoEmployee } : {}),
+  //     };
+
+  //     // Build sort
+  //     const sort = buildSortCriteria(sortBy, sortOrderInt);
+
+  //     // Get data with pagination
+  //     const [totalCount, users] = await Promise.all([
+  //       User.countDocuments(query).session(session),
+  //       User.find(query)
+  //         .populate({
+  //           path: "Profile",
+  //         })
+  //         .sort(sort)
+  //         .limit(limitInt)
+  //         .skip((pageInt - 1) * limitInt)
+  //         .lean()
+  //         .session(session),
+  //     ]);
+
+  //     await session.commitTransaction();
+
+  //     res.status(200).json({
+  //       success: true,
+  //       data: users,
+  //       totalCount,
+  //       currentPage: pageInt,
+  //       totalPages: Math.ceil(totalCount / limitInt),
+  //     });
+  //   } catch (error) {
+  //     await session.abortTransaction();
+
+  //     console.error("Error fetching staff:", error);
+  //     res.status(500).json({
+  //       success: false,
+  //       message: "Server error while fetching staff",
+  //       error: error.message,
+  //     });
+  //   } finally {
+  //     session.endSession();
+  //   }
+  // },
+
+  
+  
+  
+  
+  
+  
   getStaff: async (req, res) => {
-    const session = await mongoose.startSession();
-    try {
-      session.startTransaction();
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      sortBy = "createdAt",
+      sortOrder = -1,
+      isCocoEmployee,
+    } = req.query;
 
-      const {
-        page = 1,
-        limit = 10,
-        search = "",
-        sortBy = "createdAt",
-        sortOrder = -1,
-        isCocoEmployee,
-      } = req.query;
+    const pageInt = parseInt(page);
+    const limitInt = parseInt(limit);
+    const sortOrderInt = parseInt(sortOrder);
 
-      // Validate inputs
-      const pageInt = parseInt(page);
-      const limitInt = parseInt(limit);
-      const sortOrderInt = parseInt(sortOrder);
+    if (isNaN(pageInt)) throw new Error("Invalid page number");
+    if (isNaN(limitInt)) throw new Error("Invalid limit value");
+    if (![-1, 1].includes(sortOrderInt)) throw new Error("Invalid sort order");
 
-      if (isNaN(pageInt)) throw new Error("Invalid page number");
-      if (isNaN(limitInt)) throw new Error("Invalid limit value");
-      if (![-1, 1].includes(sortOrderInt))
-        throw new Error("Invalid sort order");
+    const query = {
+      ...buildSearchQuery(search),
+      ...(isCocoEmployee ? { isCocoEmployee } : {}),
+    };
 
-      // Build query
-      const query = {
-        ...buildSearchQuery(search),
-        ...(isCocoEmployee ? { isCocoEmployee } : {}),
-      };
+    const sort = buildSortCriteria(sortBy, sortOrderInt);
 
-      // Build sort
-      const sort = buildSortCriteria(sortBy, sortOrderInt);
+    const [totalCount, users] = await Promise.all([
+      User.countDocuments(query),
+      User.find(query)
+        .populate({ path: "Profile" })
+        .sort(sort)
+        .limit(limitInt)
+        .skip((pageInt - 1) * limitInt)
+        .lean(),
+    ]);
 
-      // Get data with pagination
-      const [totalCount, users] = await Promise.all([
-        User.countDocuments(query).session(session),
-        User.find(query)
-          .populate({
-            path: "Profile",
-          })
-          .sort(sort)
-          .limit(limitInt)
-          .skip((pageInt - 1) * limitInt)
-          .lean()
-          .session(session),
-      ]);
+    res.status(200).json({
+      success: true,
+      data: users,
+      totalCount,
+      currentPage: pageInt,
+      totalPages: Math.ceil(totalCount / limitInt),
+    });
+  } catch (error) {
+    console.error("Error fetching staff:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching staff",
+      error: error.message,
+    });
+  }
+},
 
-      await session.commitTransaction();
-
-      res.status(200).json({
-        success: true,
-        data: users,
-        totalCount,
-        currentPage: pageInt,
-        totalPages: Math.ceil(totalCount / limitInt),
-      });
-    } catch (error) {
-      await session.abortTransaction();
-
-      console.error("Error fetching staff:", error);
-      res.status(500).json({
-        success: false,
-        message: "Server error while fetching staff",
-        error: error.message,
-      });
-    } finally {
-      session.endSession();
-    }
-  },
-
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   deleteStaff: async (req, res) => {
     const session = await mongoose.startSession();
     try {
