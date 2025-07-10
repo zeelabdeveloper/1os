@@ -1,15 +1,17 @@
 import { Form, Input, Button, Typography } from "antd";
 import { MailOutlined } from "@ant-design/icons";
 import toast from "react-hot-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { sendForgotPasswordEmail } from "../api/auth.js";
 import { useNavigate } from "react-router-dom";
 import { useMediaQuery } from "react-responsive";
 import { FullLogo, LoginBackground, ZeelabShop1 } from "../locale/local";
+ 
 
 const { Title } = Typography;
 
 const ForgotPassword = () => {
+  console.log("Forget")
   const navigate = useNavigate();
   const isDesktop = useMediaQuery({ minWidth: 992 });
 
@@ -22,7 +24,10 @@ const ForgotPassword = () => {
     onError: (err) => {
       toast.error(err.response?.data?.message || "Failed to send password reset link");
     },
+
   });
+
+  
 
   const onFinish = (values) => {
     mutation.mutate(values);
@@ -127,6 +132,8 @@ const ForgotPassword = () => {
               <span className="font-extrabold text-[#281870]">Asli</span>
               <span className="font-extrabold text-[#177B9D]">Dam</span>
               <span className="font-extrabold text-[#7FBF2A]">Par</span>
+              
+ 
             </p>
           </div>
         </div>
@@ -200,6 +207,19 @@ const ForgotPassword = () => {
           </Form.Item>
         </Form>
       </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
     </div>
   );
 };

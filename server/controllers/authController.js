@@ -91,7 +91,7 @@ exports.forgotPassword = async (req, res) => {
     const user = await User.findOne({ email })
       .select("+password")
       .populate("EmployeeId");
-    console.log(user);
+    
     if (!user) {
       return res.status(404).json({ message: "No user found with this email" });
     }

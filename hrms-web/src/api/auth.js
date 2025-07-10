@@ -16,6 +16,7 @@ export const verifyUser = async () => {
 };
 
 export const sendForgotPasswordEmail = async ({ email }) => {
+  console.log(" sendForgotPasswordEmail")
   const res = await axios.post("/api/v1/forgot-password", { email });
   return res.data;
 };

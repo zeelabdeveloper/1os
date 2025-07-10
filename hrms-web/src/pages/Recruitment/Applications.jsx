@@ -39,6 +39,11 @@ import {
   QuestionOutlined,
   MailOutlined,
   SolutionOutlined,
+  CheckCircleOutlined,
+  DollarOutlined,
+  RocketOutlined,
+  MehOutlined,
+  PauseOutlined,
 } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -88,17 +93,113 @@ const ApplicationManagement = () => {
   };
 
   // Status configuration
-  const statusConfig = {
-    applied: { title: "Applied", icon: <FileTextOutlined />, color: "#1890ff" },
-    phone_screen: {
-      title: "Phone Screen",
-      icon: <PhoneOutlined />,
-      color: "#fa8c16",
-    },
-    interview: { title: "Interview", icon: <UserOutlined />, color: "#722ed1" },
-    hired: { title: "Hired", icon: <CheckOutlined />, color: "#52c41a" },
-    rejected: { title: "Rejected", icon: <CloseOutlined />, color: "#f5222d" },
-  };
+
+
+
+
+  // const statusConfig = {
+  //   applied: { title: "Applied", icon: <FileTextOutlined />, color: "#1890ff" },
+  //   phone_screen: {
+  //     title: "interview_round",
+  //     icon: <PhoneOutlined />,
+  //     color: "#fa8c16",
+  //   },
+  //   interview: { title: "Interview", icon: <UserOutlined />, color: "#722ed1" },
+  //   hired: { title: "Hired", icon: <CheckOutlined />, color: "#52c41a" },
+  //   rejected: { title: "Rejected", icon: <CloseOutlined />, color: "#f5222d" },
+  // };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const statusConfig = {
+  applied: { title: "Applied", icon: <FileTextOutlined />, color: "#3b82f6" },
+  phone_screen: {
+    title: "Phone Screen",
+    icon: <PhoneOutlined />,
+    color: "#f97316",
+  },
+
+  interview_round: {
+    title: "Interview Round",
+    icon: <UserOutlined />,
+    color: "#8b5cf6",
+  },
+
+  selected: {
+    title: "Selected",
+    icon: <CheckCircleOutlined />,
+    color: "#10b981",
+  },
+  offer_sent: {
+    title: "Offer Sent",
+    icon: <DollarOutlined />,
+    color: "#059669",
+  },
+  onboarding: {
+    title: "Onboarding",
+    icon: <RocketOutlined />,
+    color: "#7c3aed",
+  },
+  not_interested: {
+    title: "Not Interested",
+    icon: <MehOutlined />,
+    color: "#64748b",
+  },
+  rejected: {
+    title: "Rejected",
+    icon: <CloseOutlined />,
+    color: "#ef4444",
+  },
+  on_hold: {
+    title: "On Hold",
+    icon: <PauseOutlined />,
+    color: "#f59e0b",
+  },
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   return (
     <div className="p-4 h-[92vh] overflow-y-auto ">
@@ -185,6 +286,9 @@ const ApplicationManagement = () => {
               headStyle={{ borderBottom: `2px solid ${status.color}` }}
               className="status-column h-[40vh] overflow-y-auto   "
             >
+               
+              {console.log(statusKey)}
+              {console.log(applications)}
               {applications
                 .filter((app) => app.status === statusKey)
                 .map((application) => (
@@ -384,30 +488,7 @@ const ApplicationDetailsModal = ({ application, onClose, statusConfig }) => {
             </Timeline>
           </Card>
 
-          {/* <Card title="Change Status">
-            <Space direction="vertical" style={{ width: "100%" }}>
-              {Object.entries(statusConfig).map(([statusKey, status]) => (
-                <Button
-                  key={statusKey}
-                  icon={status.icon}
-                  onClick={() => {
-                    updateStatus({
-                      id: application._id,
-                      status: statusKey,
-                    });
-                    onClose();
-                  }}
-                  style={{
-                    width: "100%",
-                    borderColor: status.color,
-                    color: status.color,
-                  }}
-                >
-                  Mark as {status.title}
-                </Button>
-              ))}
-            </Space>
-          </Card> */}
+      
         </Col>
       </Row>
     </Modal>
@@ -499,7 +580,7 @@ const ApplicationForm = ({ jobs, onSuccess }) => {
         </Col> */}
 
         <Col span={12}>
-          <Form.Item name="currentLocation" label="Current Location">
+          <Form.Item       rules={[{ required: true }]} name="currentLocation" label="Current Location">
             <Input />
           </Form.Item>
         </Col>
@@ -533,7 +614,7 @@ const ApplicationForm = ({ jobs, onSuccess }) => {
         </Col>
 
         <Col span={12}>
-          <Form.Item name="salary" label="Salary">
+          <Form.Item name="salary" label="Current Salary">
             <Input type="number" />
           </Form.Item>
         </Col>

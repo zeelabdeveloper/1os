@@ -11,7 +11,7 @@ const { Title } = Typography;
 
 const Login = () => {
   const isDesktop = useMediaQuery({ minWidth: 992 });
-  console.log(isDesktop);
+  console.log("Login");
   const mutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
