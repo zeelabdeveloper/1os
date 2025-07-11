@@ -83,16 +83,122 @@ router.get("/allusers/:userId", async (req, res) => {
   }
 });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 router.get("/myteam/analytics/:id", async (req, res) => {
   try {
-    const assignedDepartmentForHeadRole = await Department.find({
-      head: req.params.id,
-    });
-    return res.status(404).json({message:"Error"})
+    const headId = req.params.id;
+
+    // Step 1: Find all departments where this user is the head
+    const departments = await Department.find({ head: headId }).select('_id');
+    const departmentIds = departments.map(dept => dept._id);
+
+    if (departmentIds.length === 0) {
+      return res.status(200).json({ 
+        totalMembers: 0,
+        activeMembers: 0,
+        inactiveMembers: 0 
+      });
+    }
+
+    // Step 2: Aggregate to count total, active, and inactive members
+    const result = await User.aggregate([
+      // Lookup organization data
+      {
+        $lookup: {
+          from: "organizations",
+          localField: "Organization",
+          foreignField: "_id",
+          as: "orgData",
+        },
+      },
+      { $unwind: "$orgData" },
+
+      // Match users in the departments where head is the given ID
+      {
+        $match: {
+          "orgData.department": { $in: departmentIds }
+        }
+      },
+
+      // Group to count active and inactive members
+      {
+        $group: {
+          _id: null,
+          totalMembers: { $sum: 1 },
+          activeMembers: {
+            $sum: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] }
+          },
+          inactiveMembers: {
+            $sum: { $cond: [{ $eq: ["$isActive", false] }, 1, 0] }
+          }
+        }
+      }
+    ]);
+
+    // Default response if no members found
+    const response = result[0] || {
+      totalMembers: 0,
+      activeMembers: 0,
+      inactiveMembers: 0
+    };
+
+    return res.status(200).json(response);
   } catch (error) {
-    return res.status(404).json({message:"Error"})
+    console.error(error);
+    return res.status(500).json({ message: "Server Error" });
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // router.get("/allusers/:userId", async (req, res) => {
 //   try {

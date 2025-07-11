@@ -28,6 +28,7 @@ const emailSettingSchema = new mongoose.Schema(
     newApplicationStatus: { type: Boolean, default: false },
     interviewInitiateInterviewer: { type: Boolean, default: false },
     interviewInitiateApplicant: { type: Boolean, default: false },
+    managerRequestRegardingNewHiring: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

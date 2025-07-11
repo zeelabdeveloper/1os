@@ -274,15 +274,12 @@ const getApplicationsForJob = async (req, res) => {
 // const getHiredApplicationsForJob = async (req, res) => {
 //   try {
 
-
 //     const applications = await Application.find({
 //       status: { $in: ["hired", "onboarding"] },
-//     }).then{  
+//     }).then{
 //       await Onboarding.findOneAndUpdate({ application: app._id }, {})
 
 //     )}
-
-   
 
 //     res.status(200).json(applications);
 //   } catch (error) {
@@ -295,34 +292,29 @@ const getApplicationsForJob = async (req, res) => {
 //   }
 // };
 
-
-
-
-
-
 const getHiredApplicationsForJob = async (req, res) => {
   try {
     const applications = await Application.aggregate([
       {
         $match: {
-          status: { $in: ["hired", "onboarding"] }
-        }
+          status: { $in: ["hired", "onboarding"] },
+        },
       },
       {
         $lookup: {
           from: "onboardings",
           localField: "_id",
           foreignField: "applicationId",
-          as: "onboarding"
-        }
+          as: "onboarding",
+        },
       },
       {
         $addFields: {
-          onboarding: { $arrayElemAt: ["$onboarding", 0] }
-        }
-      }
+          onboarding: { $arrayElemAt: ["$onboarding", 0] },
+        },
+      },
     ]);
-console.log(applications)
+    console.log(applications);
     res.status(200).json(applications);
   } catch (error) {
     console.error("Error fetching applications:", error);
@@ -333,20 +325,6 @@ console.log(applications)
     });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 const fetchApplicationById = async (req, res) => {
   try {
@@ -425,7 +403,7 @@ const createApplication = async (req, res) => {
     if (req.file) {
       resumePath = `/uploads/company/${req.file.filename}`;
     }
-       console.log(req.body)
+    console.log(req.body);
     const application = await Application.create({
       ...req.body,
 
@@ -436,7 +414,7 @@ const createApplication = async (req, res) => {
     const allNotification = await EmailNotification.findOne();
     if (allNotification.newApplicationStatus) {
       // Generate tracking URL
-      const trackingUrl = `/track-application/${application._id}`;
+      const trackingUrl = `http://139.59.72.240/career/application`;
 
       const mailOptions = {
         from: `${EmailConfig.mailFromName} <${EmailConfig.mailFromAddress}>`,

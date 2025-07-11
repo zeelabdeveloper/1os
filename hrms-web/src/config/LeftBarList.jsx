@@ -15,6 +15,7 @@ import {
   MdOutlineSettingsSuggest,
   MdOutlinePayments,
 } from "react-icons/md";
+import { GiHelp } from "react-icons/gi";
 
 const menuItems = [
   {
@@ -68,6 +69,21 @@ const menuItems = [
       {
         key: "/team/logs",
         label: "Members",
+      },
+    ],
+  },
+  {
+    key: "Support",
+    icon: <GiHelp />,
+    label: "Support",
+    children: [
+      {
+        key: "/support/need-emp",
+        label: "Need a Emoloyeee",
+      },
+      {
+        key: "/support/manager-request",
+        label: "Get Request From Manager",
       },
     ],
   },

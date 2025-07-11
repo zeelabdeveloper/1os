@@ -267,7 +267,7 @@ exports.getNewsByRole = async (req, res) => {
       data: news,
     });
   } catch (err) {
-    console.error(`Error getting news for role ${id}:`, err);
+     
 
     return res.status(500).json({
       success: false,

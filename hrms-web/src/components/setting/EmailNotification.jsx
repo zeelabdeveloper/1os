@@ -208,6 +208,19 @@ const EmailNotificationSettings = () => {
         },
       ],
     },
+    {
+      title: "Support",
+      items: [
+        {
+          name: "managerRequestRegardingNewHiring",
+          label: "Hiring Request From Manager To Head And HR",
+          icon: <FileDoneOutlined />,
+          color: "#08979c",
+        },
+        
+       
+      ],
+    },
   ];
 
   if (isLoading)

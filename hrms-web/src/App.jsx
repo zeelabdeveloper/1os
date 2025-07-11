@@ -277,11 +277,13 @@ import CreateEmployeeMain from "./pages/Staff/CreateEmployee";
 import ApplicationTrack from "./pages/ApplicationTrack";
 import Separation from "./pages/Recruitment/Separation";
 import SeparationFromStaff from "./pages/SeparationFromStaff";
+import NeedEmployee from "./pages/Support/NeedEmployee";
+import ManagerRequest from "./pages/Support/ManagerRequest";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-console.log("App")
+  console.log("App");
   return (
     <Router>
       <QueryClientProvider client={queryClient}>
@@ -316,6 +318,8 @@ console.log("App")
               {/* Team Routes */}
               <Route path="team/logs" element={<TeamMembers />} />
 
+
+
               {/* Permission Routes */}
               <Route path="permission/departments" element={<Departments />} />
               <Route path="permission/roles" element={<Roles />} />
@@ -325,7 +329,12 @@ console.log("App")
                 element={<PermissionList />}
               />
 
-              {/* Payroll Routes */}
+              {/* Support Routes */}
+              <Route path="support/need-emp" element={<NeedEmployee />} />
+              <Route
+                path="support/manager-request"
+                element={<ManagerRequest />}
+              />
 
               {/* Content Routes */}
               <Route path="content/letter" element={<Letter />} />
@@ -404,7 +413,7 @@ console.log("App")
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/forget-pass" element={<ForgotPassword />} />
-            <Route path="/career/application" element={<ApplicationTrack />} />
+            <Route path=" " element={<ApplicationTrack />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </ErrorBoundary>

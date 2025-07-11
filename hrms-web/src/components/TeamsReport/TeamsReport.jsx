@@ -21,7 +21,7 @@ import {
   BarChartOutlined,
   LineChartOutlined,
 } from "@ant-design/icons";
-import { FaUserTie, FaRegClock } from "react-icons/fa";
+import { FaUserTie, FaRegClock, FaCut } from "react-icons/fa";
 import { GiProgression } from "react-icons/gi";
 import dayjs from "dayjs";
 import axiosInstance from "../../axiosConfig";
@@ -33,12 +33,12 @@ const fetchTeamMetrics = async (usert) => {
   const data = await axiosInstance.get(
     `/api/v1/team/myteam/analytics/${usert}`
   );
-
+console.log( data.data)
   return data.data;
 };
 
 function TeamsReport({ user }) {
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isError, } = useQuery({
     queryKey: ["teamMetrics"],
     queryFn: () => fetchTeamMetrics(user?._id),
     keepPreviousData: true,
@@ -83,26 +83,19 @@ function TeamsReport({ user }) {
             </Card>
             <Card>
               <Statistic
-                title="On Leave"
-                value={data.onLeave}
-                prefix={<FaRegClock />}
-                valueStyle={{ color: "#faad14" }}
+                title="inactive Members"
+                value={data.inactiveMembers}
+                prefix={<FaCut />}
+                valueStyle={{ color: "#52c41a" }}
               />
             </Card>
-            <Card>
-              <Statistic
-                title="Separating"
-                value={data.separating}
-                prefix={<GiProgression />}
-                valueStyle={{ color: "#fa541c" }}
-              />
-            </Card>
+           
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <Card title="Department Distribution" extra={<PieChartOutlined />}>
               <div className="space-y-2">
-                {Object.entries(data.departmentDistribution).map(
+                { data?.departmentDistribution &&   Object.entries(data?.departmentDistribution).map(
                   ([dept, count]) => (
                     <div
                       key={dept}
@@ -121,45 +114,45 @@ function TeamsReport({ user }) {
                 <div className="flex justify-between items-center">
                   <span>Excellent</span>
                   <Tag color="green">
-                    {data.performanceDistribution.excellent}
+                    {data?.performanceDistribution?.excellent}
                   </Tag>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Good</span>
-                  <Tag color="blue">{data.performanceDistribution.good}</Tag>
+                  <Tag color="blue">{data?.performanceDistribution?.good}</Tag>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Average</span>
                   <Tag color="orange">
-                    {data.performanceDistribution.average}
+                    {data?.performanceDistribution?.average}
                   </Tag>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Poor</span>
-                  <Tag color="red">{data.performanceDistribution.poor}</Tag>
+                  <Tag color="red">{data?.performanceDistribution?.poor}</Tag>
                 </div>
               </div>
             </Card>
-          </div>
+          </div> */}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card title="Separation Types" extra={<LineChartOutlined />}>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span>Resignations</span>
-                  <Tag color="volcano">{data.separationTypes.resignation}</Tag>
+                  <Tag color="volcano">{data?.separationTypes?.resignation}</Tag>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Terminations</span>
-                  <Tag color="red">{data.separationTypes.termination}</Tag>
+                  <Tag color="red">{data?.separationTypes?.termination}</Tag>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Retirements</span>
-                  <Tag color="gold">{data.separationTypes.retirement}</Tag>
+                  <Tag color="gold">{data?.separationTypes?.retirement}</Tag>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Other</span>
-                  <Tag color="gray">{data.separationTypes.other}</Tag>
+                  <Tag color="gray">{data?.separationTypes?.other}</Tag>
                 </div>
               </div>
             </Card>
@@ -167,17 +160,17 @@ function TeamsReport({ user }) {
             <Card title="Overall Attendance">
               <Statistic
                 title="Attendance Rate"
-                value={data.attendanceRate}
+                value={data?.attendanceRate}
                 suffix="%"
                 precision={1}
               />
               <Divider />
               <div className="text-sm text-gray-500">
                 Last updated:{" "}
-                {dayjs(data.lastUpdated).format("DD MMM YYYY, hh:mm A")}
+                {dayjs(data?.lastUpdated).format("DD MMM YYYY, hh:mm A")}
               </div>
             </Card>
-          </div>
+          </div> */}
         </>
       )}
     </div>

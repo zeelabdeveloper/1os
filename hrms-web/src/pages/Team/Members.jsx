@@ -448,15 +448,7 @@ const TeamMembers = () => {
             <Input placeholder="Enter contact number" />
           </Form.Item>
 
-          <Form.Item
-            name="EmployeeId"
-            label="Employee ID"
-            rules={[
-              { required: true, message: "Please input the employee ID!" },
-            ]}
-          >
-            <Input placeholder="Enter employee ID" />
-          </Form.Item>
+        
 
           <Form.Item name="Store" label="Store">
             <Select placeholder="Select store" allowClear>

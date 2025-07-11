@@ -109,6 +109,7 @@ app.use("/api/v1/manage-letter", require("./routes/letterTemplates.js"));
 app.use("/api/v1/stores", require("./routes/storeRoutes.js"));
 app.use("/api/v1/storeuser", require("./routes/storeuser.js"));
 app.use("/api/v1/team", require("./routes/team.js"));
+app.use("/api/v1/support", require("./routes/managerCandidateRequests.js"));
 app.use(
   "/api/v1/performance",
   require("./routes/performance/performanceRouter.js")
