@@ -413,7 +413,7 @@ const App = () => {
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/forget-pass" element={<ForgotPassword />} />
-            <Route path=" " element={<ApplicationTrack />} />
+            <Route path="/career/application" element={<ApplicationTrack />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </ErrorBoundary>
