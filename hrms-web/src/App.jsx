@@ -279,6 +279,7 @@ import Separation from "./pages/Recruitment/Separation";
 import SeparationFromStaff from "./pages/SeparationFromStaff";
 import NeedEmployee from "./pages/Support/NeedEmployee";
 import ManagerRequest from "./pages/Support/ManagerRequest";
+import Zone from "./pages/Permission/Zone";
 
 const queryClient = new QueryClient();
 
@@ -324,6 +325,7 @@ const App = () => {
               <Route path="permission/departments" element={<Departments />} />
               <Route path="permission/roles" element={<Roles />} />
               <Route path="permission/branches" element={<Branch />} />
+              <Route path="permission/zones" element={<Zone />} />
               <Route
                 path="permission/permissions-list"
                 element={<PermissionList />}

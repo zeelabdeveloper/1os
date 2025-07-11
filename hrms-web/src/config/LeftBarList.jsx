@@ -87,10 +87,11 @@ const menuItems = [
       },
     ],
   },
+  
   {
     key: "Coco Management",
     icon: <FaHouseChimneyMedical />,
-    label: "Coco Management",
+    label: "Coco ",
     children: [
       {
         key: "/coco/userlist",
@@ -285,6 +286,11 @@ const menuItems = [
         key: "/permission/departments",
 
         label: "Departments",
+      },
+      {
+        key: "/permission/zones",
+
+        label: "Sis Zones",
       },
       {
         key: "/permission/permissions-list",

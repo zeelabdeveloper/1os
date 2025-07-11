@@ -239,3 +239,27 @@ export const fetchUsersByRole = async (roleId) => {
   const response = await axios.get(`/api/v1/user/roles/${roleId}`);
   return response.data.data;
 };
+
+
+
+
+
+export const fetchZones = async () => {
+  const response = await axios.get("/api/v1/company/zones");
+  return response.data;
+};
+
+export const addZone = async (zoneData) => {
+  const response = await axios.post("/api/v1/company/zones", zoneData);
+  return response.data;
+};
+
+export const updateZone = async ({ id, ...zoneData }) => {
+  const response = await axios.put(`/api/v1/company/zones/${id}`, zoneData);
+  return response.data;
+};
+
+export const deleteZone = async (id) => {
+  const response = await axios.delete(`/api/v1/company/zones/${id}`);
+  return response.data;
+};

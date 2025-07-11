@@ -18,6 +18,10 @@ const {
   updateRole,
   getRoleByDepartment,
   getDepartmentOfHead,
+  getAllZones,
+  createZone,
+  updateZone,
+  deleteZone,
 } = require("../controllers/componyOperation");
 
 
@@ -35,9 +39,17 @@ router.get("/branch/department/:branchId", getDepartmentsByBranch);
 router.get("/branch/department/role/:departmentId", getRoleByDepartment);
 router.get("/Head/department/:Head", getDepartmentOfHead);
 
+
+router.get("/departments", getAllDepartments);
 router.post("/departments", createDepartment);
 router.put("/departments/:id", updateDepartment);
 router.delete("/departments/:id", deleteDepartment);
+
+
+router.get("/zones", getAllZones);
+router.post("/zones", createZone);
+router.put("/zones/:id", updateZone);
+router.delete("/zones/:id", deleteZone);
 
 
 

@@ -6,6 +6,7 @@ const {
   validateDepartment,
 } = require("../validations/departmentValidation.js");
 const Role = require("../models/Role.js");
+const Zone = require("../models/Zone.js");
 
 exports.fetchBranches = async (req, res) => {
   try {
@@ -397,5 +398,120 @@ exports.deleteDepartment = async (req, res) => {
       message: "Failed to delete department",
       error: error.message,
     });
+  }
+};
+
+
+
+
+exports.getAllZones = async (req, res) => {
+  try {
+    const zones = await Zone.find().populate("branch head");
+    res.json({ success: true, data: zones });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.createZone = async (req, res) => {
+  try {
+    const { name, code, branch, head, isActive } = req.body;
+
+    // Basic validation
+    if (!name || !code || !branch) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Name, code and branch are required" 
+      });
+    }
+
+    // Check branch exists
+    const branchExists = await Branch.findById(branch);
+    if (!branchExists) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Branch not found" 
+      });
+    }
+
+    // Check unique code per branch
+    const existingZone = await Zone.findOne({ code, branch });
+    if (existingZone) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Zone code must be unique within a branch" 
+      });
+    }
+
+    const zone = new Zone({ name, code, branch, head, isActive });
+    await zone.save();
+
+    res.status(201).json({ success: true, data: zone });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.updateZone = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, code, branch, head, isActive } = req.body;
+
+    // Check if zone exists
+    const existingZone = await Zone.findById(id);
+    if (!existingZone) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Zone not found" 
+      });
+    }
+
+    // If branch is being updated, verify it exists
+    if (branch && branch !== existingZone.branch.toString()) {
+      const branchExists = await Branch.findById(branch);
+      if (!branchExists) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Branch not found" 
+        });
+      }
+
+      // Check if new code is unique in new branch
+      const codeExists = await Zone.findOne({ code, branch });
+      if (codeExists && codeExists._id.toString() !== id) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Zone code must be unique within a branch" 
+        });
+      }
+    }
+
+    const updatedZone = await Zone.findByIdAndUpdate(
+      id,
+      { name, code, branch, head, isActive },
+      { new: true, runValidators: true }
+    );
+
+    res.json({ success: true, data: updatedZone });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.deleteZone = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const zone = await Zone.findByIdAndDelete(id);
+
+    if (!zone) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Zone not found" 
+      });
+    }
+
+    res.json({ success: true, message: "Zone deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

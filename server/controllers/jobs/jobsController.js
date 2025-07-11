@@ -414,7 +414,7 @@ const createApplication = async (req, res) => {
     const allNotification = await EmailNotification.findOne();
     if (allNotification.newApplicationStatus) {
       // Generate tracking URL
-      const trackingUrl = `http://139.59.72.240/career/application`;
+      const trackingUrl = `http://139.59.72.240/career/application?id=${application._id}`;
 
       const mailOptions = {
         from: `${EmailConfig.mailFromName} <${EmailConfig.mailFromAddress}>`,
