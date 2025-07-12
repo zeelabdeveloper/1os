@@ -7,6 +7,7 @@ const {
   getBankAnalytics,
   getSalaryAnalytics,
   getExperienceAnalytics,
+  getSingleBranchAnalytics,
 } = require("../controllers/analytics/staffController");
 const {
   getAttendanceDashboard,
@@ -21,6 +22,7 @@ router.get("/dashboard", getStaffAnalyticsNew);
 
 // Branch analytics
 router.get("/branches", getBranchAnalytics);
+router.get("/branches/:id", getSingleBranchAnalytics);
 
 // Department analytics
 router.get("/departments", getDepartmentAnalytics);

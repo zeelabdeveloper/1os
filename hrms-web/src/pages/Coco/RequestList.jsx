@@ -23,7 +23,7 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
-const AdminRegularizationList = ({ user }) => {
+const AdminRegularizationList = ({ branchId }) => {
   const [form] = Form.useForm();
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [filters, setFilters] = useState({
@@ -44,6 +44,7 @@ const AdminRegularizationList = ({ user }) => {
       const [, params] = queryKey;
       const response = await axios.get("/api/v1/regularization/admin", {
         params: {
+          branchId,
           page: params.current,
           limit: params.pageSize,
           status: params.status,

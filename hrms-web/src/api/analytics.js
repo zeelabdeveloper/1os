@@ -13,6 +13,10 @@ export const fetchBranchAnalytics = async () => {
   const { data } = await axios.get("/api/v1/analytics/branches");
   return data;
 };
+export const fetchSingleBranchAnalytics = async (branchID) => {
+  const { data } = await axios.get(`/api/v1/analytics/branches/${branchID}`);
+  return data;
+};
 
 export const fetchBankAnalytics = async () => {
   const { data } = await axios.get("/api/v1/analytics/bank");

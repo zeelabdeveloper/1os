@@ -1,14 +1,11 @@
 import axios from "../axiosConfig";
 
 export const loginUser = async (credentials) => {
-  const response = await axios.post("/api/v1/login", credentials, {
-   
-  });
+  const response = await axios.post("/api/v1/login", credentials, {});
   return response.data;
 };
 
 export const verifyUser = async () => {
-  console.log("dfdfdf")
   const response = await axios.post("/api/v1/auth/verify", {
     token: localStorage.getItem("token"),
   });
@@ -16,21 +13,17 @@ export const verifyUser = async () => {
 };
 
 export const sendForgotPasswordEmail = async ({ email }) => {
-  console.log(" sendForgotPasswordEmail")
+  console.log(" sendForgotPasswordEmail");
   const res = await axios.post("/api/v1/forgot-password", { email });
   return res.data;
 };
 
 export const fetchUser = async (credentials) => {
-  const response = await axios.get("/api/v1/fetchUser", {
-  
-  });
+  const response = await axios.get("/api/v1/fetchUser", {});
   return response.data;
 };
 export const fetchManagers = async (credentials) => {
-  const response = await axios.get("/api/v1/fetchUser", {
-   
-  });
+  const response = await axios.get("/api/v1/fetchUser", {});
   return response.data;
 };
 
@@ -63,7 +56,7 @@ export const updateCompanyBankAccounts = async ({ id, data }) => {
 
 export const fetchBranches = async () => {
   const { data } = await axios.get("/api/v1/company/companyBranch");
-  console.log(data);
+
   return data;
 };
 
@@ -147,9 +140,7 @@ export const fetchDepartmentsByBranch = async (branchId) => {
 };
 export const fetchZonesByBranch = async (branchId) => {
   if (!branchId) return [];
-  const response = await axios.get(
-    `/api/v1/company/branch/zone/${branchId}`
-  );
+  const response = await axios.get(`/api/v1/company/branch/zone/${branchId}`);
 
   return response.data.data;
 };
@@ -247,10 +238,6 @@ export const fetchUsersByRole = async (roleId) => {
   const response = await axios.get(`/api/v1/user/roles/${roleId}`);
   return response.data.data;
 };
-
-
-
-
 
 export const fetchZones = async () => {
   const response = await axios.get("/api/v1/company/zones");

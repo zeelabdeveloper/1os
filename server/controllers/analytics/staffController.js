@@ -1,6 +1,6 @@
 // controllers/staffController.js
 const User = require("../../models/User");
-
+const mongoose = require("mongoose");
 const Bank = require("../..//models/Bank");
 const Department = require("../../models/Department");
 const Branch = require("../../models/Branch");
@@ -9,7 +9,6 @@ const Salary = require("../../models/Salary");
 const moment = require("moment");
 
 exports.getStaffAnalytics = async (req, res) => {
- 
   try {
     // Total staff count
     const totalStaff = await User.countDocuments();
@@ -94,7 +93,7 @@ exports.getStaffAnalytics = async (req, res) => {
     const suspendedAccounts = await User.countDocuments({
       accountSuspended: true,
     });
-     
+
     res.json({
       totalStaff,
       cocoStaff,
@@ -226,8 +225,6 @@ exports.getStaffAnalyticsNew = async (req, res) => {
   }
 };
 
-
-
 // Branch-wise analytics
 exports.getBranchAnalytics = async (req, res) => {
   try {
@@ -262,16 +259,125 @@ exports.getBranchAnalytics = async (req, res) => {
         },
       },
     ]);
- 
+
     res.json(branchStats);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+//Sigle Branch-wise analytics
+exports.getSingleBranchAnalytics = async (req, res) => {
+  try {
+    const { id: branchId } = req.params;
+    const currentDate = new Date();
+    const startOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
+    const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
+
+    // Validate branchId
+    if (!mongoose.Types.ObjectId.isValid(branchId)) {
+      return res.status(400).json({ message: "Invalid branch ID" });
+    }
+
+    // Get user statistics directly using User.isActive
+    const results = await User.aggregate([
+      {
+        $lookup: {
+          from: "organizations",
+          localField: "_id",
+          foreignField: "user",
+          as: "orgData",
+        },
+      },
+      { $unwind: "$orgData" },
+      {
+        $match: {
+          "orgData.branch": new mongoose.Types.ObjectId(branchId),
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalUsers: { $sum: 1 },
+          activeUsers: {
+            $sum: {
+              $cond: [{ $eq: ["$isActive", true] }, 1, 0],
+            },
+          },
+          newThisMonth: {
+            $sum: {
+              $cond: [{ $gte: ["$createdAt", startOfMonth] }, 1, 0],
+            },
+          },
+          newThisYear: {
+            $sum: {
+              $cond: [{ $gte: ["$createdAt", startOfYear] }, 1, 0],
+            },
+          },
+          deactivatedThisMonth: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ["$isActive", false] },
+                    { $gte: ["$updatedAt", startOfMonth] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalUsers: 1,
+          activeUsers: 1,
+          inactiveUsers: { $subtract: ["$totalUsers", "$activeUsers"] },
+          activePercentage: {
+            $multiply: [{ $divide: ["$activeUsers", "$totalUsers"] }, 100],
+          },
+          newThisMonth: 1,
+          newThisYear: 1,
+          deactivatedThisMonth: 1,
+        },
+      },
+    ]);
+
+    if (results.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          totalUsers: 0,
+          activeUsers: 0,
+          inactiveUsers: 0,
+          activePercentage: 0,
+          newThisMonth: 0,
+          newThisYear: 0,
+          deactivatedThisMonth: 0,
+        },
+      });
+    }
+
+    res.status(200).json({
+      ...results[0]
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 // Department-wise analytics
 exports.getDepartmentAnalytics = async (req, res) => {
- 
   try {
     const departmentStats = await Organization.aggregate([
       {
@@ -310,7 +416,7 @@ exports.getDepartmentAnalytics = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
- 
+
 // Salary distribution analytics
 exports.getSalaryAnalytics = async (req, res) => {
   try {

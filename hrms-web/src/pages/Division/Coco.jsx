@@ -12,7 +12,11 @@ function Coco() {
     {
       key: "dashboard",
       label: "Dashboard",
-      children: <UserManagementCoco branchId="685a45cfac371d35857d3acf" />,
+      children: () => {
+        <div>
+          <UserManagementCoco branchId="685a45cfac371d35857d3acf" />
+        </div>;
+      },
     },
     {
       key: "regularization",

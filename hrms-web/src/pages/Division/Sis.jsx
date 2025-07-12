@@ -4,6 +4,8 @@ import UserManagementCoco from "../Coco/UserList";
 import AdminRegularizationList from "../Coco/RequestList";
 import Store from "../Coco/Store";
 import Attendance from "../Coco/Attendance";
+import SingleBranchAnalytics from "../../components/dashboard/SingleBranchAnalyitcs";
+ 
 
 function Coco() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -12,12 +14,18 @@ function Coco() {
     {
       key: "dashboard",
       label: "Dashboard",
-      children: <UserManagementCoco branchId="685a45cfac371d35857d3acf" />,
+      children: (
+        <div>
+          <SingleBranchAnalytics branchId="687106f95af89aa175060110" />
+          <UserManagementCoco branchId="687106f95af89aa175060110" />
+        </div>
+      ),
     },
+
     {
       key: "regularization",
       label: "Regularization",
-      children: <AdminRegularizationList />,
+      children: <AdminRegularizationList  branchId="687106f95af89aa175060110"  />,
     },
     {
       key: "attendance",

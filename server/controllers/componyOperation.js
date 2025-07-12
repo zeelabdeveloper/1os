@@ -7,6 +7,7 @@ const {
 } = require("../validations/departmentValidation.js");
 const Role = require("../models/Role.js");
 const Zone = require("../models/Zone.js");
+const Organization = require("../models/Organization.js");
 
 exports.fetchBranches = async (req, res) => {
   try {
@@ -535,109 +536,102 @@ exports.deleteZone = async (req, res) => {
   }
 };
 
-// controllers/userController.js
-
-const Attendance = require("../models/Attendance");
-const moment = require("moment");
-
+ 
 exports.analyticsByBranch = async (req, res) => {
   try {
     const { id: branchId } = req.params;
     const { page = 1, limit = 10, status, search } = req.query;
 
-    // Base match conditions
-    const matchConditions = {
-      "Organization.branch": new mongoose.Types.ObjectId(branchId)
+    // Build the query conditions
+    const query = {
+      Organization: {
+        $in: await Organization.distinct("_id", { branch: branchId }),
+      },
     };
 
     // Status filter
     if (status !== undefined) {
-      matchConditions.isActive = status === "true";
+      query.isActive = status === "true";
     }
 
-    // Search functionality (by name or employee ID)
+    // Search functionality
     if (search) {
-      const searchRegex = new RegExp(search, 'i');
-      matchConditions.$or = [
+      const searchRegex = new RegExp(search, "i");
+      query.$or = [
         { firstName: searchRegex },
         { lastName: searchRegex },
-        { 'EmployeeId.employeeId': searchRegex } 
+        { fullName: searchRegex },
+        { "EmployeeId.employeeId": searchRegex },
       ];
     }
 
-    // Aggregation Pipeline
-    const aggregationPipeline = [
-      {
-        $lookup: {
-          from: "organizations",
-          localField: "Organization",
-          foreignField: "_id",
-          as: "Organization",
-        },
-      },
-      { $unwind: "$Organization" },
-      {
-        $lookup: {
-          from: "employeeids",
-          localField: "EmployeeId",
-          foreignField: "_id",
-          as: "EmployeeId",
-        },
-      },
-      { $unwind: { path: "$EmployeeId", preserveNullAndEmptyArrays: true } },
-      { $match: matchConditions },
-      {
-        $facet: {
-          employees: [
-            { $sort: { isActive: -1, createdAt: -1 } },
-            { $skip: (page - 1) * limit },
-            { $limit: parseInt(limit) },
-            {
-              $project: {
-                _id: 1,
-                firstName: 1,
-                lastName: 1,
-                isActive: 1,
-                dateOfJoining: 1,
-                Profile: 1,
-                EmployeeId: 1,
-                Organization: {
-                  department: 1,
-                  role: 1,
-                  employmentType: 1
-                }
-              }
-            }
-          ],
-          pagination: [
-            { $count: "total" }
-          ]
-        }
-      },
-      {
-        $project: {
-          employees: 1,
-          pagination: {
-            current: parseInt(page),
-            pageSize: parseInt(limit),
-            total: { $ifNull: [{ $arrayElemAt: ["$pagination.total", 0] }, 0] }
-          }
-        }
-      }
-    ];
+    // Get total count for pagination
+    const total = await User.countDocuments(query);
+   
+    // Find users with population
+    const users = await User.find(query)
+      .populate({
+        path: "Organization",
+        populate: [
+          {
+            path: "branch",
+            model: "CompanyBranch",
+            select: "name code",
+          },
+          {
+            path: "department",
+            model: "Department",
+            select: "name code",
+          },
+          {
+            path: "role",
+            model: "Role",
+            select: "name description",
+          },
+          {
+            path: "zone",
+            model: "Zone",
+            select: "name",
+          },
+        ],
+      })
+      .populate({
+        path: "EmployeeId",
+        select: "employeeId",
+      })
+      .select("firstName lastName isActive dateOfJoining Profile")
+      .sort({ isActive: -1, createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
 
-    const result = await User.aggregate(aggregationPipeline);
+    // Transform the data for better frontend consumption
+    const employees = users.map((user) => ({
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      isActive: user.isActive,
+      dateOfJoining: user.dateOfJoining,
+      Profile: user.Profile,
+      EmployeeId: user.EmployeeId,
+      Organization: {
+        department: user.Organization?.department?.name || null,
+        role: user.Organization?.role?.name || null,
+        branch: user.Organization?.branch?.name || null,
+        zone: user.Organization?.zone?.name || null,
+        employmentType: user.Organization?.employmentType || null,
+      },
+    }));
 
     res.status(200).json({
       success: true,
-      data: result[0] || {
-        employees: [],
+      data: {
+        employees,
         pagination: {
           current: parseInt(page),
           pageSize: parseInt(limit),
-          total: 0
-        }
-      }
+          total,
+        },
+      },
     });
   } catch (error) {
     console.error(error);

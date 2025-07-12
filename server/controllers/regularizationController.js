@@ -1,4 +1,5 @@
 const Attendance = require("../models/Attendance");
+const Organization = require("../models/Organization");
 const Regularization = require("../models/Regularization");
 const { startOfDay, endOfDay } = require("date-fns");
 
@@ -101,6 +102,7 @@ exports.getAllRegularizations = async (req, res) => {
       page = 1,
       limit = 10,
       status,
+      branchId,
       userId,
       startDate,
       endDate,
@@ -110,6 +112,17 @@ exports.getAllRegularizations = async (req, res) => {
     const filter = {};
     if (status) filter.status = status;
     if (userId) filter.userId = userId;
+
+
+
+  if (branchId) {
+  filter.userId = {
+    $in: await Organization.distinct("user", { branch: branchId })
+  };
+}
+
+
+
     if (startDate && endDate) {
       filter.date = {
         $gte: startOfDay(new Date(startDate)),
