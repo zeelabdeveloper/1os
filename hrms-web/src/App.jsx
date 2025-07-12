@@ -280,6 +280,9 @@ import SeparationFromStaff from "./pages/SeparationFromStaff";
 import NeedEmployee from "./pages/Support/NeedEmployee";
 import ManagerRequest from "./pages/Support/ManagerRequest";
 import Zone from "./pages/Permission/Zone";
+import Coco from "./pages/Division/Coco";
+import Sis from "./pages/Division/Sis";
+import Fofo from "./pages/Division/Fofo";
 
 const queryClient = new QueryClient();
 
@@ -319,13 +322,20 @@ const App = () => {
               {/* Team Routes */}
               <Route path="team/logs" element={<TeamMembers />} />
 
-
-
               {/* Permission Routes */}
               <Route path="permission/departments" element={<Departments />} />
               <Route path="permission/roles" element={<Roles />} />
               <Route path="permission/branches" element={<Branch />} />
               <Route path="permission/zones" element={<Zone />} />
+              <Route
+                path="permission/permissions-list"
+                element={<PermissionList />}
+              />
+              {/* Division Routes */}
+              <Route path="division/coco" element={<Coco />} />
+              <Route path="division/fofo" element={<Fofo />} />
+              <Route path="division/sis" element={<Sis />} />
+
               <Route
                 path="permission/permissions-list"
                 element={<PermissionList />}

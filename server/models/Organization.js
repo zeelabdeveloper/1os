@@ -18,6 +18,10 @@ const OrganizationSchema = new mongoose.Schema(
       ref: "Department",
       required: true,
     },
+    zone: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Zone",
+    },
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",

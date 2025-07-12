@@ -145,6 +145,14 @@ export const fetchDepartmentsByBranch = async (branchId) => {
 
   return response.data.data;
 };
+export const fetchZonesByBranch = async (branchId) => {
+  if (!branchId) return [];
+  const response = await axios.get(
+    `/api/v1/company/branch/zone/${branchId}`
+  );
+
+  return response.data.data;
+};
 export const fetchDepartmentsByHeadId = async (Head) => {
   if (!Head) return [];
   const response = await axios.get(`/api/v1/company/Head/department/${Head}`);

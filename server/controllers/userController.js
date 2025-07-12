@@ -346,6 +346,14 @@ module.exports = {
                 },
               },
               {
+                $lookup: {
+                  from: "zones",
+                  localField: "zone",
+                  foreignField: "_id",
+                  as: "zone",
+                },
+              },
+              {
                 $unwind: { path: "$branch", preserveNullAndEmptyArrays: true },
               },
               {
@@ -355,6 +363,7 @@ module.exports = {
                 },
               },
               { $unwind: { path: "$role", preserveNullAndEmptyArrays: true } },
+              { $unwind: { path: "$zone", preserveNullAndEmptyArrays: true } },
             ],
           },
         },

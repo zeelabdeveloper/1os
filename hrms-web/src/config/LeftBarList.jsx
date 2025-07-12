@@ -8,7 +8,7 @@ import {
 import { FcDataConfiguration } from "react-icons/fc";
 
 import { IoIosAnalytics, IoIosPaper } from "react-icons/io";
-import { FaHouseChimneyMedical } from "react-icons/fa6";
+import { FaHouse, FaHouseChimneyMedical } from "react-icons/fa6";
 
 import {
   MdAccountBalance,
@@ -25,6 +25,25 @@ const menuItems = [
   },
 
   {
+    key: "division",
+    icon: <FaHouse />,
+    label: "Division",
+    children: [
+      {
+        key: "/division/coco",
+        label: "Coco",
+      },
+      {
+        key: "/division/fofo",
+        label: "Fofo",
+      },
+      {
+        key: "/division/sis",
+        label: "Sis",
+      },
+    ],
+  },
+  {
     key: "staff",
     icon: <UserOutlined />,
     label: "Staff",
@@ -40,6 +59,53 @@ const menuItems = [
       },
     ],
   },
+
+
+
+
+
+
+
+//  {
+//     key: "Coco Management",
+//     icon: <FaHouseChimneyMedical />,
+//     label: "Coco ",
+//     children: [
+//       {
+//         key: "/coco/userlist",
+//         label: "User List",
+//       },
+//       {
+//         key: "/coco/createuser",
+//         label: "Create User",
+//       },
+//       {
+//         key: "/coco/attendance",
+//         label: "Attendance List",
+//       },
+//       {
+//         key: "/coco/request-list",
+//         label: "Request List",
+//       },
+//       {
+//         key: "/coco/store",
+//         label: "Store",
+//       },
+//     ],
+//   },
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   {
     key: "attendance",
@@ -87,34 +153,8 @@ const menuItems = [
       },
     ],
   },
-  
-  {
-    key: "Coco Management",
-    icon: <FaHouseChimneyMedical />,
-    label: "Coco ",
-    children: [
-      {
-        key: "/coco/userlist",
-        label: "User List",
-      },
-      {
-        key: "/coco/createuser",
-        label: "Create User",
-      },
-      {
-        key: "/coco/attendance",
-        label: "Attendance List",
-      },
-      {
-        key: "/coco/request-list",
-        label: "Request List",
-      },
-      {
-        key: "/coco/store",
-        label: "Store",
-      },
-    ],
-  },
+
+ 
   {
     key: "Store",
     icon: <FaHouseChimneyMedical />,

@@ -11,6 +11,8 @@ import {
   Select,
   message,
   Spin,
+  Pagination,
+  Avatar,
 } from "antd";
 import {
   FiPlus,
@@ -19,14 +21,21 @@ import {
   FiEdit,
   FiSave,
   FiX,
+
   FiUsers,
   FiUser,
 } from "react-icons/fi";
 import { FaExclamationCircle } from "react-icons/fa";
-
+import {
+ 
+  UserOutlined,
+  
+} from "@ant-design/icons";
 import * as api from "../../api/auth";
 
 import toast from "react-hot-toast";
+import { debounce } from "lodash";
+import axiosInstance from "../../axiosConfig";
 
 // Custom debounce hook
 const useDebounce = (value, delay) => {
@@ -73,42 +82,86 @@ const BranchSelect = ({
   </Select>
 );
 
-const EmployeeSelect = ({ loading, employees, onSearch, value, onChange }) => {
-  const [searchText, setSearchText] = useState("");
-  const debouncedSearch = useDebounce(searchText, 300);
 
-  useEffect(() => {
-    onSearch?.(debouncedSearch);
-  }, [debouncedSearch, onSearch]);
+const EmployeeSelect = ({value , onChange}) => {
+   
+  const [employeeSearchParams, setEmployeeSearchParams] = useState({
+    search: "",
+    page: 1,
+    limit: 10,
+  });
 
-  const filteredEmployees = useMemo(() => {
-    if (!debouncedSearch) return employees;
-    return employees.filter(
-      (emp) =>
-        emp.employeeId.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        emp.fullName.toLowerCase().includes(debouncedSearch.toLowerCase())
-    );
-  }, [employees, debouncedSearch]);
+  const { data: employeesData, isLoading: employeesLoading } = useQuery({
+    queryKey: ["allEmployees", employeeSearchParams],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/api/v1/user/staff", {
+        params: {
+          ...employeeSearchParams,
+        },
+      });
+      return response.data;
+    },
+    staleTime:500,
+  });
+
+  const handleEmployeeSearch = debounce((value) => {
+    
+    setEmployeeSearchParams((prev) => ({
+      ...prev,
+      search: value,
+      page: 1,
+    }));
+  }, 500);
 
   return (
-    <Select
-      showSearch
-      placeholder="Select department head"
-      optionFilterProp="children"
-      onSearch={setSearchText}
-      loading={loading}
-      size="large"
-      suffixIcon={<FiUser />}
-      notFoundContent={loading ? <Spin size="small" /> : "No employees found"}
-      value={value}
-      onChange={onChange}
-    >
-      {filteredEmployees.map((emp) => (
-        <Select.Option key={emp._id} value={emp._id}>
-          {emp?.firstName} ({emp?.EmployeeId?.employeeId})
-        </Select.Option>
-      ))}
-    </Select>
+    <div className="mt-6">
+      <Select
+        showSearch
+        value={  value}
+        style={{ width: "100%" }}
+        placeholder="Search employee by name or ID"
+        optionFilterProp="children"
+        filterOption={false}
+        onSearch={handleEmployeeSearch}
+         onChange={onChange}
+        loading={employeesLoading}
+        notFoundContent={employeesLoading ? <Spin size="small" /> : null}
+      >
+        {Array.isArray(employeesData?.data) &&
+          employeesData?.data?.map((employee) => (
+            <Option key={employee._id} value={employee._id}>
+              <div className="flex items-center">
+                <Avatar
+                  size="small"
+                  src={employee?.profilePicture}
+                  icon={<UserOutlined />}
+                  className="mr-2"
+                />
+                {employee?.firstName} {employee?.lastName} (
+                {employee?.EmployeeId || "N/A"})
+              </div>
+            </Option>
+          ))}
+      </Select>
+
+      <div className="mt-4 flex justify-end">
+        <Pagination
+          size="small"
+          current={employeeSearchParams.page}
+          pageSize={employeeSearchParams.limit}
+          total={employeesData?.totalCount}
+          onChange={(page, pageSize) => {
+            setEmployeeSearchParams((prev) => ({
+              ...prev,
+              page,
+              limit: pageSize,
+            }));
+          }}
+          showSizeChanger
+          showQuickJumper
+        />
+      </div>
+    </div>
   );
 };
 
@@ -303,7 +356,7 @@ const DepartmentManagement = () => {
     mutationFn: api.updateDepartment,
     onSuccess: (data) => {
       queryClient.invalidateQueries(["departments"]);
-      message.success(data.message || "Department updated");
+      toast.success(data.message || "Department updated");
       setEditingId(null);
       form.resetFields();
     },
@@ -315,7 +368,7 @@ const DepartmentManagement = () => {
     mutationFn: api.deleteDepartment,
     onSuccess: (data) => {
       queryClient.invalidateQueries(["departments"]);
-      message.success(data.message || "Department deleted");
+      toast.success(data.message || "Department deleted");
     },
     onError: (err) =>
       toast.error(err.response.data.message || "Failed to delete departments"),
@@ -494,7 +547,7 @@ const DepartmentManagement = () => {
   );
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow">
+    <div className="p-4 h-[92vh] overflow-y-auto bg-white rounded-lg shadow">
       <div className="flex justify-between mb-6">
         <h1 className="text-2xl font-bold">Departments</h1>
         <Button

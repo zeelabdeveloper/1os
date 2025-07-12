@@ -10,6 +10,7 @@ const CreateBasicInfo = memo(
     isCocoStaff,
     branches,
     departments,
+    zones,
     roles,
     selectedBranch,
     selectedDepartment,
@@ -110,6 +111,27 @@ const CreateBasicInfo = memo(
               }}
             >
               {departments?.map((dept) => (
+                <Option key={dept._id} value={dept._id}>
+                  {dept.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name={["organization", "zone"]}
+            label={
+              <p>
+                {" "}
+                Zone*{" "}
+                <span className="text-[9px] text-orange-500">
+                  Only For Store Side
+                </span>{" "}
+              </p>
+            }
+          >
+            <Select placeholder="Select Zone" disabled={!selectedBranch}>
+              {zones?.map((dept) => (
                 <Option key={dept._id} value={dept._id}>
                   {dept.name}
                 </Option>

@@ -22,6 +22,8 @@ const {
   createZone,
   updateZone,
   deleteZone,
+  getZonesByBranch,
+  analyticsByBranch,
 } = require("../controllers/componyOperation");
 
 
@@ -36,6 +38,7 @@ router.delete("/companyBranch/:id", deleteBranch);
 router.get("/departments", getAllDepartments);
 router.get("/departments/head", getHeadOfDepartments);
 router.get("/branch/department/:branchId", getDepartmentsByBranch);
+router.get("/branch/zone/:branchId", getZonesByBranch);
 router.get("/branch/department/role/:departmentId", getRoleByDepartment);
 router.get("/Head/department/:Head", getDepartmentOfHead);
 
@@ -58,5 +61,15 @@ router.post("/roles", createRole);
 router.get("/roles", fetchRole);
 router.delete("/roles/:id", deleteRole);
 router.put("/roles/:id", updateRole);
+
+
+
+// analytics
+router.get("/branch/analytics/:id", analyticsByBranch);
+
+
+
+
+
 
 module.exports = router;

@@ -25,6 +25,7 @@ import {
   fetchBranches,
   fetchDepartmentsByBranch,
   fetchRoleByDepartment,
+  fetchZonesByBranch,
 } from "../../api/auth";
 import AssetInfo from "./ProfileCreating/AssetsInfo";
 import DocumentVerification from "./ProfileCreating/DocumentInfo";
@@ -54,6 +55,12 @@ const CreateEmployeeMain = () => {
     queryFn: () => fetchDepartmentsByBranch(selectedBranch),
     enabled: !!selectedBranch && !isCocoStaff,
   });
+  // Fetch Zone based on selected branch
+  const { data: zones } = useQuery({
+    queryKey: ["zones", selectedBranch],
+    queryFn: () => fetchZonesByBranch(selectedBranch),
+    enabled: !!selectedBranch && !isCocoStaff,
+  });
 
   // Fetch roles based on selected department
   const { data: roles } = useQuery({
@@ -66,7 +73,7 @@ const CreateEmployeeMain = () => {
   const {
     mutate: createUser,
     data,
-    isLoading, 
+    isLoading,
     isError,
     isSuccess,
   } = useMutation({
@@ -74,10 +81,6 @@ const CreateEmployeeMain = () => {
     onSuccess: (data) => {
       toast.success(data.message || "User created successfully!");
       queryClient.invalidateQueries(["users"]);
-      // form.resetFields();
-      // setCurrent(0);
-
-      // setIsCocoStaff(false);
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Failed to create user");
@@ -95,6 +98,7 @@ const CreateEmployeeMain = () => {
           isCocoStaff={isCocoStaff}
           branches={branches}
           departments={departments}
+          zones={zones}
           roles={roles}
           selectedBranch={selectedBranch}
           selectedDepartment={selectedDepartment}
@@ -136,7 +140,14 @@ const CreateEmployeeMain = () => {
     {
       title: "Confirmation",
       icon: <CheckCircleOutlined />,
-      content: <ConfirmationStaffCreate isLoading={isLoading} isError={isError} isSuccess={isSuccess}    data={data} />,
+      content: (
+        <ConfirmationStaffCreate
+          isLoading={isLoading}
+          isError={isError}
+          isSuccess={isSuccess}
+          data={data}
+        />
+      ),
     },
   ];
 
@@ -239,4 +250,4 @@ const CreateEmployeeMain = () => {
   );
 };
 
-export default CreateEmployeeMain
+export default CreateEmployeeMain;

@@ -52,6 +52,7 @@ import {
   fetchBranches,
   fetchDepartmentsByBranch,
   fetchRoleByDepartment,
+  fetchZonesByBranch,
 } from "../../api/auth";
 const { Option } = Select;
 
@@ -484,8 +485,6 @@ const ProfileCard = ({
     }
   };
 
- 
-
   return (
     <Card
       title={
@@ -878,6 +877,7 @@ const OrganizationCard = ({
     branch: null,
     department: null,
     role: null,
+    zone: null,
     employmentType: "full-time",
     isActive: true,
   });
@@ -897,6 +897,12 @@ const OrganizationCard = ({
     queryFn: () => fetchDepartmentsByBranch(formData.branch),
     enabled: !!formData.branch,
   });
+  // Departments (depends on formData.branch)
+  const { data: zones = [] } = useQuery({
+    queryKey: ["zones", formData.branch],
+    queryFn: () => fetchZonesByBranch(formData.branch),
+    enabled: !!formData.branch,
+  });
 
   // Roles (depends on formData.department)
   const { data: roles = [] } = useQuery({
@@ -911,6 +917,7 @@ const OrganizationCard = ({
       setFormData({
         branch: data?.branch?._id || null,
         department: data?.department?._id || null,
+        zone: data?.zone?._id || null,
         role: data?.role?._id || null,
         employmentType: data?.employmentType || "full-time",
         isActive: data?.isActive ?? true,
@@ -1013,6 +1020,26 @@ const OrganizationCard = ({
               ))}
             </Select>
           </div>
+          {/* Zone Selection */}
+         {  <div>
+            <label className="block text-sm font-medium mb-1">Zone</label>
+            <Select
+              value={formData.zone}
+              onChange={(value) => handleChange("zone", value)}
+              placeholder="Select Zone"
+              className="w-full"
+              disabled={!formData.branch}
+              loading={formData.branch && zones.length === 0}
+              showSearch
+              optionFilterProp="children"
+            >
+              {zones.map((dept) => (
+                <Option key={dept._id} value={dept._id}>
+                  {dept.name}
+                </Option>
+              ))}
+            </Select>
+          </div>}
 
           {/* Role Selection */}
           <div>
@@ -1073,6 +1100,11 @@ const OrganizationCard = ({
           <Descriptions.Item label="Department">
             {data?.department?.name || "N/A"}
           </Descriptions.Item>
+          {data?.zone?.name && (
+            <Descriptions.Item label="Zone">
+              {data?.zone?.name || "N/A"}
+            </Descriptions.Item>
+          )}
           <Descriptions.Item label="Role">
             {data?.role?.name || "N/A"}
           </Descriptions.Item>
@@ -1266,13 +1298,6 @@ const OrganizationCard = ({
 //   );
 // };
 
-
-
-
-
-
-
-
 const BankDetailsCard = ({
   data,
   loading,
@@ -1318,9 +1343,9 @@ const BankDetailsCard = ({
             Bank Details
           </span>
           {!isEditing ? (
-            <Button 
-              icon={data ? <EditOutlined /> : <PlusOutlined />} 
-              onClick={onEdit} 
+            <Button
+              icon={data ? <EditOutlined /> : <PlusOutlined />}
+              onClick={onEdit}
               disabled={loading}
             >
               {data ? "Edit" : "Add Bank Details"}
@@ -1366,7 +1391,9 @@ const BankDetailsCard = ({
             </label>
             <Input
               value={formData.accountHolderName}
-              onChange={(e) => handleChange("accountHolderName", e.target.value)}
+              onChange={(e) =>
+                handleChange("accountHolderName", e.target.value)
+              }
             />
           </div>
 
@@ -1454,9 +1481,7 @@ const BankDetailsCard = ({
           )}
 
           {data.branch && (
-            <Descriptions.Item label="Branch">
-              {data.branch}
-            </Descriptions.Item>
+            <Descriptions.Item label="Branch">{data.branch}</Descriptions.Item>
           )}
 
           <Descriptions.Item label="Verification Status">
@@ -1470,14 +1495,6 @@ const BankDetailsCard = ({
     </Card>
   );
 };
-
-
-
-
-
-
-
-
 
 // Salary Details Card Component
 // const SalaryDetailsCard = ({
@@ -1711,8 +1728,6 @@ const BankDetailsCard = ({
 //   );
 // };
 
-
-
 const SalaryDetailsCard = ({
   data,
   loading,
@@ -1787,9 +1802,9 @@ const SalaryDetailsCard = ({
             Salary Details
           </span>
           {!isEditing ? (
-            <Button 
-              icon={data ? <EditOutlined /> : <PlusOutlined />} 
-              onClick={onEdit} 
+            <Button
+              icon={data ? <EditOutlined /> : <PlusOutlined />}
+              onClick={onEdit}
               disabled={loading}
             >
               {data ? "Edit" : "Add Salary Details"}
@@ -1819,7 +1834,9 @@ const SalaryDetailsCard = ({
                 value={formData.basicSalary}
                 onChange={(value) => handleChange("basicSalary", value)}
                 min={0}
-                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                formatter={(value) =>
+                  `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }
               />
             </div>
 
@@ -1832,7 +1849,9 @@ const SalaryDetailsCard = ({
                 value={formData.hra}
                 onChange={(value) => handleChange("hra", value)}
                 min={0}
-                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                formatter={(value) =>
+                  `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }
               />
             </div>
 
@@ -1845,7 +1864,9 @@ const SalaryDetailsCard = ({
                 value={formData.da}
                 onChange={(value) => handleChange("da", value)}
                 min={0}
-                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                formatter={(value) =>
+                  `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }
               />
             </div>
 
@@ -1858,7 +1879,9 @@ const SalaryDetailsCard = ({
                 value={formData.conveyance}
                 onChange={(value) => handleChange("conveyance", value)}
                 min={0}
-                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                formatter={(value) =>
+                  `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }
               />
             </div>
 
@@ -1871,7 +1894,9 @@ const SalaryDetailsCard = ({
                 value={formData.medical}
                 onChange={(value) => handleChange("medical", value)}
                 min={0}
-                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                formatter={(value) =>
+                  `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }
               />
             </div>
 
@@ -1884,7 +1909,9 @@ const SalaryDetailsCard = ({
                 value={formData.otherAllow}
                 onChange={(value) => handleChange("otherAllow", value)}
                 min={0}
-                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                formatter={(value) =>
+                  `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }
               />
             </div>
 
@@ -1897,7 +1924,9 @@ const SalaryDetailsCard = ({
                 value={formData.pf}
                 onChange={(value) => handleChange("pf", value)}
                 min={0}
-                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                formatter={(value) =>
+                  `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }
               />
             </div>
 
@@ -1910,7 +1939,9 @@ const SalaryDetailsCard = ({
                 value={formData.tds}
                 onChange={(value) => handleChange("tds", value)}
                 min={0}
-                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                formatter={(value) =>
+                  `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }
               />
             </div>
 
@@ -1923,7 +1954,9 @@ const SalaryDetailsCard = ({
                 value={formData.esi}
                 onChange={(value) => handleChange("esi", value)}
                 min={0}
-                formatter={(value) => `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                formatter={(value) =>
+                  `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                }
               />
             </div>
 
@@ -2053,7 +2086,9 @@ const SalaryDetailsCard = ({
             <div className="bg-red-50 p-4 rounded-lg">
               <h4 className="font-semibold text-red-700">Total Deductions</h4>
               <p className="text-xl font-bold">
-                {formatCurrency((data.pf || 0) + (data.tds || 0) + (data.esi || 0))}
+                {formatCurrency(
+                  (data.pf || 0) + (data.tds || 0) + (data.esi || 0)
+                )}
               </p>
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
@@ -2076,16 +2111,6 @@ const SalaryDetailsCard = ({
     </Card>
   );
 };
-
-
-
-
-
-
-
-
-
-
 
 // Experience Card Component
 // const ExperienceCard = ({
@@ -2339,15 +2364,6 @@ const SalaryDetailsCard = ({
 //   );
 // };
 
-
-
-
-
-
-
-
-
-
 const ExperienceCard = ({
   data,
   loading,
@@ -2426,23 +2442,28 @@ const ExperienceCard = ({
 
   const calculateDuration = (startDate, endDate) => {
     if (!startDate) return "N/A";
-    
+
     const start = new Date(startDate);
     const end = endDate ? new Date(endDate) : new Date();
-    
-    const diffInMonths = (end.getFullYear() - start.getFullYear()) * 12 + 
-                         (end.getMonth() - start.getMonth());
-    
+
+    const diffInMonths =
+      (end.getFullYear() - start.getFullYear()) * 12 +
+      (end.getMonth() - start.getMonth());
+
     const years = Math.floor(diffInMonths / 12);
     const months = diffInMonths % 12;
-    
+
     return `${years} years ${months} months`;
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
   return (
@@ -2526,7 +2547,9 @@ const ExperienceCard = ({
               </label>
               <Switch
                 checked={formData.currentlyWorking}
-                onChange={(checked) => handleChange("currentlyWorking", checked)}
+                onChange={(checked) =>
+                  handleChange("currentlyWorking", checked)
+                }
                 checkedChildren="Yes"
                 unCheckedChildren="No"
               />
@@ -2561,10 +2584,7 @@ const ExperienceCard = ({
 
           <div className="flex justify-end space-x-2">
             <Button onClick={onCancel}>Cancel</Button>
-            <Button 
-              type="primary" 
-              onClick={handleSaveExperience}
-            >
+            <Button type="primary" onClick={handleSaveExperience}>
               {editingIndex !== null ? "Update Experience" : "Add Experience"}
             </Button>
           </div>
@@ -2572,7 +2592,10 @@ const ExperienceCard = ({
       ) : experiences && experiences.length > 0 ? (
         <div className="space-y-4">
           {experiences.map((exp, index) => (
-            <Card key={index} className="relative hover:shadow-md transition-shadow">
+            <Card
+              key={index}
+              className="relative hover:shadow-md transition-shadow"
+            >
               <div className="absolute top-4 right-4 flex space-x-2">
                 <Button
                   size="small"
@@ -2592,12 +2615,15 @@ const ExperienceCard = ({
               <div className="space-y-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-lg font-semibold">{exp.companyName || "N/A"}</h3>
+                    <h3 className="text-lg font-semibold">
+                      {exp.companyName || "N/A"}
+                    </h3>
                     <p className="text-gray-600">{exp.jobTitle || "N/A"}</p>
                   </div>
                   <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                    {exp.employmentType 
-                      ? exp.employmentType.charAt(0).toUpperCase() + exp.employmentType.slice(1)
+                    {exp.employmentType
+                      ? exp.employmentType.charAt(0).toUpperCase() +
+                        exp.employmentType.slice(1)
                       : "N/A"}
                   </div>
                 </div>
@@ -2610,7 +2636,10 @@ const ExperienceCard = ({
                   <div>
                     <p className="text-sm text-gray-500">Period</p>
                     <p>
-                      {formatDate(exp.startDate)} - {exp.currentlyWorking ? "Present" : formatDate(exp.endDate)}
+                      {formatDate(exp.startDate)} -{" "}
+                      {exp.currentlyWorking
+                        ? "Present"
+                        : formatDate(exp.endDate)}
                     </p>
                   </div>
                 </div>
@@ -2618,7 +2647,9 @@ const ExperienceCard = ({
                 {exp.description && (
                   <div>
                     <p className="text-sm text-gray-500">Description</p>
-                    <p className="text-gray-700 whitespace-pre-line">{exp.description}</p>
+                    <p className="text-gray-700 whitespace-pre-line">
+                      {exp.description}
+                    </p>
                   </div>
                 )}
               </div>
@@ -2631,26 +2662,6 @@ const ExperienceCard = ({
     </Card>
   );
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // const AssetCard = ({ data, loading, isEditing, onEdit, onCancel, onSave }) => {
 //   const [formData, setFormData] = useState({
@@ -2828,12 +2839,6 @@ const ExperienceCard = ({
 //     </Card>
 //   );
 // };
-
-
-
-
-
-
 
 const AssetCard = ({
   data,
@@ -3033,9 +3038,7 @@ const AssetCard = ({
                     className="asset-details"
                   >
                     <Descriptions.Item label="Asset Name">
-                      <span className="font-medium">
-                        {asset.name || "N/A"}
-                      </span>
+                      <span className="font-medium">{asset.name || "N/A"}</span>
                     </Descriptions.Item>
                     <Descriptions.Item label="Price">
                       <Tag color="blue" className="text-sm">
@@ -3118,19 +3121,6 @@ const AssetCard = ({
     </Card>
   );
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 const DocumentCard = ({
   data,

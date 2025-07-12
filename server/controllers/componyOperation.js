@@ -148,6 +148,27 @@ exports.getDepartmentsByBranch = async (req, res) => {
     });
   }
 };
+exports.getZonesByBranch = async (req, res) => {
+  try {
+    const { branchId } = req.params;
+    const departments = await Zone.find({ branch: branchId }).select(
+      "_id name code isActive"
+    );
+
+    res.json({
+      success: true,
+      data: departments,
+      message: "Departments fetched successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch departments",
+      error: error.message,
+    });
+  }
+};
 exports.getDepartmentOfHead = async (req, res) => {
   try {
     const { Head } = req.params;
@@ -203,7 +224,7 @@ exports.createDepartment = async (req, res) => {
         message: error.details[0].message,
       });
     }
-
+    console.log(req.body);
     // Check if branch exists
     const branch = await Branch.findById(req.body.branch);
     if (!branch) {
@@ -234,9 +255,10 @@ exports.createDepartment = async (req, res) => {
       message: "Department created successfully",
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
-      message: "Failed to create department",
+      message: error.message || "Failed to create department",
       error: error.message,
     });
   }
@@ -401,9 +423,6 @@ exports.deleteDepartment = async (req, res) => {
   }
 };
 
-
-
-
 exports.getAllZones = async (req, res) => {
   try {
     const zones = await Zone.find().populate("branch head");
@@ -419,27 +438,27 @@ exports.createZone = async (req, res) => {
 
     // Basic validation
     if (!name || !code || !branch) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Name, code and branch are required" 
+      return res.status(400).json({
+        success: false,
+        message: "Name, code and branch are required",
       });
     }
 
     // Check branch exists
     const branchExists = await Branch.findById(branch);
     if (!branchExists) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Branch not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Branch not found",
       });
     }
 
     // Check unique code per branch
     const existingZone = await Zone.findOne({ code, branch });
     if (existingZone) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Zone code must be unique within a branch" 
+      return res.status(400).json({
+        success: false,
+        message: "Zone code must be unique within a branch",
       });
     }
 
@@ -460,9 +479,9 @@ exports.updateZone = async (req, res) => {
     // Check if zone exists
     const existingZone = await Zone.findById(id);
     if (!existingZone) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Zone not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Zone not found",
       });
     }
 
@@ -470,18 +489,18 @@ exports.updateZone = async (req, res) => {
     if (branch && branch !== existingZone.branch.toString()) {
       const branchExists = await Branch.findById(branch);
       if (!branchExists) {
-        return res.status(404).json({ 
-          success: false, 
-          message: "Branch not found" 
+        return res.status(404).json({
+          success: false,
+          message: "Branch not found",
         });
       }
 
       // Check if new code is unique in new branch
       const codeExists = await Zone.findOne({ code, branch });
       if (codeExists && codeExists._id.toString() !== id) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Zone code must be unique within a branch" 
+        return res.status(400).json({
+          success: false,
+          message: "Zone code must be unique within a branch",
         });
       }
     }
@@ -504,14 +523,127 @@ exports.deleteZone = async (req, res) => {
     const zone = await Zone.findByIdAndDelete(id);
 
     if (!zone) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Zone not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Zone not found",
       });
     }
 
     res.json({ success: true, message: "Zone deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// controllers/userController.js
+
+const Attendance = require("../models/Attendance");
+const moment = require("moment");
+
+exports.analyticsByBranch = async (req, res) => {
+  try {
+    const { id: branchId } = req.params;
+    const { page = 1, limit = 10, status, search } = req.query;
+
+    // Base match conditions
+    const matchConditions = {
+      "Organization.branch": new mongoose.Types.ObjectId(branchId)
+    };
+
+    // Status filter
+    if (status !== undefined) {
+      matchConditions.isActive = status === "true";
+    }
+
+    // Search functionality (by name or employee ID)
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      matchConditions.$or = [
+        { firstName: searchRegex },
+        { lastName: searchRegex },
+        { 'EmployeeId.employeeId': searchRegex } 
+      ];
+    }
+
+    // Aggregation Pipeline
+    const aggregationPipeline = [
+      {
+        $lookup: {
+          from: "organizations",
+          localField: "Organization",
+          foreignField: "_id",
+          as: "Organization",
+        },
+      },
+      { $unwind: "$Organization" },
+      {
+        $lookup: {
+          from: "employeeids",
+          localField: "EmployeeId",
+          foreignField: "_id",
+          as: "EmployeeId",
+        },
+      },
+      { $unwind: { path: "$EmployeeId", preserveNullAndEmptyArrays: true } },
+      { $match: matchConditions },
+      {
+        $facet: {
+          employees: [
+            { $sort: { isActive: -1, createdAt: -1 } },
+            { $skip: (page - 1) * limit },
+            { $limit: parseInt(limit) },
+            {
+              $project: {
+                _id: 1,
+                firstName: 1,
+                lastName: 1,
+                isActive: 1,
+                dateOfJoining: 1,
+                Profile: 1,
+                EmployeeId: 1,
+                Organization: {
+                  department: 1,
+                  role: 1,
+                  employmentType: 1
+                }
+              }
+            }
+          ],
+          pagination: [
+            { $count: "total" }
+          ]
+        }
+      },
+      {
+        $project: {
+          employees: 1,
+          pagination: {
+            current: parseInt(page),
+            pageSize: parseInt(limit),
+            total: { $ifNull: [{ $arrayElemAt: ["$pagination.total", 0] }, 0] }
+          }
+        }
+      }
+    ];
+
+    const result = await User.aggregate(aggregationPipeline);
+
+    res.status(200).json({
+      success: true,
+      data: result[0] || {
+        employees: [],
+        pagination: {
+          current: parseInt(page),
+          pageSize: parseInt(limit),
+          total: 0
+        }
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

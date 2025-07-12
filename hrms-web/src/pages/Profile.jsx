@@ -378,6 +378,11 @@ const OrganizationCard = ({ data, employee, loading }) => {
           <Descriptions.Item label="Department">
             {data?.department?.name || "N/A"}
           </Descriptions.Item>
+          {data?.zone?.name && (
+            <Descriptions.Item label="Zone">
+              {data?.zone?.name || "N/A"}
+            </Descriptions.Item>
+          )}
           <Descriptions.Item label="Role">
             {data?.role?.name || "N/A"}
           </Descriptions.Item>
